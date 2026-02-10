@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-import type { Curriculum, CurriculumPageLevel1 } from "../scraper/types";
+import type { Cursus, CursusLevel1 } from "../scraper/types";
 
 export interface CacheEntry<T> {
 	data: T;
@@ -32,7 +32,7 @@ export interface CacheEntry<T> {
 
 /**
  * KV Cache Manager for Cloudflare Workers
- * Handles caching of curriculum data with TTL support
+ * Handles caching of cursus data with TTL support
  */
 export class KVCache {
 	private kvNamespace: KVNamespace;
@@ -42,15 +42,15 @@ export class KVCache {
 	}
 
 	/**
-	 * Generate a cache key for a curriculum code
+	 * Generate a cache key for a cursus code
 	 */
 	private generateKey(code: string, suffix?: string): string {
-		const baseKey = `cnam:curriculum:${code.toUpperCase()}`;
+		const baseKey = `cnam:cursus:${code.toUpperCase()}`;
 		return suffix ? `${baseKey}:${suffix}` : baseKey;
 	}
 
 	/**
-	 * Get cached curriculum data
+	 * Get cached cursus data
 	 */
 	async get<T>(code: string, suffix?: string): Promise<T | null> {
 		try {
@@ -84,7 +84,7 @@ export class KVCache {
 	}
 
 	/**
-	 * Set cached curriculum data with TTL (in seconds)
+	 * Set cached cursus data with TTL (in seconds)
 	 * Default TTL: 24 hours (86400 seconds)
 	 */
 	async set<T>(
@@ -117,7 +117,7 @@ export class KVCache {
 	}
 
 	/**
-	 * Invalidate cache for a curriculum code
+	 * Invalidate cache for a cursus code
 	 */
 	async invalidate(code: string, suffix?: string): Promise<boolean> {
 		try {
@@ -132,11 +132,11 @@ export class KVCache {
 	}
 
 	/**
-	 * Invalidate all cache for a curriculum code (all suffixes)
+	 * Invalidate all cache for a cursus code (all suffixes)
 	 */
 	async invalidateAll(code: string): Promise<boolean> {
 		try {
-			const baseKey = `cnam:curriculum:${code.toUpperCase()}`;
+			const baseKey = `cnam:cursus:${code.toUpperCase()}`;
 			// List all keys matching the pattern
 			const { keys } = await this.kvNamespace.list({
 				prefix: baseKey,

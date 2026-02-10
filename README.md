@@ -88,23 +88,23 @@ cnam+simple/
 
 ### Endpoint principal
 ```
-GET /api/curriculum/<code>
+GET /api/cursus/<code>
 ```
 
 **Exemples de requêtes:**
 
 ```bash
 # Curriculum basic (Level 1 avec cache)
-curl "http://localhost:8788/api/curriculum/CYC9101A"
+curl "http://localhost:8788/api/cursus/CYC9101A"
 
 # Enrichissement Level 2
-curl "http://localhost:8788/api/curriculum/CYC9101A?enrich=true"
+curl "http://localhost:8788/api/cursus/CYC9101A?enrich=true"
 
 # Forcer un refresh
-curl "http://localhost:8788/api/curriculum/CYC9101A?force=true"
+curl "http://localhost:8788/api/cursus/CYC9101A?force=true"
 
 # Cache override avec password (SHA512-crypt)
-curl "http://localhost:8788/api/curriculum/CYC9101A?override_password=cleartext&force=true"
+curl "http://localhost:8788/api/cursus/CYC9101A?api-key=cleartext&force=true"
 ```
 
 ### Paramètres de requête
@@ -114,7 +114,7 @@ curl "http://localhost:8788/api/curriculum/CYC9101A?override_password=cleartext&
 | `force` | boolean | Ignorer le cache et forcer un scraping frais |
 | `timeout` | number | Timeout personnalisé en millisecondes (défaut: 30000) |
 | `enrich` | boolean | Récupérer Level 2 (détails complets des unités) |
-| `override_password` | string | Mot de passe plain pour bypass cache + invalidation |
+| `api-key` | string | Mot de passe plain pour bypass cache + invalidation |
 
 ### Format de réponse
 
@@ -152,7 +152,7 @@ curl "http://localhost:8788/api/curriculum/CYC9101A?override_password=cleartext&
 
 ### Suppression du cache
 ```
-DELETE /api/curriculum/<code>/cache
+DELETE /api/cursus/<code>/cache
 ```
 
 ## 🔐 Sécurité
@@ -223,7 +223,7 @@ yarn test                # Mode watch
 ### Phase 3 - Contrôle de Cache 🔄 En cours
 - [x] Import sha512crypt-node
 - [x] Validation password SHA512-crypt
-- [x] Query params `?enrich=true` et `?override_password=xxx`
+- [x] Query params `?enrich=true` et `?api-key=xxx`
 - [x] Invalidation de cache sécurisée
 - [ ] Tests d'intégration avec bedeo.cnam.fr réel
 - [ ] UI React pour recherche curriculaire
@@ -243,7 +243,7 @@ Le projet utilise **Vitest** avec le pool `@cloudflare/vitest-pool-workers` pour
 ```bash
 # Tests existants (53 total):
 ✓ cnam-scraper.test.ts     (20 tests - unitaires)
-✓ curriculum-routes.test.ts (26 tests - contrats API)
+✓ cursus-routes.test.ts (26 tests - contrats API)
 ✓ unit-parser.test.ts       (7 tests - Level 2 parsing)
 ```
 

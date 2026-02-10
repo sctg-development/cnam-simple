@@ -23,7 +23,7 @@
  */
 
 import { Router } from "./router";
-import { setupCurriculumRoutes } from "./curriculum";
+import { setupCurriculumRoutes } from "./cursus";
 
 export const setupRoutes = (router: Router, env: Env) => {
 	// Preserve the original root response for backwards compatibility
@@ -42,6 +42,6 @@ export const setupRoutes = (router: Router, env: Env) => {
 		});
 	});
 
-	// Setup curriculum routes
+	// Setup cursus routes
 	setupCurriculumRoutes(router, env);
 };

@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+import { B } from "vitest/dist/chunks/worker.d.1GmBbd7G.js";
+
 /**
  * Bibliography entry for a unit
  */
@@ -44,7 +46,7 @@ export interface Unit {
 }
 
 /**
- * Year section in a curriculum
+ * Year section in a cursus
  */
 export interface Year {
 	year: number | string;
@@ -52,9 +54,9 @@ export interface Year {
 }
 
 /**
- * Complete curriculum structure
+ * Complete cursus structure
  */
-export interface Curriculum {
+export interface Cursus {
 	name: string;
 	code: string;
 	audience_access?: string;
@@ -63,31 +65,27 @@ export interface Curriculum {
 }
 
 /**
- * API Response for curriculum endpoint
+ * API Response for cursus endpoint
  */
-export interface CurriculumResponse {
+export interface CursusApiResponse {
 	success: boolean;
-	data?: Curriculum;
+	data?: Cursus;
 	cached?: boolean;
 	scrapedAt?: string;
 	error?: string;
 }
 
 /**
- * Level 1 parsing result (main curriculum page)
+ * Cursus parsing result
  */
-export interface CurriculumPageLevel1 {
+export interface CursusLevel1 {
 	code: string;
 	name?: string;
 	audience_access?: string;
 	objectives?: string;
 	years: {
 		year: string | number;
-		units: {
-			name: string;
-			code?: string;
-			url?: string;
-		}[];
+		units: Unit[];
 	}[];
 }
 

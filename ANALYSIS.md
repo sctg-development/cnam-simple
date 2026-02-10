@@ -18,7 +18,7 @@ The proposed implementation is **highly feasible** with manageable complexity. T
 
 ### Objectives
 - Fetch CNAM training program data (e.g., CYC9101A) from bedeo.cnam.fr
-- Parse curriculum structure including years, units (EU), and detailed unit information
+- Parse cursus structure including years, units (EU), and detailed unit information
 - Return structured JSON with training information, objectives, content, and bibliography
 - Cache results in Cloudflare KV to minimize scraping frequency
 - Expose data via REST API endpoint
@@ -36,6 +36,8 @@ The proposed implementation is **highly feasible** with manageable complexity. T
       "units": [
         {
           "name": "string",
+          "code": "string",
+          "url": "string",
           "audience_access": "string",
           "objectives": "string",
           "content": "string",
@@ -148,7 +150,7 @@ The CACHE KV namespace is already bound:
 ```
 
 **Considerations**:
-- Maximum value size: **25 MB** per entry (sufficient for typical curriculum data)
+- Maximum value size: **25 MB** per entry (sufficient for typical cursus data)
 - Maximum key length: **512 bytes**
 - Read/write operations: ~50ms latency (acceptable for caching)
 - Cost-effective for frequently accessed data
@@ -179,7 +181,7 @@ The target website structure requires:
 
 **Scraping Strategy**:
 1. **Level 1 - Curriculum Page**:
-   - Navigate to main curriculum page
+   - Navigate to main cursus page
    - Parse div `#cursus_schema` for year containers
    - Extract year labels from `.schema-ensemble-infos-label` spans
    - Identify all `.schema-unite` education units
@@ -234,14 +236,14 @@ apps/cloudflare-worker/src/
 │   ├── kv-cache.ts            (KV operations wrapper)
 │   └── cache-key-generator.ts (Consistent cache key strategy)
 ├── routes/
-│   └── curriculum.ts          (API endpoint implementation)
+│   └── cursus.ts          (API endpoint implementation)
 ```
 
 #### Key Modules to Implement
 
-1. **Curriculum Route Handler** (`curriculum.ts`)
+1. **Curriculum Route Handler** (`cursus.ts`)
    ```typescript
-   router.get("/api/curriculum/<code>", async (req, env) => {
+   router.get("/api/cursus/<code>", async (req, env) => {
      // Implementation
    });
    ```
@@ -258,13 +260,13 @@ apps/cloudflare-worker/src/
    - `extractBibliography()`: Table parsing for references
 
 4. **KV Cache Manager** (`cache/kv-cache.ts`)
-   - `get(code)`: Retrieve cached curriculum
+   - `get(code)`: Retrieve cached cursus
    - `set(code, data, ttl)`: Store with TTL
    - `invalidate(code)`: Manual cache clearing
 
 ### 5.2 API Endpoint Design
 
-**Endpoint**: `GET /api/curriculum/<code>`
+**Endpoint**: `GET /api/cursus/<code>`
 
 **Parameters**:
 - `code` (path): Training code (e.g., "CYC9101A")
@@ -275,7 +277,7 @@ apps/cloudflare-worker/src/
 ```json
 {
   "success": true,
-  "data": { /* curriculum object */ },
+  "data": { /* cursus object */ },
   "cached": false,
   "scrapedAt": "2026-02-10T15:30:00Z"
 }
@@ -406,8 +408,8 @@ await new Promise(resolve => setTimeout(resolve, 2000)); // 2s between requests
 
 **Calculations**:
 - Average unit: 2-3 seconds to scrape
-- Typical curriculum: 3-5 years × 4-8 units = 12-40 units
-- **Total time estimate**: 30-120 seconds for full curriculum
+- Typical cursus: 3-5 years × 4-8 units = 12-40 units
+- **Total time estimate**: 30-120 seconds for full cursus
 
 **Solutions**:
 1. **Async Queue System**: Queue scraping tasks for background processing
@@ -473,7 +475,7 @@ await page.setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.goo
    - Allow frontend to request missing units
 
 4. **Lazy Loading on Frontend**:
-   - Load curriculum overview first
+   - Load cursus overview first
    - Load detailed units on-demand
    - Reduces initial payload
 
@@ -529,18 +531,18 @@ All features are enabled and configured.
 - [ ] Implement `parseCurriculumPage()` (main page parsing)
 - [ ] Implement `parseUnitDetailPage()` (detail page parsing)
 - [ ] Add error handling and retry logic
-- [ ] Implement curriculum API route
+- [ ] Implement cursus API route
 
 ### Phase 3: Testing & Validation (2-3 days)
 - [ ] Unit tests for parsers
 - [ ] Integration tests against real bedeo.cnam.fr
-- [ ] Test with various curriculum codes
+- [ ] Test with various cursus codes
 - [ ] Validate JSON output structure
 - [ ] Load testing (concurrent requests)
 
 ### Phase 4: Frontend Integration (2-3 days)
-- [ ] Create curriculum search component
-- [ ] Create curriculum detail view
+- [ ] Create cursus search component
+- [ ] Create cursus detail view
 - [ ] Implement loading states and error handling
 - [ ] Add cache invalidation UI (admin only)
 
@@ -567,7 +569,7 @@ All features are enabled and configured.
 
 **Implementation Points**:
 - Use React hooks for state management
-- React Router for curriculum detail view
+- React Router for cursus detail view
 - TailwindCSS for responsive design (already available)
 - Error boundary for stability
 
@@ -594,7 +596,7 @@ All features are enabled and configured.
 ```typescript
 const codePattern = /^[A-Z0-9]{6,8}$/; // e.g., CYC9101A or CYC9101
 if (!codePattern.test(code)) {
-  throw new Error('Invalid curriculum code format');
+  throw new Error('Invalid cursus code format');
 }
 ```
 
@@ -625,7 +627,7 @@ if (!codePattern.test(code)) {
 - Input validation
 
 ### Integration Tests
-- Full curriculum scraping flow
+- Full cursus scraping flow
 - Multi-unit extraction
 - Cache hit/miss scenarios
 - Error recovery
@@ -638,7 +640,7 @@ if (!codePattern.test(code)) {
 ### Test Example Structure
 ```typescript
 describe('CNAM Scraper', () => {
-  it('parses curriculum page structure', () => {
+  it('parses cursus page structure', () => {
     // Test with real HTML or mock
   });
   
@@ -690,7 +692,7 @@ The project is **technically feasible** with expected implementation within 10-1
 
 2. **External Scraping Service**: Use third-party services like Bright Data or ScraperAPI as fallback
 
-3. **Manual Data Entry**: Provide admin panel for manual curriculum entry as backup
+3. **Manual Data Entry**: Provide admin panel for manual cursus entry as backup
 
 4. **Hybrid Approach**: Combine automated scraping with manual updates for enhanced reliability
 
@@ -698,7 +700,7 @@ The project is **technically feasible** with expected implementation within 10-1
 
 ## 15. Conclusion
 
-The CNAM curriculum scraper project is **highly feasible** within the current monorepo architecture. The Cloudflare Workers platform, combined with Playwright browser automation and KV caching, provides a robust foundation for reliable, performant data extraction.
+The CNAM cursus scraper project is **highly feasible** within the current monorepo architecture. The Cloudflare Workers platform, combined with Playwright browser automation and KV caching, provides a robust foundation for reliable, performant data extraction.
 
 **Key Success Factors**:
 1. Thorough testing against real website before production

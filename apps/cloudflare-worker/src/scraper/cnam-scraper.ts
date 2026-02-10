@@ -24,12 +24,12 @@
 
 import { launch } from "@cloudflare/playwright";
 import type { Browser, Page } from "@cloudflare/playwright";
-import { CurriculumPageParser } from "./parsers";
-import type { CurriculumPageLevel1, ScraperOptions } from "./types";
+import { CurriculumPageParser as CursusPageParser } from "./parsers";
+import type { CursusLevel1, ScraperOptions } from "./types";
 
 /**
  * CNAM Curriculum Scraper using Cloudflare Playwright
- * Level 1: Scrapes the main curriculum page to extract years and units
+ * Level 1: Scrapes the main cursus page to extract years and units
  */
 export class CNAMScraper {
 	private bedeoCnamUrl: string;
@@ -48,19 +48,19 @@ export class CNAMScraper {
 	}
 
 	/**
-	 * Scrape level 1 (main curriculum page)
+	 * Scrape level 1 (main cursus page)
 	 * Extracts year and unit structure
 	 *
 	 * @param code - Curriculum code (e.g., CYC9101A)
 	 * @param options - Scraper options
 	 * @param cfbrowser - Cloudflare Playwright browser options
-	 * @returns Parsed curriculum structure
+	 * @returns Parsed cursus structure
 	 */
 	async scrapeCurriculumLevel1(
 		code: string,
 		options: ScraperOptions = {},
 		cfbrowser: any,
-	): Promise<CurriculumPageLevel1> {
+	): Promise<CursusLevel1> {
 		// eslint-disable-next-line no-console
 		console.log(`[Scraper] Starting Level 1 scrape for code: ${code}`);
 
@@ -69,9 +69,9 @@ export class CNAMScraper {
 		let page: Page | null = null;
 
 		try {
-			// Validate curriculum code format
+			// Validate cursus code format
 			if (!this.isValidCurriculumCode(code)) {
-				throw new Error(`Invalid curriculum code format: ${code}`);
+				throw new Error(`Invalid cursus code format: ${code}`);
 			}
 
 			// Create browser instance using Cloudflare Playwright
@@ -95,12 +95,12 @@ export class CNAMScraper {
 				}),
 			);
 
-			// Build the curriculum URL
+			// Build the cursus URL
 			const curriculumUrl = this.buildCurriculumUrl(code);
 			// eslint-disable-next-line no-console
 			console.log(`[Scraper] Navigating to: ${curriculumUrl}`);
 
-			// Navigate to the curriculum page
+			// Navigate to the cursus page
 			await page.goto(curriculumUrl, {
 				waitUntil: "networkidle",
 				timeout,
@@ -116,12 +116,12 @@ export class CNAMScraper {
 				`[Scraper] Page loaded successfully for code: ${code}`,
 			);
 
-			// Parse the curriculum page
+			// Parse the cursus page
 			const curriculumData =
-				await CurriculumPageParser.parseCurriculumPage(page, code);
+				await CursusPageParser.parseCurriculumPage(page, code);
 
-			// Try to get curriculum title
-			const title = await CurriculumPageParser.getCurriculumTitle(page);
+			// Try to get cursus title
+			const title = await CursusPageParser.getCurriculumTitle(page);
 			if (title) {
 				curriculumData.name = title;
 			}
@@ -163,7 +163,7 @@ export class CNAMScraper {
 	}
 
 	/**
-	 * Validate curriculum code format
+	 * Validate cursus code format
 	 * Expected format: 3-8 characters, alphanumeric
 	 *
 	 * @param code - Curriculum code to validate
@@ -175,7 +175,7 @@ export class CNAMScraper {
 	}
 
 	/**
-	 * Build the full URL for a curriculum
+	 * Build the full URL for a cursus
 	 *
 	 * @param code - Curriculum code
 	 * @returns Full URL
@@ -347,7 +347,7 @@ export class CNAMScraper {
 
 			// Parse the unit detail page
 			const enrichedUnit =
-				await CurriculumPageParser.parseUnitDetailPage(
+				await CursusPageParser.parseUnitDetailPage(
 					page,
 					unit.code,
 				);

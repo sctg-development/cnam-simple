@@ -24,7 +24,7 @@
 
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { KVCache } from "../cache/kv-cache";
-import type { CurriculumPageLevel1, CurriculumResponse } from "../scraper/types";
+import type { CursusLevel1, CursusApiResponse } from "../scraper/types";
 
 describe("Curriculum Routes - API Contract", () => {
 	let mockKVNamespace: any;
@@ -41,7 +41,7 @@ describe("Curriculum Routes - API Contract", () => {
 
 	describe("Response Structure Validation", () => {
 		it("should return valid success response structure", () => {
-			const successResponse: CurriculumResponse = {
+			const successResponse: CursusApiResponse = {
 				success: true,
 				data: {
 					name: "Test Curriculum",
@@ -71,7 +71,7 @@ describe("Curriculum Routes - API Contract", () => {
 		});
 
 		it("should return valid error response structure", () => {
-			const errorResponse: CurriculumResponse = {
+			const errorResponse: CursusApiResponse = {
 				success: false,
 				error: "Curriculum not found",
 			};
@@ -82,7 +82,7 @@ describe("Curriculum Routes - API Contract", () => {
 		});
 
 		it("should include cache status in response", () => {
-			const cachedResponse: CurriculumResponse = {
+			const cachedResponse: CursusApiResponse = {
 				success: true,
 				data: {
 					name: "Test",
@@ -97,12 +97,12 @@ describe("Curriculum Routes - API Contract", () => {
 		});
 
 		it("should differentiate between cached and fresh responses", () => {
-			const cachedResponse: CurriculumResponse = {
+			const cachedResponse: CursusApiResponse = {
 				success: true,
 				cached: true,
 			};
 
-			const freshResponse: CurriculumResponse = {
+			const freshResponse: CursusApiResponse = {
 				success: true,
 				cached: false,
 				scrapedAt: new Date().toISOString(),
@@ -125,7 +125,7 @@ describe("Curriculum Routes - API Contract", () => {
 
 		it("should handle cache operations", async () => {
 			const cache = new KVCache(mockKVNamespace);
-			const testData: CurriculumPageLevel1 = {
+			const testData: CursusLevel1 = {
 				code: "CYC9101A",
 				years: [],
 			};
@@ -167,7 +167,7 @@ describe("Curriculum Routes - API Contract", () => {
 	});
 
 	describe("Error Handling", () => {
-		it("should handle missing curriculum gracefully", async () => {
+		it("should handle missing cursus gracefully", async () => {
 			mockKVNamespace.get.mockResolvedValueOnce(null);
 
 			const cache = new KVCache(mockKVNamespace);
@@ -206,8 +206,8 @@ describe("Curriculum Routes - API Contract", () => {
 	});
 
 	describe("Curriculum Data Structures", () => {
-		it("should validate curriculum page level 1 structure", () => {
-			const level1Data: CurriculumPageLevel1 = {
+		it("should validate cursus page level 1 structure", () => {
+			const level1Data: CursusLevel1 = {
 				code: "CYC9101A",
 				name: "Curriculum Title",
 				years: [
@@ -263,8 +263,8 @@ describe("Curriculum Routes - API Contract", () => {
 			expect(unitMinimal.code).toBeUndefined();
 		});
 
-		it("should support empty curriculum", () => {
-			const emptyCurriculum: CurriculumPageLevel1 = {
+		it("should support empty cursus", () => {
+			const emptyCurriculum: CursusLevel1 = {
 				code: "UNKNOWN",
 				years: [],
 			};
@@ -276,7 +276,7 @@ describe("Curriculum Routes - API Contract", () => {
 
 	describe("Query Parameter Handling", () => {
 		it("should parse force query parameter", () => {
-			const url = new URL("http://localhost/api/curriculum/CYC9101A?force=true");
+			const url = new URL("http://localhost/api/cursus/CYC9101A?force=true");
 			const force = url.searchParams.get("force") === "true";
 
 			expect(force).toBe(true);
@@ -284,7 +284,7 @@ describe("Curriculum Routes - API Contract", () => {
 
 		it("should parse timeout query parameter", () => {
 			const url = new URL(
-				"http://localhost/api/curriculum/CYC9101A?timeout=45000",
+				"http://localhost/api/cursus/CYC9101A?timeout=45000",
 			);
 			const timeout = url.searchParams.get("timeout")
 				? parseInt(url.searchParams.get("timeout") || "30000", 10)
@@ -294,7 +294,7 @@ describe("Curriculum Routes - API Contract", () => {
 		});
 
 		it("should handle default timeout when not provided", () => {
-			const url = new URL("http://localhost/api/curriculum/CYC9101A");
+			const url = new URL("http://localhost/api/cursus/CYC9101A");
 			const timeout = url.searchParams.get("timeout")
 				? parseInt(url.searchParams.get("timeout") || "30000", 10)
 				: 30000;
@@ -304,7 +304,7 @@ describe("Curriculum Routes - API Contract", () => {
 
 		it("should handle invalid timeout values", () => {
 			const url = new URL(
-				"http://localhost/api/curriculum/CYC9101A?timeout=invalid",
+				"http://localhost/api/cursus/CYC9101A?timeout=invalid",
 			);
 			const timeout = url.searchParams.get("timeout")
 				? parseInt(url.searchParams.get("timeout") || "30000", 10)
@@ -355,7 +355,7 @@ describe("Curriculum API Routes", () => {
 
 	describe("Response structure validation", () => {
 		it("should return valid success response structure", () => {
-			const successResponse: CurriculumResponse = {
+			const successResponse: CursusApiResponse = {
 				success: true,
 				data: {
 					name: "Test Curriculum",
@@ -385,7 +385,7 @@ describe("Curriculum API Routes", () => {
 		});
 
 		it("should return valid error response structure", () => {
-			const errorResponse: CurriculumResponse = {
+			const errorResponse: CursusApiResponse = {
 				success: false,
 				error: "Curriculum not found",
 			};
@@ -396,7 +396,7 @@ describe("Curriculum API Routes", () => {
 		});
 
 		it("should include cache status in response", () => {
-			const cachedResponse: CurriculumResponse = {
+			const cachedResponse: CursusApiResponse = {
 				success: true,
 				data: {
 					name: "Test",
@@ -420,7 +420,7 @@ describe("Curriculum API Routes", () => {
 
 		it("should handle cache operations", async () => {
 			const cache = new KVCache(mockKVNamespace);
-			const testData: CurriculumPageLevel1 = {
+			const testData: CursusLevel1 = {
 				code: "CYC9101A",
 				years: [],
 			};
@@ -444,7 +444,7 @@ describe("Curriculum API Routes", () => {
 	});
 
 	describe("Error responses", () => {
-		it("should handle missing curriculum gracefully", async () => {
+		it("should handle missing cursus gracefully", async () => {
 			mockKVNamespace.get.mockResolvedValueOnce(null);
 
 			const cache = new KVCache(mockKVNamespace);

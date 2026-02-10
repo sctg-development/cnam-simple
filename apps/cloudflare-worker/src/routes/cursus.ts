@@ -25,26 +25,26 @@
 import { Router } from "./router";
 import { CNAMScraper } from "../scraper/cnam-scraper";
 import { KVCache } from "../cache/kv-cache";
-import type { CurriculumPageLevel1, CurriculumResponse } from "../scraper/types";
+import type { CursusLevel1, CursusApiResponse } from "../scraper/types";
 import { validateScraperPassword } from "../utils/password-validator";
 
 /**
- * Setup curriculum routes
- * Handles API endpoints for curriculum data
+ * Setup cursus routes
+ * Handles API endpoints for cursus data
  */
 export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 	/**
-	 * GET /api/curriculum/<code>
-	 * Retrieve curriculum data (Level 1: years and units)
+	 * GET /api/cursus/<code>
+	 * Retrieve cursus data (Level 1: years and units)
 	 *
 	 * Query parameters:
 	 * - force: boolean (force scrape even if cached)
 	 * - timeout: number (custom timeout in milliseconds)
 	 * - enrich: boolean (fetch Level 2 unit details)
-	 * - override_password: string (SHA512-crypt password to invalidate cache)
+	 * - api-key: string (SHA512-crypt password to allow cache invalidation)
 	 */
 	router.get(
-		"/api/curriculum/<code>",
+		"/api/cursus/<code>",
 		async (req: any, env: Env): Promise<Response> => {
 			try {
 				const { code } = req.params as { code: string };
@@ -56,18 +56,18 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 					? parseInt(url.searchParams.get("timeout") || "30000", 10)
 					: 30000;
 				const enrich = url.searchParams.get("enrich") === "true";
-				const overridePassword = url.searchParams.get("override_password");
+				const apiKey = url.searchParams.get("api-key");
 
 				// eslint-disable-next-line no-console
 				console.log(
-					`[Route] GET /api/curriculum/${code} (force: ${force}, timeout: ${timeout}ms, enrich: ${enrich})`,
+					`[Route] GET /api/cursus/${code} (force: ${force}, timeout: ${timeout}ms, enrich: ${enrich})`,
 				);
 
-				// Handle cache override with password
+				// Handle cache override with password if api-key is provided and force is true
 				let forcedByOverride = false;
-				if (overridePassword) {
+				if (apiKey && force) {
 					const passwordHash = env.SCRAPER_CACHE_OVERRIDE as string;
-					if (passwordHash && validateScraperPassword(overridePassword, passwordHash)) {
+					if (passwordHash && validateScraperPassword(apiKey, passwordHash)) {
 						// eslint-disable-next-line no-console
 						console.log(`[Route] Cache override validated for ${code}`);
 						forcedByOverride = true;
@@ -90,7 +90,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Check cache if not forcing fresh data
 				if (!force && !forcedByOverride) {
-					const cachedData = await cache.get<CurriculumPageLevel1>(
+					const cachedData = await cache.get<CursusLevel1>(
 						code,
 					);
 
@@ -98,7 +98,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 						// eslint-disable-next-line no-console
 						console.log(`[Route] Cache hit for ${code}`);
 
-						const response: CurriculumResponse = {
+						const response: CursusApiResponse = {
 							success: true,
 							data: {
 								name: cachedData.name || code,
@@ -138,9 +138,9 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Validate we got meaningful data
 				if (!scrapedData || scrapedData.years.length === 0) {
-					const errorResponse: CurriculumResponse = {
+					const errorResponse: CursusApiResponse = {
 						success: false,
-						error: `No curriculum data found for code: ${code}`,
+						error: `No cursus data found for code: ${code}`,
 					};
 
 					return new Response(JSON.stringify(errorResponse), {
@@ -159,15 +159,24 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 				// Enrich with Level 2 unit details if requested
 				if (enrich) {
 					// eslint-disable-next-line no-console
-					console.log(`[Route] Enriching curriculum ${code} with Level 2 unit details`);
+					console.log(`[Route] Enriching cursus ${code} with Level 2 unit details`);
 
 					// Build unit URLs from the scraped data
+					// Prefer the URL extracted from the Level 1 page if available.
+					// Skip units with neither a URL nor a code to avoid invalid requests.
 					const unitUrls = scrapedData.years.flatMap((year) =>
-						year.units.map((unit) => ({
-							...unit,
-							url: `https://bedeo.cnam.fr/public/unite/view/${unit.code}`,
-						})),
-					);
+						year.units
+							.map((unit) => {
+								const url =
+									unit.url ||
+									(unit.code ? `${env.CNAM_BEDEO_URL}${env.CNAM_BEDEO_UNITE_VIEW_PATH}${unit.code}` : undefined);
+								if (!url) return null;
+								return {
+									...unit,
+									url,
+								};
+							})
+							.filter((u) => u !== null) as Array<{ code?: string; url: string }>,)
 
 					// Scrape Level 2 details (with concurrency limits due to timeout constraints)
 					try {
@@ -199,7 +208,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 					}
 				}
 
-				const response: CurriculumResponse = {
+				const response: CursusApiResponse = {
 					success: true,
 					data: {
 						name: scrapedData.name || code,
@@ -222,11 +231,11 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 				});
 			} catch (error) {
 				// eslint-disable-next-line no-console
-				console.error("[Route] Error in curriculum handler:", error);
+				console.error("[Route] Error in cursus handler:", error);
 
-				const errorResponse: CurriculumResponse = {
+				const errorResponse: CursusApiResponse = {
 					success: false,
-					error: `Error retrieving curriculum: ${error instanceof Error ? error.message : "Unknown error"}`,
+					error: `Error retrieving cursus: ${error instanceof Error ? error.message : "Unknown error"}`,
 				};
 
 				return new Response(JSON.stringify(errorResponse), {
@@ -241,17 +250,17 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 	);
 
 	/**
-	 * DELETE /api/curriculum/<code>/cache
-	 * Invalidate curriculum cache (admin only)
+	 * DELETE /api/cursus/<code>/cache
+	 * Invalidate cursus cache (admin only)
 	 */
 	router.delete(
-		"/api/curriculum/<code>/cache",
+		"/api/cursus/<code>/cache",
 		async (req: any, env: Env): Promise<Response> => {
 			try {
 				const { code } = req.params as { code: string };
 
 				// eslint-disable-next-line no-console
-				console.log(`[Route] DELETE /api/curriculum/${code}/cache`);
+				console.log(`[Route] DELETE /api/cursus/${code}/cache`);
 
 				const cache = new KVCache(env.CACHE as KVNamespace);
 				const success = await cache.invalidateAll(code);

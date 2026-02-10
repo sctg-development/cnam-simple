@@ -24,7 +24,7 @@
 
 import { describe, it, expect, beforeAll, vi } from "vitest";
 import { KVCache } from "../cache/kv-cache";
-import type { CurriculumPageLevel1 } from "../scraper/types";
+import type { CursusLevel1 } from "../scraper/types";
 
 // Mock environment variables from .env
 const mockEnv = {
@@ -37,7 +37,7 @@ const mockEnv = {
 } as unknown as Env;
 
 /**
- * Validate curriculum code format
+ * Validate cursus code format
  * Expected format: 3-8 characters, alphanumeric
  */
 function isValidCurriculumCode(code: string): boolean {
@@ -46,7 +46,7 @@ function isValidCurriculumCode(code: string): boolean {
 }
 
 /**
- * Build curriculum URL
+ * Build cursus URL
  */
 function buildCurriculumUrl(code: string): string {
 	const baseUrl = `${mockEnv.CNAM_BEDEO_URL}/${mockEnv.CNAM_BEDEO_CURSUS_PATH}`;
@@ -64,7 +64,7 @@ function buildUnitUrl(code: string): string {
 describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 	beforeAll(() => {
 		console.log(
-			`[Tests] Using curriculum code: ${mockEnv.CNAM_FORMATION_CODE}`,
+			`[Tests] Using cursus code: ${mockEnv.CNAM_FORMATION_CODE}`,
 		);
 	});
 
@@ -91,7 +91,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 	});
 
 	describe("URL Building", () => {
-		it("should build correct curriculum URL", () => {
+		it("should build correct cursus URL", () => {
 			const code = "CYC9101A";
 			const url = buildCurriculumUrl(code);
 
@@ -110,7 +110,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			expect(url).toContain(code);
 		});
 
-		it("should handle different curriculum codes", () => {
+		it("should handle different cursus codes", () => {
 			const codes = ["CYC9101A", "ENG110", "MATH201"];
 
 			codes.forEach((code) => {
@@ -122,7 +122,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 	});
 
 	describe("Curriculum Code Validation", () => {
-		it("should validate correct curriculum codes", () => {
+		it("should validate correct cursus codes", () => {
 			const validCodes = [
 				"CYC9101A",
 				"CYC9101",
@@ -140,7 +140,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			});
 		});
 
-		it("should reject invalid curriculum codes", () => {
+		it("should reject invalid cursus codes", () => {
 			const invalidCodes = [
 				"",
 				"A",
@@ -167,7 +167,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			});
 		});
 
-		it("should validate the test curriculum code", () => {
+		it("should validate the test cursus code", () => {
 			const code = mockEnv.CNAM_FORMATION_CODE as string;
 			expect(isValidCurriculumCode(code)).toBe(true);
 		});
@@ -182,8 +182,8 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			expect(/^[A-Z0-9]+$/i.test(code)).toBe(true);
 		});
 
-		it("should create valid curriculum page structure", () => {
-			const curriculumData: CurriculumPageLevel1 = {
+		it("should create valid cursus page structure", () => {
+			const curriculumData: CursusLevel1 = {
 				code: "CYC9101A",
 				name: "Test Curriculum",
 				years: [
@@ -239,7 +239,7 @@ describe("KVCache - Unit Tests", () => {
 	describe("Cache Operations", () => {
 		it("should handle cache set and get", async () => {
 			const code = "CYC9101A";
-			const testData: CurriculumPageLevel1 = {
+			const testData: CursusLevel1 = {
 				code,
 				years: [
 					{
@@ -273,7 +273,7 @@ describe("KVCache - Unit Tests", () => {
 
 		it("should handle cache TTL correctly", async () => {
 			const code = "CYC9101A";
-			const testData: CurriculumPageLevel1 = {
+			const testData: CursusLevel1 = {
 				code,
 				years: [],
 			};

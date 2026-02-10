@@ -23,28 +23,28 @@
  */
 
 import type { Page } from "@cloudflare/playwright";
-import type { CurriculumPageLevel1, Unit, Bibliography } from "./types";
+import type { CursusLevel1, Unit, Bibliography } from "./types";
 
 /**
- * Parser for CNAM curriculum page (Level 1)
- * Extracts the main curriculum structure: years and units
+ * Parser for CNAM cursus page (Level 1)
+ * Extracts the main cursus structure: years and units
  */
 export class CurriculumPageParser {
 	/**
-	 * Parse the main curriculum page to extract years and units
+	 * Parse the main cursus page to extract years and units
 	 *
 	 * @param page - Playwright page instance
 	 * @param code - Curriculum code (e.g., CYC9101A)
-	 * @returns Parsed curriculum structure with years and units
+	 * @returns Parsed cursus structure with years and units
 	 */
 	static async parseCurriculumPage(
 		page: Page,
 		code: string,
-	): Promise<CurriculumPageLevel1> {
+	): Promise<CursusLevel1> {
 		// eslint-disable-next-line no-console
-		console.log(`[Parser] Parsing curriculum page for code: ${code}`);
+		console.log(`[Parser] Parsing cursus page for code: ${code}`);
 
-		const result: CurriculumPageLevel1 = {
+		const result: CursusLevel1 = {
 			code,
 			years: [],
 		};
@@ -110,7 +110,7 @@ export class CurriculumPageParser {
 		} catch (error) {
 			// eslint-disable-next-line no-console
 			console.error(
-				`[Parser] Error parsing curriculum page for ${code}:`,
+				`[Parser] Error parsing cursus page for ${code}:`,
 				error,
 			);
 		}
@@ -258,14 +258,14 @@ export class CurriculumPageParser {
 	}
 
 	/**
-	 * Get the curriculum title/name from the page
+	 * Get the cursus title/name from the page
 	 *
 	 * @param page - Playwright page instance
 	 * @returns Curriculum name or null if not found
 	 */
 	static async getCurriculumTitle(page: Page): Promise<string | null> {
 		try {
-			// Try common selectors for curriculum title
+			// Try common selectors for cursus title
 			const selectors = [
 				"h1",
 				"h2",
@@ -289,7 +289,7 @@ export class CurriculumPageParser {
 			return null;
 		} catch (error) {
 			// eslint-disable-next-line no-console
-			console.error(`[Parser] Error getting curriculum title:`, error);
+			console.error(`[Parser] Error getting cursus title:`, error);
 			return null;
 		}
 	}
