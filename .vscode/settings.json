@@ -1,0 +1,11 @@
+{
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/.pnp.*": true
+  },
+  "i18n-ally.localesPaths": [
+                "apps/client/src/locales/base"
+  ],
+  "i18n-ally.keystyle": "flat",
+  "i18n-ally.sourceLanguage": "en-US"
+}

@@ -1,0 +1,8 @@
+node_modules/
+.yarn/
+.pnp*
+.env
+.turbo/
+dist/
+.wrangler/
+apps/cloudflare-worker/.dev.vars

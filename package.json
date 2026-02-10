@@ -1,0 +1,35 @@
+{
+    "name": "cnam-simple",
+    "version": "0.0.0",
+    "type": "module",
+    "license": "MIT",
+    "packageManager": "yarn@4.12.0",
+    "workspaces": [
+        "apps/*"
+    ],
+    "scripts": {
+        "build": "turbo run build",
+        "build:env": "turbo run build:env",
+        "dev": "turbo run dev",
+        "dev:env": "turbo run dev:env",
+        "preview:env": "turbo run preview:env",
+        "lint": "turbo run lint",
+        "test": "turbo run test",
+        "type-check": "turbo run type-check",
+        "clean": "turbo run clean && rm -rf node_modules",
+        "dev:client": "turbo run dev --filter=cnam-simple-client",
+        "dev:worker": "turbo run dev --filter=cnam-simple-worker",
+        "dev:client:env": "turbo run dev:env --filter=cnam-simple-client",
+        "dev:worker:env": "turbo run dev:env --filter=cnam-simple-worker",
+        "build:client": "turbo run build --filter=cnam-simple-client",
+        "build:worker": "turbo run build --filter=cnam-simple-worker",
+        "build:client:env": "turbo run build:env --filter=cnam-simple-client",
+        "build:worker:env": "turbo run build:env --filter=cnam-simple-worker",
+        "deploy:worker": "turbo run deploy --filter=cnam-simple-worker"
+    },
+    "devDependencies": {
+        "@types/node": "^24.10.12",
+        "turbo": "^2.8.3",
+        "typescript": "^5.9.3"
+    }
+}
