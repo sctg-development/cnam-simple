@@ -22,7 +22,7 @@ import { BrowserRouter } from "react-router-dom";
 
 import { App } from "./App.tsx";
 import "./i18n";
-import { Providers } from "./app/providers.tsx";
+import { Provider } from "./provider.tsx";
 import "@/styles/globals.css";
 import { CookieConsentProvider } from "./contexts/cookie-consent-context.tsx";
 import { CookieConsent } from "./components/cookie-consent.tsx";
@@ -30,12 +30,12 @@ import { CookieConsent } from "./components/cookie-consent.tsx";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <Providers>
+      <Provider>
         <CookieConsentProvider>
           <CookieConsent />
           <App />
         </CookieConsentProvider>
-      </Providers>
+      </Provider>
     </BrowserRouter>
   </React.StrictMode>,
 );

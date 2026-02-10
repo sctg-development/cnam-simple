@@ -10,7 +10,7 @@ import PricingPage from "@/pages/pricing";
 import BlogPage from "@/pages/blog";
 import AboutPage from "@/pages/about";
 
-function App() {
+export function App() {
   return (
     <CookieConsentProvider>
       <CookieConsent />
