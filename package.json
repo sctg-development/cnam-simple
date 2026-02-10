@@ -11,7 +11,7 @@
         "build": "turbo run build",
         "build:env": "turbo run build:env",
         "dev": "turbo run dev",
-        "dev:env": "turbo run dev:env",
+        "dev:env": "turbo run dev:env --ui=tui",
         "preview:env": "turbo run preview:env",
         "lint": "turbo run lint",
         "test": "turbo run test",

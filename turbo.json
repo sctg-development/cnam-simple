@@ -1,63 +1,205 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalDependencies": ["**/.env", ".env"],
-  "globalEnv": ["NODE_ENV"],
+  "globalDependencies": [
+    "**/.env",
+    ".env"
+  ],
+  "globalEnv": [
+    "NODE_ENV"
+  ],
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "clean"],
-      "inputs": ["$TURBO_DEFAULT$", ".env", ".env.local", ".env.production"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"],
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "PUBLIC_*", "VITE_*"]
+      "dependsOn": [
+        "^build",
+        "clean"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env",
+        ".env.local",
+        ".env.production"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "build/**"
+      ],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "PUBLIC_*",
+        "VITE_*"
+      ]
     },
     "build:env": {
-      "dependsOn": ["^build", "clean"],
-      "inputs": ["$TURBO_DEFAULT$", "../../.env", ".env", ".env.local", ".env.production"],
-      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "build/**"],
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "PUBLIC_*", "VITE_*", "AUTH0_*", "CLOUDFLARE_*"]
+      "dependsOn": [
+        "^build",
+        "clean"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../../.env",
+        ".env",
+        ".env.local",
+        ".env.production"
+      ],
+      "outputs": [
+        "dist/**",
+        ".next/**",
+        "!.next/cache/**",
+        "build/**"
+      ],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "PUBLIC_*",
+        "VITE_*",
+        "AUTH0_*",
+        "CLOUDFLARE_*"
+      ]
     },
     "preview": {
-      "dependsOn": ["^build:env"],
-      "inputs": ["$TURBO_DEFAULT$", "../../.env", ".env", ".env.local", ".env.production"],
-      "outputs": [".next/**", "!.next/cache/**"],
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "PUBLIC_*", "VITE_*", "AUTH0_*", "CLOUDFLARE_*"]
+      "dependsOn": [
+        "^build:env"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../../.env",
+        ".env",
+        ".env.local",
+        ".env.production"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**"
+      ],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "PUBLIC_*",
+        "VITE_*",
+        "AUTH0_*",
+        "CLOUDFLARE_*"
+      ]
     },
     "preview:env": {
-      "dependsOn": ["^build:env"],
+      "dependsOn": [
+        "^build:env"
+      ],
       "cache": false,
       "persistent": true,
-      "inputs": ["$TURBO_DEFAULT$", "../../.env", ".env", ".env.local", ".env.production"],
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "PUBLIC_*", "VITE_*", "AUTH0_*", "CLOUDFLARE_*"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../../.env",
+        ".env",
+        ".env.local",
+        ".env.production"
+      ],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "PUBLIC_*",
+        "VITE_*",
+        "AUTH0_*",
+        "CLOUDFLARE_*"
+      ]
     },
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "PUBLIC_*", "VITE_*", "AUTH0_*", "CLOUDFLARE_*"]
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "PUBLIC_*",
+        "VITE_*",
+        "AUTH0_*",
+        "CLOUDFLARE_*"
+      ]
     },
     "dev:env": {
       "cache": false,
       "persistent": true,
-      "inputs": ["$TURBO_DEFAULT$", "../../.env"],
-      "env": ["NODE_ENV", "NEXT_PUBLIC_*", "PUBLIC_*", "VITE_*", "AUTH0_*", "CLOUDFLARE_*"]
+      "interactive": true,
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "../../.env"
+      ],
+      "env": [
+        "NODE_ENV",
+        "NEXT_PUBLIC_*",
+        "PUBLIC_*",
+        "VITE_*",
+        "AUTH0_*",
+        "CLOUDFLARE_*"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"],
-      "inputs": ["$TURBO_DEFAULT$", "eslint.config.*", ".eslintrc*", "tsconfig.json"]
+      "dependsOn": [
+        "^lint"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "eslint.config.*",
+        ".eslintrc*",
+        "tsconfig.json"
+      ]
     },
     "type-check": {
-      "dependsOn": ["^type-check"],
-      "inputs": ["$TURBO_DEFAULT$", "tsconfig.json", "tsconfig.*.json"]
+      "dependsOn": [
+        "^type-check"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "tsconfig.json",
+        "tsconfig.*.json"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "vitest.config.*", "jest.config.*", "playwright.config.*"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "vitest.config.*",
+        "jest.config.*",
+        "playwright.config.*"
+      ]
     },
     "deploy": {
-      "dependsOn": ["build"],
-      "inputs": ["$TURBO_DEFAULT$", "wrangler.json*", ".env"],
-      "env": ["NODE_ENV", "CLOUDFLARE_*", "AUTH0_*"]
+      "dependsOn": [
+        "build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "wrangler.json*",
+        ".env"
+      ],
+      "env": [
+        "NODE_ENV",
+        "CLOUDFLARE_*",
+        "AUTH0_*"
+      ]
     },
     "clean": {
       "cache": false
+    },
+    "dev:client": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "NODE_ENV",
+        "VITE_*"
+      ]
+    },
+    "dev:worker": {
+      "cache": false,
+      "persistent": true,
+      "env": [
+        "NODE_ENV",
+        "AUTH0_*",
+        "CLOUDFLARE_*"
+      ]
     }
   }
 }
