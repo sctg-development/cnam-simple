@@ -336,19 +336,22 @@ export class CurriculumPageParser {
 	private static async getObjectives(page: Page): Promise<string | null> {
 		try {
 			// XPath: //*[@id="presentation"]/div[2]/div/p
-			const element = page.locator(
+			const locator = page.locator(
 				'//*[@id="presentation"]/div[2]/div/p',
 			);
-			const count = await element.count();
+			const count = await locator.count();
 
 			if (count > 0) {
-				const text = await element.textContent();
-				if (text && text.trim().length > 0) {
+				// Collect all paragraph texts and join non-empty ones
+				const texts = await locator.allTextContents();
+				const nonEmpty = texts.map((t) => t?.trim()).filter(Boolean);
+				if (nonEmpty.length > 0) {
+					const text = nonEmpty.join("\n\n");
 					// eslint-disable-next-line no-console
 					console.log(
 						`[Parser] Extracted objectives: ${text.substring(0, 50)}...`,
 					);
-					return text.trim();
+					return text;
 				}
 			}
 
@@ -448,9 +451,10 @@ export class CurriculumPageParser {
 					'//*[@id="presentation"]/div[1]/div',
 				);
 				if ((await audienceElement.count()) > 0) {
-					const text = await audienceElement.textContent();
-					if (text && text.trim().length > 0) {
-						result.audience_access = text.trim();
+					const texts = await audienceElement.allTextContents();
+					const nonEmpty = texts.map((t) => t?.trim()).filter(Boolean);
+					if (nonEmpty.length > 0) {
+						result.audience_access = nonEmpty.join("\n\n");
 					}
 				}
 			} catch (error) {
@@ -467,9 +471,10 @@ export class CurriculumPageParser {
 					'//*[@id="presentation"]/div[2]/div/p',
 				);
 				if ((await objectivesElement.count()) > 0) {
-					const text = await objectivesElement.textContent();
-					if (text && text.trim().length > 0) {
-						result.objectives = text.trim();
+					const texts = await objectivesElement.allTextContents();
+					const nonEmpty = texts.map((t) => t?.trim()).filter(Boolean);
+					if (nonEmpty.length > 0) {
+						result.objectives = nonEmpty.join("\n\n");
 					}
 				}
 			} catch (error) {
@@ -512,13 +517,15 @@ export class CurriculumPageParser {
 				'//*[@id="contenu"]/div[1]/div',
 			);
 			if ((await contentElement.count()) > 0) {
-				const text = await contentElement.textContent();
-				if (text && text.trim().length > 0) {
+				const texts = await contentElement.allTextContents();
+				const nonEmpty = texts.map((t) => t?.trim()).filter(Boolean);
+				if (nonEmpty.length > 0) {
+					const text = nonEmpty.join("\n\n");
 					// eslint-disable-next-line no-console
 					console.log(
 						`[Parser] Extracted content: ${text.substring(0, 50)}...`,
 					);
-					return text.trim();
+					return text;
 				}
 			}
 

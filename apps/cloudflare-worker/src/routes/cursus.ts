@@ -51,13 +51,22 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 				const url = new URL(req.url);
 
 				// Parse query parameters
-				const force = url.searchParams.get("force") === "true";
+				let force = url.searchParams.get("force") === "true";
 				const timeout = url.searchParams.get("timeout")
 					? parseInt(url.searchParams.get("timeout") || "30000", 10)
 					: 30000;
 				const enrich = url.searchParams.get("enrich") === "true";
 				const apiKey = url.searchParams.get("api-key");
 
+				// If force is requested but no api-key was provided, ignore the force to avoid
+				// accidental cache invalidation. A valid api-key is required to override cache.
+				if (force && !apiKey) {
+					// eslint-disable-next-line no-console
+					console.warn(
+						`[Route] Force requested for ${code} but no api-key provided; ignoring force parameter to preserve cache.`,
+					);
+					force = false;
+				}
 				// eslint-disable-next-line no-console
 				console.log(
 					`[Route] GET /api/cursus/${code} (force: ${force}, timeout: ${timeout}ms, enrich: ${enrich})`,
@@ -152,8 +161,8 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 					});
 				}
 
-				// Cache the result (24 hours default)
-				const ttl = 24 * 60 * 60; // 24 hours in seconds
+				// Cache the result (30 days default)
+				const ttl = Number(env.SCRAPER_CACHE_TTL) || 2592000; // 30 days in seconds
 				await cache.set(code, scrapedData, ttl);
 
 				// Enrich with Level 2 unit details if requested
@@ -198,6 +207,8 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 						// eslint-disable-next-line no-console
 						console.log(`[Route] Enrichment complete for ${code}`);
+						// update cache with enriched data
+						await cache.set(code, scrapedData, ttl);
 					} catch (enrichError) {
 						// eslint-disable-next-line no-console
 						console.warn(

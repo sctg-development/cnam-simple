@@ -169,7 +169,7 @@ openssl passwd -6
 ```
 
 ### Gestion du cache
-- **TTL par défaut**: 24 heures
+- **TTL par défaut**: 30 jours (configurable) via la variable d'environnement `SCRAPER_CACHE_TTL`
 - **Invalidation**: Via password-protected endpoint
 - **Override forcé**: `?force=true` sans password (développement)
 
