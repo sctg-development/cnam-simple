@@ -97,13 +97,11 @@ GET /api/cursus/<code>
 # Curriculum basic (Level 1 avec cache)
 curl "http://localhost:8788/api/cursus/CYC9101A"
 
-# Enrichissement Level 2
+# Enrichissement Level 2 (peut être long)
 curl "http://localhost:8788/api/cursus/CYC9101A?enrich=true"
 
-# Forcer un refresh
-curl "http://localhost:8788/api/cursus/CYC9101A?force=true"
-
-# Cache override avec password (SHA512-crypt)
+# Forcer un refresh (invalidation de cache) — REQUIERT une api-key valide
+# Sans api-key la requête `?force=true` est ignorée et le cache est préservé.
 curl "http://localhost:8788/api/cursus/CYC9101A?api-key=cleartext&force=true"
 ```
 
@@ -111,7 +109,7 @@ curl "http://localhost:8788/api/cursus/CYC9101A?api-key=cleartext&force=true"
 
 | Paramètre | Type | Description |
 |-----------|------|-------------|
-| `force` | boolean | Ignorer le cache et forcer un scraping frais |
+| `force` | boolean | Demander un scraping frais et invalider le cache **uniquement** si une `api-key` valide est fournie (sinon le paramètre est ignoré). |
 | `timeout` | number | Timeout personnalisé en millisecondes (défaut: 30000) |
 | `enrich` | boolean | Récupérer Level 2 (détails complets des unités) |
 | `api-key` | string | Mot de passe plain pour bypass cache + invalidation |
@@ -158,7 +156,7 @@ DELETE /api/cursus/<code>/cache
 ## 🔐 Sécurité
 
 ### Validation de mot de passe
-- Format: Hashes SHA512-crypt (OpenSSL `passwd -6`)
+- Format: Hashes SHA512-crypt (OpenSSL `openss passwd -6`)
 - Stockage: Variable d'env `SCRAPER_CACHE_OVERRIDE`
 - Exemple de hash: `$6$CY9bJUwYHGVpqnJx$Yz...`
 
@@ -170,8 +168,10 @@ openssl passwd -6
 
 ### Gestion du cache
 - **TTL par défaut**: 30 jours (configurable) via la variable d'environnement `SCRAPER_CACHE_TTL`
-- **Invalidation**: Via password-protected endpoint
-- **Override forcé**: `?force=true` sans password (développement)
+- **Invalidation**: Via password-protected endpoint (recommandé : utiliser `api-key` + `force=true` pour invalider)
+- **Override forcé**: Requiert désormais une `api-key` valide. Les requêtes avec `?force=true` sans `api-key` ne provoqueront pas d'invalidation du cache (sécurité renforcée). 
+
+**Remarque**: lorsqu'un enrichissement Level 2 (`?enrich=true`) réussit, le résultat enrichi est sauvegardé en cache — les requêtes suivantes peuvent donc retourner des données enrichies même sans `?enrich=true`.
 
 ## 📦 Installation et démarrage
 
