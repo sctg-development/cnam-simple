@@ -50,15 +50,36 @@ jobs:
               submodules: true
 
         - name: Set up Node.js
-          uses: actions/setup-node@v5
+          uses: actions/setup-node@v6
           with:
-            node-version: "24"
+             node-version: "24"
+
+        - name: Cache Yarn dependencies
+          uses: actions/cache@v5
+          with:
+            path: |
+                .yarn/cache
+                .yarn/unplugged
+                .yarn/build-state.yml
+                .yarn/install-state.gz
+                node_modules
+            key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+            restore-keys: |
+                ${{ runner.os }}-yarn-
+
+        - name: Cache Turborepo
+          uses: actions/cache@v5
+          with:
+            path: .turbo
+            key: ${{ runner.os }}-turbo-${{ github.sha }}
+            restore-keys: |
+                ${{ runner.os }}-turbo-
 
         - name: Install dependencies
+          shell: bash
           run: |
             corepack enable
-            yarn set version 4.2.0
-            yarn install
+            yarn install --immutable
     
 
         - name: Create .env file
