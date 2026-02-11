@@ -105,9 +105,35 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Check cache if not forcing fresh data
 				if (!force && !forcedByOverride) {
-					const cachedData = await cache.get<CursusLevel1>(
-						code,
-					);
+// If a 'rich' cache exists, return it immediately (serve enriched content by default)
+				const cachedRich = await cache.get<any>(code, "rich");
+				if (cachedRich) {
+					// eslint-disable-next-line no-console
+					console.log(`[Route] Cache hit for ${code} (rich)`);
+
+					const response: CursusApiResponse = {
+						success: true,
+						data: {
+							name: cachedRich.name || code,
+							code: cachedRich.code,
+							audience_access: cachedRich.audience_access,
+							objectives: cachedRich.objectives,
+							EU: cachedRich.years,
+						},
+						cached: true,
+					};
+
+					return new Response(JSON.stringify(response), {
+						status: 200,
+						headers: {
+							...router.corsHeaders,
+							"X-Cache": "HIT-RICH",
+							"Content-Type": "application/json",
+						},
+					});
+				}
+
+				const cachedData = await cache.get<CursusLevel1>(code);
 
 					if (cachedData) {
 						// eslint-disable-next-line no-console
@@ -223,8 +249,8 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 						// eslint-disable-next-line no-console
 						console.log(`[Route] Enrichment complete for ${code}`);
-						// update cache with enriched data
-						await cache.set(code, scrapedData, ttl);
+						// update cache with enriched data (stored under 'rich' suffix)
+						await cache.set(code, scrapedData, ttl, "rich");
 					} catch (enrichError) {
 						// eslint-disable-next-line no-console
 						console.warn(

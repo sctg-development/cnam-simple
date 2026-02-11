@@ -42,11 +42,18 @@ export class KVCache {
 	}
 
 	/**
-	 * Generate a cache key for a cursus code
+	 * Generate a cache key for a cursus code.
+	 * If a suffix is provided it will be placed before the code, e.g.:
+	 *  - generateKey('CYC9101A') -> 'cnam:cursus:CYC9101A'
+	 *  - generateKey('CYC9101A', 'rich') -> 'cnam:cursus:rich:CYC9101A'
 	 */
 	private generateKey(code: string, suffix?: string): string {
-		const baseKey = `cnam:cursus:${code.toUpperCase()}`;
-		return suffix ? `${baseKey}:${suffix}` : baseKey;
+		const codeUpper = code.toUpperCase();
+		if (suffix) {
+			// Place the suffix before the code to keep namespace-style keys
+			return `cnam:cursus:${suffix}:${codeUpper}`;
+		}
+		return `cnam:cursus:${codeUpper}`;
 	}
 
 	/**
@@ -132,20 +139,23 @@ export class KVCache {
 	}
 
 	/**
-	 * Invalidate all cache for a cursus code (all suffixes)
+	 * Invalidate all cache for a cursus code (all suffixes).
+	 * Removes the base key and any suffixed keys related to the code (e.g. 'cnam:cursus:rich:<CODE>').
 	 */
 	async invalidateAll(code: string): Promise<boolean> {
 		try {
-			const baseKey = `cnam:cursus:${code.toUpperCase()}`;
-			// List all keys matching the pattern
+			const codeUpper = code.toUpperCase();
+			// List all keys under the cursus namespace and filter those related to the code
 			const { keys } = await this.kvNamespace.list({
-				prefix: baseKey,
+				prefix: "cnam:cursus:",
+			});
+
+			const matching = keys.filter((k) => {
+				return k.name === `cnam:cursus:${codeUpper}` || k.name.endsWith(`:${codeUpper}`);
 			});
 
 			// Delete all matching keys
-			const deletePromises = keys.map((key) =>
-				this.kvNamespace.delete(key.name),
-			);
+			const deletePromises = matching.map((key) => this.kvNamespace.delete(key.name));
 
 			await Promise.all(deletePromises);
 			return true;
