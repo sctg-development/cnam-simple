@@ -21,6 +21,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
 import CnamMarkdownViewer from "@/components/cnam-markdown-viewer.tsx";
+import PdfTransformer from "@/components/pdf-transformer";
 import SearchControl from "@/components/search-control";
 
 import { title, subtitle } from "@/components/primitives";
@@ -156,6 +157,8 @@ function SearchBar() {
                   {t("download_json")}
                 </a>
               )}
+
+              <PdfTransformer data={data} fileName={`${code}.pdf`} />
             </div>
             <CnamMarkdownViewer
               data={data}

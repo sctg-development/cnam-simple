@@ -22,8 +22,6 @@
  * SOFTWARE.
  */
 
-import { B } from "vitest/dist/chunks/worker.d.1GmBbd7G.js";
-
 /**
  * Bibliography entry for a unit
  */

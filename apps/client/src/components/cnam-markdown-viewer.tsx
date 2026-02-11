@@ -136,7 +136,7 @@ export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownVi
 
   // Convert markdown to HTML using marked. No sanitization is performed here
   // to preserve previous behaviour; consider adding DOMPurify before render.
-  const html = React.useMemo(() => marked(markdown || ""), [markdown]);
+  const html = React.useMemo(() => marked(markdown || ""), [markdown]) as string;
 
   return (
     <div className="mt-4">

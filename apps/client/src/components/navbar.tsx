@@ -38,9 +38,7 @@ import { I18nIcon, LanguageSwitch } from "./language-switch";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
 import {
-  TwitterIcon,
   GithubIcon,
-  DiscordIcon,
   HeartFilledIcon,
 } from "@/components/icons";
 import { Logo } from "@/components/icons";

@@ -27,7 +27,7 @@ import { Button } from "@heroui/button";
 import { Tooltip } from "@heroui/tooltip";
 
 import { type AvailableLanguage } from "@/i18n";
-import { type IconSvgProps } from "@/types";
+import { type IconSvgProps } from "@/components/icons";
 
 interface LanguageSwitchProps {
   /**
