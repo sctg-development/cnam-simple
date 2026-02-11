@@ -16,8 +16,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 import * as React from "react";
+import { SVGProps } from "react";
 
-import { IconSvgProps } from "@/types";
+export type IconSvgProps = SVGProps<SVGSVGElement> & {
+  size?: number;
+};
 
 export const Logo: React.FC<IconSvgProps> = React.memo(
   ({ size = 36, height = 36 }) => (
