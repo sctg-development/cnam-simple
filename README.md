@@ -45,7 +45,7 @@ cnam+simple/
 ## 🔧 Stack technique
 
 ### Frontend (Client)
-- **Framework**: React 18+ avec TypeScript
+- **Framework**: React 19 avec TypeScript
 - **Build**: Vite
 - **Styling**: TailwindCSS + HeroUI
 - **i18n**: Support multilingue (FR, EN, ES, AR, HE, ZH)
@@ -95,14 +95,14 @@ GET /api/cursus/<code>
 
 ```bash
 # Curriculum basic (Level 1 avec cache)
-curl "http://localhost:8788/api/cursus/CYC9101A"
+curl "http://localhost:8787/api/cursus/CYC9101A"
 
 # Enrichissement Level 2 (peut être long)
-curl "http://localhost:8788/api/cursus/CYC9101A?enrich=true"
+curl "http://localhost:8787/api/cursus/CYC9101A?enrich=true"
 
 # Forcer un refresh (invalidation de cache) — REQUIERT une api-key valide
 # Sans api-key la requête `?force=true` est ignorée et le cache est préservé.
-curl "http://localhost:8788/api/cursus/CYC9101A?api-key=cleartext&force=true"
+curl "http://localhost:8787/api/cursus/CYC9101A?api-key=cleartext&force=true"
 ```
 
 ### Paramètres de requête
@@ -112,7 +112,7 @@ curl "http://localhost:8788/api/cursus/CYC9101A?api-key=cleartext&force=true"
 | `force` | boolean | Demander un scraping frais et invalider le cache **uniquement** si une `api-key` valide est fournie (sinon le paramètre est ignoré). |
 | `timeout` | number | Timeout personnalisé en millisecondes (défaut: 30000) |
 | `enrich` | boolean | Récupérer Level 2 (détails complets des unités) |
-| `api-key` | string | Mot de passe plain pour bypass cache + invalidation |
+| `api-key` | string | Mot de passe en clair pour bypass cache + invalidation |
 
 ### Format de réponse
 
@@ -176,8 +176,8 @@ openssl passwd -6
 ## 📦 Installation et démarrage
 
 ### Prérequis
-- Node.js 18+
-- Yarn
+- Node.js 24+
+- Yarn 4+
 - Compte Cloudflare (pour production)
 
 ### Installation
@@ -195,8 +195,8 @@ yarn cf-typegen:env
 # Démarrer l'environnement complet (client + worker)
 yarn dev:env
 
-# Frontend: http://localhost:5174
-# Worker: http://localhost:8788
+# Frontend: http://localhost:5173
+# Worker: http://localhost:8787
 ```
 
 ### Tests
@@ -259,16 +259,20 @@ Le projet utilise **Vitest** avec le pool `@cloudflare/vitest-pool-workers` pour
 
 ```env
 # Cloudflare
-CLOUDFLARE_BACKEND=http://localhost:8787
+CLOUDFLARE_BACKEND="http://localhost:8787"
 
 # CNAM
-CNAM_FORMATION_CODE=CYC9101A
-CNAM_BEDEO_URL=https://bedeo.cnam.fr
-CNAM_BEDEO_CURSUS_PATH=public/cursus/view/
-CNAM_BEDEO_UNITE_VIEW_PATH=/public/unite/view/
+CNAM_FORMATION_CODE="CYC9101A" # Code de formation pour les tests (ex: CYC9101A, CYC9202B, etc)
+CNAM_BEDEO_URL="https://bedeo.cnam.fr"
+CNAM_BEDEO_CURSUS_PATH="public/cursus/view/"
+CNAM_BEDEO_UNITE_VIEW_PATH="/public/unite/view/"
+
+# Performance
+SCRAPER_CACHE_TTL=2592000 # 30 jours en secondes
 
 # Sécurité
-SCRAPER_CACHE_OVERRIDE=$6$...  # Hash SHA512-crypt
+SCRAPER_CACHE_OVERRIDE="$6$..."  # Hash SHA512-crypt
+CORS_ORIGIN="http://localhost:5173"
 ```
 
 ## 📄 Licence
