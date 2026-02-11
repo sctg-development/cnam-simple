@@ -23,6 +23,8 @@
  */
 
 import { Router } from "./router";
+import { launch as browserLaunch } from "@cloudflare/playwright";
+import type { Browser } from "@cloudflare/playwright";
 import { CNAMScraper } from "../scraper/cnam-scraper";
 import { KVCache } from "../cache/kv-cache";
 import type { CursusLevel1, CursusApiResponse } from "../scraper/types";
@@ -95,6 +97,10 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Initialize services
 				const cache = new KVCache(env.CACHE as KVNamespace);
+				let browserInstance: Browser | null = null; // Reusable browser instance
+				// Create browser instance once
+    			browserInstance = await browserLaunch(env.CFBROWSER);
+
 				const scraper = new CNAMScraper(env);
 
 				// Check cache if not forcing fresh data
@@ -142,7 +148,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 				const scrapedData = await scraper.scrapeCurriculumLevel1(
 					code,
 					{ timeout },
-					env.CFBROWSER,
+					browserInstance,
 				);
 
 				// Validate we got meaningful data
@@ -192,7 +198,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 						const enrichedUnits = await scraper.scrapeCurriculumLevel2(
 							unitUrls,
 							{ timeout },
-							env.CFBROWSER,
+							browserInstance,
 						);
 
 						// Merge enriched units back into years

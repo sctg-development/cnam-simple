@@ -59,7 +59,7 @@ export class CNAMScraper {
 	async scrapeCurriculumLevel1(
 		code: string,
 		options: ScraperOptions = {},
-		cfbrowser: any,
+		cfbrowser: Browser,
 	): Promise<CursusLevel1> {
 		// eslint-disable-next-line no-console
 		console.log(`[Scraper] Starting Level 1 scrape for code: ${code}`);
@@ -75,7 +75,7 @@ export class CNAMScraper {
 			}
 
 			// Create browser instance using Cloudflare Playwright
-			browserInstance = await launch(cfbrowser);
+			browserInstance = cfbrowser;
 
 			// Create new page context with FR locale
 			page = await browserInstance.newPage({ locale: "fr-FR" });
@@ -152,13 +152,7 @@ export class CNAMScraper {
 					console.warn(`[Scraper] Error closing page:`, err);
 				});
 			}
-
-			if (browserInstance) {
-				await browserInstance.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(`[Scraper] Error closing browser:`, err);
-				});
-			}
+			// Note: Do not close browserInstance here as it is managed externally
 		}
 	}
 
@@ -208,7 +202,7 @@ export class CNAMScraper {
 	async scrapeCurriculumLevel2(
 		unitUrls: Array<{ code: string; url: string }>,
 		options: ScraperOptions = {},
-		browser: any,
+		browser: Browser,
 	): Promise<any[]> {
 		// eslint-disable-next-line no-console
 		console.log(
@@ -221,7 +215,7 @@ export class CNAMScraper {
 
 		try {
 			// Create browser instance
-			const browserInstance = await launch(browser);
+			const browserInstance = browser;
 
 			try {
 				// Process units with concurrency limit
@@ -263,14 +257,7 @@ export class CNAMScraper {
 					}
 				}
 			} finally {
-				// Cleanup browser
-				await browserInstance.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(
-						`[Scraper] Error closing browser:`,
-						err,
-					);
-				});
+				// Note: Do not close browserInstance here as it is managed externally
 			}
 
 			// eslint-disable-next-line no-console
