@@ -50,6 +50,9 @@
   "docs.license.title": "License",
   "docs.license.p": "MIT (see README for details).",
 
+  "docs.warning.title": "Disclaimer",
+  "docs.warning.p": "This tool is not affiliated with the CNAM and results are provided as-is; accuracy is not guaranteed.",
+
   "documentation": "Documentation",
   "get-started-by-editing": "Get started by editing",
   "make": "Make",

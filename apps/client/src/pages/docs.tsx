@@ -33,6 +33,12 @@ export default function DocsPage() {
             <h2 className="font-semibold mt-2">{t("docs.overview.title")}</h2>
             <p className="mt-2">{t("docs.overview.p")}</p>
 
+            {/* Disclaimer / Warning: Not affiliated with CNAM and results are not guaranteed */}
+            <div role="alert" className="mt-4 p-4 bg-yellow-50 border-l-4 border-amber-400 rounded">
+              <p className="font-semibold">{t("docs.warning.title")}</p>
+              <p className="mt-1 text-sm">{t("docs.warning.p")}</p>
+            </div>
+
             <h2 className="font-semibold mt-4">{t("docs.goals.title")}</h2>
             <ul className="list-disc pl-6 mt-2">
               <li>{t("docs.goals.item1")}</li>

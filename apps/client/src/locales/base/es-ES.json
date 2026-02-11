@@ -51,6 +51,9 @@
   "docs.api.p": "Endpoint principal: GET /api/cursus/<code>. Soporta `enrich=true` y la invalidación de caché segura.",
   "docs.license.title": "Licencia",
   "docs.license.p": "MIT (ver README para detalles).",
+
+  "docs.warning.title": "Aviso",
+  "docs.warning.p": "Esta herramienta no está afiliada al CNAM y los resultados se proporcionan tal cual; no se garantiza su exactitud.",
   "language": "Idioma",
   "cookie-consent": "Utilizamos cookies en nuestro sitio web para brindarle la experiencia más relevante al recordar sus preferencias y repetir visitas. Al hacer clic",
   "cookie-policy": "Política de cookies.",
