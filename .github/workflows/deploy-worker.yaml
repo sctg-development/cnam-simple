@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+# Copyright (c) 2025 Ronan Le Meillat - SCTG Development
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+name: CloudflareWorkerDeploy
+
+on:
+    push:
+      branches:
+        - main
+      paths:
+        - apps/cloudflare-worker/**
+        - .github/workflows/deploy-worker.yaml
+        
+    workflow_dispatch:
+
+permissions:
+    contents: write
+    pages: write
+    id-token: write
+    packages: write
+    attestations: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v6
+          with:
+              submodules: true
+
+        - name: Set up Node.js
+          uses: actions/setup-node@v5
+          with:
+            node-version: "24"
+
+        - name: Install dependencies
+          run: |
+            yarn install
+    
+
+        - name: Create .env file
+          run: |
+            echo "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" > .env
+            echo "TURBO_TEAM=${{ secrets.TURBO_TEAM }}" >> .env
+            echo "TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}" >> .env
+            echo "CLOUDFLARE_BACKEND=${{ secrets.CLOUDFLARE_BACKEND }}" >> .env
+            echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> .env
+            echo "CNAM_FORMATION_CODE=${{ secrets.CNAM_FORMATION_CODE }}" >> .env
+            echo "CNAM_BEDEO_URL=${{ secrets.CNAM_BEDEO_URL }}" >> .env
+            echo "CNAM_BEDEO_CURSUS_PATH=${{ secrets.CNAM_BEDEO_CURSUS_PATH }}" >> .env
+            echo "CNAM_BEDEO_UNITE_VIEW_PATH=${{ secrets.CNAM_BEDEO_UNITE_VIEW_PATH }}" >> .env
+            echo "SCRAPER_CACHE_OVERRIDE=${{ secrets.SCRAPER_CACHE_OVERRIDE }}" >> .env
+            echo "SCRAPER_CACHE_TTL=${{ secrets.SCRAPER_CACHE_TTL }}" >> .env
+
+        - name: Replace "// vars.*" in wrangler.jsonc with a json string
+          run: |
+            cd apps/cloudflare-worker
+            cp ../../.env .env
+            cp wrangler.jsonc wrangler.jsonc.bak
+            set -a && source .env && set +a
+            cat .env
+            # Escape special characters in ALLOWED_GROUPS for sed
+            ESCAPED_ALLOWED_GROUPS=$(printf '%s\n' "$ALLOWED_GROUPS" | sed 's/[[\.*^$()+?{|]/\\&/g')
+            cat wrangler.jsonc.bak | sed 's|// "vars".*.|,"vars": {  "TURBO_TEAM": "'"${TURBO_TEAM}"'", "TURBO_TOKEN": "'"${TURBO_TOKEN}"'", "CLOUDFLARE_BACKEND": "'"${CLOUDFLARE_BACKEND}"'", "CORS_ORIGIN": "'"${CORS_ORIGIN}"'", "CNAM_FORMATION_CODE": "'"${CNAM_FORMATION_CODE}"'", "CNAM_BEDEO_URL": "'"${CNAM_BEDEO_URL}"'", "CNAM_BEDEO_CURSUS_PATH": "'"${CNAM_BEDEO_CURSUS_PATH}"'", "CNAM_BEDEO_UNITE_VIEW_PATH": "'"${CNAM_BEDEO_UNITE_VIEW_PATH}"'", "SCRAPER_CACHE_OVERRIDE": "'"${SCRAPER_CACHE_OVERRIDE}"'", "SCRAPER_CACHE_TTL": "'"${SCRAPER_CACHE_TTL}"'" }|' > wrangler.jsonc.2
+            cat wrangler.jsonc.2 | sed 's|// "routes".*.|,"routes": [{ "pattern": "'"${DOMAIN_NAME}"'", "custom_domain": true }]|'  > wrangler.jsonc
+            cat wrangler.jsonc
+        - name: Deploy
+          uses: cloudflare/wrangler-action@v4
+          with:
+            apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+            accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            workingDirectory: apps/cloudflare-worker
+            vars: |
+                DOMAIN_NAME
+                TURBO_TEAM
+                TURBO_TOKEN
+                CLOUDFLARE_BACKEND
+                CORS_ORIGIN
+                CNAM_FORMATION_CODE
+                CNAM_BEDEO_URL
+                CNAM_BEDEO_CURSUS_PATH
+                CNAM_BEDEO_UNITE_VIEW_PATH
+                SCRAPER_CACHE_OVERRIDE
+                SCRAPER_CACHE_TTL
+          env:
+            DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+            TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+            TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+            CLOUDFLARE_BACKEND: ${{ secrets.CLOUDFLARE_BACKEND }}
+            CORS_ORIGIN: ${{ secrets.CORS_ORIGIN }}
+            CNAM_FORMATION_CODE: ${{ secrets.CNAM_FORMATION_CODE }}
+            CNAM_BEDEO_URL: ${{ secrets.CNAM_BEDEO_URL }}
+            CNAM_BEDEO_CURSUS_PATH: ${{ secrets.CNAM_BEDEO_CURSUS_PATH }}
+            CNAM_BEDEO_UNITE_VIEW_PATH: ${{ secrets.CNAM_BEDEO_UNITE_VIEW_PATH }}
+            SCRAPER_CACHE_OVERRIDE: ${{ secrets.SCRAPER_CACHE_OVERRIDE }}
+            SCRAPER_CACHE_TTL: ${{ secrets.SCRAPER_CACHE_TTL }}

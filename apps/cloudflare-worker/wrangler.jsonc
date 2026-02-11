@@ -47,10 +47,7 @@
 	 * Environment Variables
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
 	 */
-	"vars": {
-		"USERNAME": "fake",
-		"PASSWORD": "fake"
-	}
+	//"vars": {"TURBO_TEAM": "fake","TURBO_TOKEN": "fake","CLOUDFLARE_BACKEND": "fake","CORS_ORIGIN": "fake","CNAM_FORMATION_CODE": "fake","CNAM_BEDEO_URL": "fake","CNAM_BEDEO_CURSUS_PATH": "fake","CNAM_BEDEO_UNITE_VIEW_PATH": "fake","SCRAPER_CACHE_OVERRIDE": "fake","SCRAPER_CACHE_TTL": "fake"}
 	/**
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
