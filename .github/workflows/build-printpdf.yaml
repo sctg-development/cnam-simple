@@ -24,7 +24,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          recursive: true
+          submodules: true
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
