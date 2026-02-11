@@ -41,5 +41,10 @@
   "search_error": "获取课程时出错",
   "no_results": "未找到数据",
   "download_markdown": "下载 Markdown",
-  "download_json": "下载 JSON"
+  "download_json": "下载 JSON",
+  "cursus.code": "代码",
+  "cursus.audience": "受众",
+  "cursus.objectives": "目标",
+  "cursus.content": "内容",
+  "cursus.bibliography": "参考书目"
 }

@@ -18,78 +18,47 @@
 
 import { Link } from "@heroui/link";
 import { button as buttonStyles } from "@heroui/theme";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import { useState, useRef, useEffect } from "react";
-import { marked } from "marked";
+import CnamMarkdownViewer from "@/components/cnam-markdown-viewer.tsx"; 
+import SearchControl from "@/components/search-control";
 
 import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
 import { GithubIcon } from "@/components/icons";
 import DefaultLayout from "@/layouts/default";
+import type { CursusApiResponse, Cursus } from "@/types";
 
+/**
+ * SearchBar component for curriculum lookups.
+ *
+ * - Manages search input and request state
+ * - Calls the backend and receives curriculum JSON
+ * - Converts JSON into markdown and prepares download blobs
+ */
 function SearchBar() {
   const { t } = useTranslation();
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [markdown, setMarkdown] = useState<string | null>(null);
-  const mdRef = useRef<HTMLDivElement | null>(null);
-  const mdBlobUrlRef = useRef<string | null>(null);
-  const jsonBlobUrlRef = useRef<string | null>(null);
+  // Keep the API data (JSON) and let the viewer component generate markdown
+  // and the download blobs. The SearchBar will render download links when
+  // the viewer exposes them through `onGenerated`.
+  const [data, setData] = useState<Cursus | null>(null);
+  const [mdUrl, setMdUrl] = useState<string | null>(null);
+  const [jsonUrl, setJsonUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (mdBlobUrlRef.current) URL.revokeObjectURL(mdBlobUrlRef.current);
-      if (jsonBlobUrlRef.current) URL.revokeObjectURL(jsonBlobUrlRef.current);
-    };
-  }, []);
+  // Accept an optional `codeToSearch` param so parents (e.g. Navbar)
+  // can request a search programmatically.
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const generateMarkdown = (data: any) => {
-    if (!data) return "";
-    const lines: string[] = [];
-
-    lines.push(`# ${data.name || data.code}`);
-    lines.push(`**Code**: ${data.code}`);
-    if (data.audience_access)
-      lines.push(`**Audience**: ${data.audience_access}`);
-    if (data.objectives) lines.push(`**Objectives**:\n${data.objectives}`);
-    lines.push("\n---\n");
-
-    for (const year of data.EU || []) {
-      lines.push(`## ${year.year}`);
-      for (const unit of year.units || []) {
-        lines.push(`### ${unit.name}${unit.code ? ` (${unit.code})` : ""}`);
-        if (unit.audience_access)
-          lines.push(`**Audience**: ${unit.audience_access}`);
-        if (unit.objectives) lines.push(`**Objectives**:\n${unit.objectives}`);
-        if (unit.content) lines.push(`**Content**:\n${unit.content}`);
-        if (unit.bibliography && unit.bibliography.length > 0) {
-          lines.push("**Bibliography:**");
-          for (const bib of unit.bibliography) {
-            lines.push(
-              `- ${bib.title}${bib.author ? ` — _${bib.author}_` : ""}`,
-            );
-          }
-        }
-        lines.push("");
-      }
-    }
-
-    return lines.join("\n\n");
-  };
-
-  const downloadUrl = (content: string, mime: string) => {
-    const blob = new Blob([content], { type: mime });
-    const url = URL.createObjectURL(blob);
-
-    return url;
-  };
-
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async (codeToSearch?: string) => {
     setError(null);
-    setMarkdown(null);
+    setData(null);
 
-    const trimmed = code.trim();
+    const trimmed = (codeToSearch ?? code).trim();
 
     if (!trimmed) return setError(t("search_error"));
 
@@ -99,7 +68,7 @@ function SearchBar() {
       const res = await fetch(
         `${base}/api/cursus/${encodeURIComponent(trimmed)}?enrich=true`,
       );
-      const json = await res.json();
+      const json = await res.json() as CursusApiResponse;
 
       if (!json || !json.success || !json.data) {
         setError(t("no_results"));
@@ -108,18 +77,24 @@ function SearchBar() {
         return;
       }
 
-      const md = generateMarkdown(json.data);
+      // Keep the raw JSON and let the viewer generate markdown + blobs
+      setData(json.data);
 
-      setMarkdown(md);
-
-      // prepare downloads
-      if (mdBlobUrlRef.current) URL.revokeObjectURL(mdBlobUrlRef.current);
-      if (jsonBlobUrlRef.current) URL.revokeObjectURL(jsonBlobUrlRef.current);
-      mdBlobUrlRef.current = downloadUrl(md, "text/markdown");
-      jsonBlobUrlRef.current = downloadUrl(
-        JSON.stringify(json.data, null, 2),
-        "application/json",
-      );
+      // Update browser URL if it does not already reflect the current query
+      try {
+        const currentQ = new URLSearchParams(location.search).get("q");
+        if (currentQ !== trimmed) {
+          // If we're already on the home page, push a new entry; otherwise
+          // navigate to the home page with the query param.
+          if (location.pathname === "/") {
+            navigate(`/?q=${encodeURIComponent(trimmed)}`);
+          } else {
+            navigate(`/?q=${encodeURIComponent(trimmed)}`);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
     } catch (err: any) {
       setError(t("search_error"));
       // eslint-disable-next-line no-console
@@ -127,58 +102,79 @@ function SearchBar() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [code, location.search, location.pathname, navigate, t]);
+
+  // Auto-run search when `q` query param is present (useful when triggered from Navbar)
+  useEffect(() => {
+    // React to changes of the location's search param using react-router's location
+    try {
+      const params = new URLSearchParams(location.search);
+      const q = params.get("q");
+      if (q) {
+        setCode(q);
+        // call handleSearch with param (it will avoid re-navigating if already set)
+        void handleSearch(q);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, [location.search, handleSearch]);
 
   return (
     <div className="w-full mt-6">
       <div className="flex gap-2 w-full items-center">
-        <input
-          className="px-3 py-2 rounded-md border w-64"
-          placeholder={t("search_placeholder")}
-          value={code}
-          onChange={(e) => setCode(e.target.value)}
+        <SearchControl
+          initialValue={code}
+          isLoading={loading}
+          inputWidthClass="w-96"
+          onSearch={(c) => {
+            setCode(c);
+            handleSearch(c);
+          }}
         />
-        <button
-          className={buttonStyles({ variant: "shadow", radius: "full" })}
-          onClick={handleSearch}
-        >
-          {loading ? t("search_loading") : t("search_button")}
-        </button>
       </div>
 
       <div className="mt-4">
         {error && <div className="text-red-500">{error}</div>}
 
-        {markdown && (
-          <div className="mt-4">
-            <div
-              dangerouslySetInnerHTML={{ __html: marked(markdown) }}
-              ref={mdRef}
-              className="prose max-w-none"
+        {data && (
+          <>
+            <CnamMarkdownViewer
+              data={data}
+              onGenerated={(payload) => {
+                if (!payload) {
+                  setMdUrl(null);
+                  setJsonUrl(null);
+                  return;
+                }
+
+                setMdUrl(payload.mdUrl);
+                setJsonUrl(payload.jsonUrl);
+              }}
             />
 
             <div className="mt-4 flex gap-2">
-              {mdBlobUrlRef.current && (
+              {mdUrl && (
                 <a
                   className={buttonStyles({ variant: "bordered" })}
                   download={`${code}.md`}
-                  href={mdBlobUrlRef.current}
+                  href={mdUrl}
                 >
                   {t("download_markdown")}
                 </a>
               )}
 
-              {jsonBlobUrlRef.current && (
+              {jsonUrl && (
                 <a
                   className={buttonStyles({ variant: "bordered" })}
                   download={`${code}.json`}
-                  href={jsonBlobUrlRef.current}
+                  href={jsonUrl}
                 >
                   {t("download_json")}
                 </a>
               )}
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
@@ -206,27 +202,6 @@ export default function IndexPage() {
         </div>
 
         <div className="flex flex-col gap-3 w-full items-center md:items-start">
-          <div className="flex gap-3">
-            <Link
-              isExternal
-              className={buttonStyles({
-                color: "primary",
-                radius: "full",
-                variant: "shadow",
-              })}
-              href={siteConfig().links.docs}
-            >
-              <Trans i18nKey="documentation" />
-            </Link>
-            <Link
-              isExternal
-              className={buttonStyles({ variant: "bordered", radius: "full" })}
-              href={siteConfig().links.github}
-            >
-              <GithubIcon size={20} />
-              GitHub
-            </Link>
-          </div>
 
           {/* Search UI */}
           <SearchBar />

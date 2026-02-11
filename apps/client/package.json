@@ -44,6 +44,7 @@
     },
     "devDependencies": {
         "@sctg/vite-plugin-github-pages-spa": "^0.1.1",
+        "@tailwindcss/typography": "^0.5.19",
         "@tailwindcss/vite": "^4.1.18",
         "@types/node": "^24.10.12",
         "@types/react": "^19.2.13",

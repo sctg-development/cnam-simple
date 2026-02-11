@@ -41,5 +41,10 @@
   "search_error": "خطأ في جلب المنهج",
   "no_results": "لم يتم العثور على بيانات",
   "download_markdown": "تحميل Markdown",
-  "download_json": "تحميل JSON"
+  "download_json": "تحميل JSON",
+  "cursus.code": "الرمز",
+  "cursus.audience": "الجمهور",
+  "cursus.objectives": "الأهداف",
+  "cursus.content": "المحتوى",
+  "cursus.bibliography": "المراجع"
 }

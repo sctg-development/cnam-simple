@@ -41,5 +41,10 @@
   "search_error": "Error al obtener el currículo",
   "no_results": "No se encontraron datos",
   "download_markdown": "Descargar Markdown",
-  "download_json": "Descargar JSON"
+  "download_json": "Descargar JSON",
+  "cursus.code": "Código",
+  "cursus.audience": "Audiencia",
+  "cursus.objectives": "Objetivos",
+  "cursus.content": "Contenido",
+  "cursus.bibliography": "Bibliografía"
 }

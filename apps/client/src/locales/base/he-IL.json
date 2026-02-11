@@ -41,5 +41,10 @@
   "search_error": "שגיאה בשליפת התכנית",
   "no_results": "לא נמצאו נתונים",
   "download_markdown": "הורדת Markdown",
-  "download_json": "הורדת JSON"
+  "download_json": "הורד JSON",
+  "cursus.code": "קוד",
+  "cursus.audience": "קהל",
+  "cursus.objectives": "מטרות",
+  "cursus.content": "תוכן",
+  "cursus.bibliography": "ביבליוגרפיה"
 }

@@ -16,9 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 import { Button } from "@heroui/button";
-import { Kbd } from "@heroui/kbd";
 import { Link } from "@heroui/link";
-import { Input } from "@heroui/input";
+import SearchControl from "@/components/search-control";
 import {
   Navbar as HeroUINavbar,
   NavbarBrand,
@@ -31,6 +30,7 @@ import {
 import { link as linkStyles } from "@heroui/theme";
 import { clsx } from "@heroui/shared-utils";
 import { Trans, useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { I18nIcon, LanguageSwitch } from "./language-switch";
 
@@ -41,31 +41,27 @@ import {
   GithubIcon,
   DiscordIcon,
   HeartFilledIcon,
-  SearchIcon,
 } from "@/components/icons";
 import { Logo } from "@/components/icons";
 import { availableLanguages } from "@/i18n";
 
 export const Navbar = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
   const searchInput = (
-    <Input
-      aria-label={t("search")}
-      classNames={{
-        inputWrapper: "bg-default-100",
-        input: "text-sm",
+    <SearchControl
+      inputWidthClass="w-96"
+      onSearch={(c) => {
+        try {
+          const q = encodeURIComponent(c);
+          // Use react-router navigation to avoid full page reloads / loops
+          navigate(`/?q=${q}`);
+        } catch (e) {
+          // Fallback to full navigation for older browsers
+          window.location.href = `/?q=${encodeURIComponent(c)}`;
+        }
       }}
-      endContent={
-        <Kbd className="hidden lg:inline-block" keys={["command"]}>
-          K
-        </Kbd>
-      }
-      labelPlacement="outside"
-      placeholder={`${t("search")}…`}
-      startContent={
-        <SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-      }
-      type="search"
     />
   );
 
