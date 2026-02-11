@@ -293,6 +293,9 @@ export class CNAMScraper {
 		try {
 			// Create page for this unit
 			page = await browser.newPage({ locale: "fr-FR" });
+			if (!page) {
+				throw new Error("Failed to create page for unit: " + unit.code);
+			}
 			page.setDefaultTimeout(timeout);
 			page.setDefaultNavigationTimeout(timeout);
 

@@ -195,8 +195,18 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 					// Scrape Level 2 details (with concurrency limits due to timeout constraints)
 					try {
+						// Ensure unitUrls[].code is defined for all units for matching type {code: string; url: string}
+						const unitUrlsWithCodes = unitUrls.map((unit) => {
+							if (!unit.code) {
+								// Extract code from URL as fallback (assuming it's the last part of the URL)
+								const extractedCode = unit.url.split("/").filter(Boolean).pop() || "";
+								return { ...unit, code: extractedCode };
+							}
+							return unit as { code: string; url: string };
+						});
+						
 						const enrichedUnits = await scraper.scrapeCurriculumLevel2(
-							unitUrls,
+							unitUrlsWithCodes,
 							{ timeout },
 							browserInstance,
 						);
