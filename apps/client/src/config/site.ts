@@ -22,7 +22,7 @@ export const siteConfig = () => ({
   needCookieConsent: true, // Set to false if you don't need cookie consent
   name: i18next.t("vite-heroui"),
   description: i18next.t(
-    "make-beautiful-websites-regardless-of-your-design-experience",
+    "cnam-index-title",
   ),
   navItems: [
     {
@@ -33,18 +33,18 @@ export const siteConfig = () => ({
       label: i18next.t("docs"),
       href: "/docs",
     },
-    {
-      label: i18next.t("pricing"),
-      href: "/pricing",
-    },
-    {
-      label: i18next.t("blog"),
-      href: "/blog",
-    },
-    {
-      label: i18next.t("about"),
-      href: "/about",
-    },
+    // {
+    //   label: i18next.t("pricing"),
+    //   href: "/pricing",
+    // },
+    // {
+    //   label: i18next.t("blog"),
+    //   href: "/blog",
+    // },
+    // {
+    //   label: i18next.t("about"),
+    //   href: "/about",
+    // },
   ],
   navMenuItems: [
     {
@@ -81,10 +81,11 @@ export const siteConfig = () => ({
     },
   ],
   links: {
-    github: "https://github.com/heroui-inc/heroui",
-    twitter: "https://twitter.com/hero_ui",
-    docs: "https://heroui.com",
-    discord: "https://discord.gg/9b6yyZKmH4",
+    github: "https://github.com/sctg-development/cnam-simple",
+    // twitter: "https://twitter.com/hero_ui",
+    // docs: "https://heroui.com",
+    // discord: "https://discord.gg/9b6yyZKmH4",
     sponsor: "https://github.com/sponsors/sctg-development",
+    template: "https://github.com/sctg-development/vite-react-heroui-auth0-template"
   },
 });

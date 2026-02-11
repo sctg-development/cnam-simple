@@ -17,6 +17,7 @@
  */
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
+import { LinkUniversal } from "./link-universal";
 import SearchControl from "@/components/search-control";
 import {
   Navbar as HeroUINavbar,
@@ -101,23 +102,9 @@ export const Navbar = () => {
         justify="end"
       >
         <NavbarItem className="hidden sm:flex gap-2">
-          <Link
-            isExternal
-            href={siteConfig().links.twitter}
-            title={t("twitter")}
-          >
-            <TwitterIcon className="text-default-500" />
-          </Link>
-          <Link
-            isExternal
-            href={siteConfig().links.discord}
-            title={t("discord")}
-          >
-            <DiscordIcon className="text-default-500" />
-          </Link>
-          <Link isExternal href={siteConfig().links.github} title={t("github")}>
+          <LinkUniversal isExternal href={siteConfig().links.github} title={t("github")} isInternet>
             <GithubIcon className="text-default-500" />
-          </Link>
+          </LinkUniversal>
           <ThemeSwitch />
           <LanguageSwitch
             availableLanguages={availableLanguages}

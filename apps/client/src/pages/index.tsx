@@ -16,17 +16,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import { Link } from "@heroui/link";
 import { button as buttonStyles } from "@heroui/theme";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
-import CnamMarkdownViewer from "@/components/cnam-markdown-viewer.tsx"; 
+import CnamMarkdownViewer from "@/components/cnam-markdown-viewer.tsx";
 import SearchControl from "@/components/search-control";
 
-import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
 import DefaultLayout from "@/layouts/default";
 import type { CursusApiResponse, Cursus } from "@/types";
 
@@ -139,20 +136,6 @@ function SearchBar() {
 
         {data && (
           <>
-            <CnamMarkdownViewer
-              data={data}
-              onGenerated={(payload) => {
-                if (!payload) {
-                  setMdUrl(null);
-                  setJsonUrl(null);
-                  return;
-                }
-
-                setMdUrl(payload.mdUrl);
-                setJsonUrl(payload.jsonUrl);
-              }}
-            />
-
             <div className="mt-4 flex gap-2">
               {mdUrl && (
                 <a
@@ -174,6 +157,21 @@ function SearchBar() {
                 </a>
               )}
             </div>
+            <CnamMarkdownViewer
+              data={data}
+              onGenerated={(payload) => {
+                if (!payload) {
+                  setMdUrl(null);
+                  setJsonUrl(null);
+                  return;
+                }
+
+                setMdUrl(payload.mdUrl);
+                setJsonUrl(payload.jsonUrl);
+              }}
+            />
+
+
           </>
         )}
       </div>
@@ -188,16 +186,16 @@ export default function IndexPage() {
     <DefaultLayout>
       <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
         <div className="inline-block max-w-lg text-center justify-center">
-          <span className={title()}>{t("make")}&nbsp;</span>
+          <span className={title()}>{t("cnam")}&nbsp;</span>
           <span className={title({ color: "violet" })}>
-            {t("beautiful")}&nbsp;
+            {t("simple")}&nbsp;
           </span>
           <br />
           <span className={title()}>
-            <Trans i18nKey="websites-regardless-of-your-design-experience" />
+            <Trans i18nKey="cnam-index-title" />
           </span>
           <div className={subtitle({ class: "mt-4" })}>
-            <Trans i18nKey="beautiful-fast-and-modern-react-ui-library" />
+            <Trans i18nKey="cnam-index-subtitle" />
           </div>
         </div>
 
