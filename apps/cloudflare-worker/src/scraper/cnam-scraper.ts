@@ -26,6 +26,7 @@ import { launch } from "@cloudflare/playwright";
 import type { Browser, Page } from "@cloudflare/playwright";
 import { CurriculumPageParser as CursusPageParser } from "./parsers";
 import type { CursusLevel1, ScraperOptions } from "./types";
+import { KVCache } from "../cache/kv-cache";
 
 /**
  * CNAM Curriculum Scraper using Cloudflare Playwright
@@ -35,6 +36,7 @@ export class CNAMScraper {
 	private bedeoCnamUrl: string;
 	private bedeoUniteViewPath: string;
 	private bedeoFormationPath: string;
+	private checkpointSize: number;
 
 	constructor(env: Env) {
 		this.bedeoCnamUrl =
@@ -45,6 +47,9 @@ export class CNAMScraper {
 		this.bedeoUniteViewPath =
 			(env.CNAM_BEDEO_UNITE_VIEW_PATH as string) ||
 			"/public/unite/view/";
+
+		// Number of units processed between checkpoints
+		this.checkpointSize = parseInt((env.SCRAPPER_LEVEL_2_CHECKPOINT as string) || "25", 10);
 	}
 
 	/**
@@ -64,7 +69,7 @@ export class CNAMScraper {
 		// eslint-disable-next-line no-console
 		console.log(`[Scraper] Starting Level 1 scrape for code: ${code}`);
 
-		const timeout = options.timeout || 30000; // Default 30 seconds
+		const timeout = options.timeout || 60000; // Default 60 seconds
 		let browserInstance: Browser | null = null;
 		let page: Page | null = null;
 
@@ -201,9 +206,11 @@ export class CNAMScraper {
 	 */
 	async scrapeCurriculumLevel2(
 		unitUrls: Array<{ code: string; url: string }>,
-		options: ScraperOptions = {},
+		options: ScraperOptions & { cache?: KVCache; cursusCode?: string } = {},
 		browser: Browser,
 	): Promise<any[]> {
+		const cache: KVCache | undefined = (options as any).cache;
+		const cursusCode: string | undefined = (options as any).cursusCode;
 		// eslint-disable-next-line no-console
 		console.log(
 			`[Scraper] Starting Level 2 scrape for ${unitUrls.length} units`,
@@ -213,6 +220,14 @@ export class CNAMScraper {
 		const concurrencyLimit = 2; // Maximum 2 concurrent requests to avoid overwhelming server
 		const results: any[] = [];
 
+		// Helper to sleep
+		const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+		// Per-checkpoint tracking
+		const enrichedMap: Record<string, any> = {};
+		let processedSinceLastCheckpoint: string[] = [];
+		let processedCount = 0;
+
 		try {
 			// Create browser instance
 			const browserInstance = browser;
@@ -220,40 +235,98 @@ export class CNAMScraper {
 			try {
 				// Process units with concurrency limit
 				for (let i = 0; i < unitUrls.length; i += concurrencyLimit) {
-					const batch = unitUrls.slice(
-						i,
-						i + concurrencyLimit,
-					);
+					const batch = unitUrls.slice(i, i + concurrencyLimit);
 
 					// Process batch in parallel
 					const batchResults = await Promise.allSettled(
 						batch.map((unit) =>
-							this.scrapeSingleUnit(
-								unit,
-								timeout,
-								browserInstance,
-							),
+							this.scrapeSingleUnit(unit, timeout, browserInstance),
 						),
 					);
 
-					// Collect results
-					for (const result of batchResults) {
+					// Collect results and update processed count
+					for (let bi = 0; bi < batchResults.length; bi++) {
+						const result = batchResults[bi];
+						const originalUnit = batch[bi];
 						if (result.status === "fulfilled") {
-							results.push(result.value);
+							const unitData = result.value;
+							results.push(unitData);
+							if (unitData && unitData.code) {
+								enrichedMap[unitData.code] = unitData;
+								processedSinceLastCheckpoint.push(unitData.code);
+							}
 						} else {
 							// eslint-disable-next-line no-console
-							console.error(
-								`[Scraper] Failed to scrape unit:`,
-								result.reason,
-							);
+							console.error(`[Scraper] Failed to scrape unit:`, result.reason);
+						}
+
+						processedCount++;
+
+						// Checkpoint when reaching configured size
+						if (cache && cursusCode && processedSinceLastCheckpoint.length >= this.checkpointSize) {
+							console.log(`[Scraper Checkpoint] Checkpointing after processing ${processedCount} units...`);
+							try {
+								const lockToken = await cache.tryAcquireLock(cursusCode, 60);
+								if (!lockToken) {
+									// eslint-disable-next-line no-console
+									console.warn(`[Scraper Checkpoint] Could not acquire lock for checkpointing ${cursusCode}, will retry on next checkpoint`);
+								} else {
+									// Read base and rich caches
+									const base = (await cache.get<CursusLevel1>(cursusCode)) || { code: cursusCode, years: [] };
+									const rich = (await cache.get<any>(cursusCode, "rich")) || { code: cursusCode, years: JSON.parse(JSON.stringify(base.years || [])) };
+
+									// Mark units in base as rich = true
+									for (const year of base.years || []) {
+										for (const unit of year.units) {
+											if (unit.code && enrichedMap[unit.code]) {
+												unit.rich = true;
+											}
+										}
+									}
+
+									// Merge enriched units into rich structure (replace or append)
+									for (const code of processedSinceLastCheckpoint) {
+										const enriched = enrichedMap[code];
+										let inserted = false;
+										for (const year of rich.years || []) {
+											for (let u = 0; u < (year.units || []).length; u++) {
+												if (year.units[u].code === code) {
+													year.units[u] = enriched;
+													inserted = true;
+													break;
+												}
+											}
+											if (inserted) break;
+										}
+										if (!inserted) {
+											if (!rich.years) rich.years = [];
+											rich.years[0] = rich.years[0] || { year: "", units: [] };
+											rich.years[0].units.push(enriched);
+										}
+									}
+
+									// Write back base and rich caches
+									const ttl = Number(process.env.SCRAPER_CACHE_TTL) || 2592000;
+									await cache.set(cursusCode, base, ttl);
+									// Respect one-write-per-second restriction on the same key
+									await sleep(1100);
+									await cache.set(cursusCode, rich, ttl, "rich");
+									await cache.setMetadata(cursusCode, { lastCheckpoint: processedCount, lastWriteAt: new Date().toISOString() }, 86400, "rich");
+									processedSinceLastCheckpoint = [];
+									// Release lock
+									await cache.releaseLock(cursusCode, lockToken);
+									console.log(`[Scraper Checkpoint] Checkpoint completed for ${cursusCode} at ${processedCount} units processed.`);
+								}
+							} catch (err) {
+								// eslint-disable-next-line no-console
+								console.error(`[Scraper] Error during checkpoint for ${cursusCode}:`, err);
+							}
 						}
 					}
 
 					// Add small delay between batches to be respectful
 					if (i + concurrencyLimit < unitUrls.length) {
-						await new Promise((resolve) =>
-							setTimeout(resolve, 1000),
-						);
+						await sleep(1000);
 					}
 				}
 			} finally {

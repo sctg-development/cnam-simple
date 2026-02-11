@@ -188,4 +188,60 @@ export class KVCache {
 			return null;
 		}
 	}
+
+	/**
+	 * Set metadata related to a cache entry (stored under suffix 'meta', e.g. 'rich-meta').
+	 */
+	async setMetadata(code: string, meta: Record<string, unknown>, ttlSeconds: number = 86400, suffix?: string): Promise<boolean> {
+		try {
+			const metaSuffix = suffix ? `${suffix}-meta` : "meta";
+			return await this.set(code, meta as unknown, ttlSeconds, metaSuffix);
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error(`Error setting metadata for ${code}:`, error);
+			return false;
+		}
+	}
+
+	/**
+	 * Try to acquire a short-lived advisory lock for a cursus.
+	 * Note: Cloudflare KV does not provide atomic compare-and-set, so this is a best-effort
+	 * advisory lock using existence checks and TTL. For full serialization use Durable Objects.
+	 * Returns a token string when lock is acquired, or null otherwise.
+	 */
+	async tryAcquireLock(code: string, ttlSeconds: number = 30): Promise<string | null> {
+		const lockKey = `cnam:cursus:rich-lock:${code.toUpperCase()}`;
+		try {
+			const existing = await this.kvNamespace.get(lockKey);
+			if (existing) return null;
+
+			const token = `${Date.now()}:${Math.random().toString(36).slice(2)}`;
+			await this.kvNamespace.put(lockKey, token, { expirationTtl: ttlSeconds });
+			// Return the token so the caller can verify ownership when releasing
+			return token;
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error(`Error acquiring lock for ${code}:`, error);
+			return null;
+		}
+	}
+
+	/**
+	 * Release the advisory lock if the token still matches. Best-effort.
+	 */
+	async releaseLock(code: string, token: string): Promise<boolean> {
+		const lockKey = `cnam:cursus:rich-lock:${code.toUpperCase()}`;
+		try {
+			const current = await this.kvNamespace.get(lockKey);
+			if (current && current === token) {
+				await this.kvNamespace.delete(lockKey);
+				return true;
+			}
+			return false;
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error(`Error releasing lock for ${code}:`, error);
+			return false;
+		}
+	}
 }

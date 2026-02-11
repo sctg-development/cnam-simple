@@ -37,6 +37,7 @@ export interface Unit {
 	name: string;
 	code?: string;
 	url?: string;
+	rich?: boolean;
 	audience_access?: string;
 	objectives?: string;
 	content?: string;

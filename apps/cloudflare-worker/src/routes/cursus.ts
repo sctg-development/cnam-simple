@@ -233,21 +233,17 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 						
 						const enrichedUnits = await scraper.scrapeCurriculumLevel2(
 							unitUrlsWithCodes,
-							{ timeout },
-							browserInstance,
-						);
+						{ timeout, cache, cursusCode: code },
+						browserInstance,
+				);
 
-						// Merge enriched units back into years
-						scrapedData.years = scrapedData.years.map((year) => ({
-							...year,
-							units: year.units.map(
-								(unit) =>
-									enrichedUnits.find((eu) => eu.code === unit.code) ||
-									unit,
-							),
-						}));
-
-						// eslint-disable-next-line no-console
+					// Merge enriched units back into years
+					scrapedData.years = scrapedData.years.map((year) => ({
+						...year,
+						units: year.units.map((unit) =>
+							enrichedUnits.find((eu) => eu.code === unit.code) || unit,
+						),
+					}));
 						console.log(`[Route] Enrichment complete for ${code}`);
 						// update cache with enriched data (stored under 'rich' suffix)
 						await cache.set(code, scrapedData, ttl, "rich");
