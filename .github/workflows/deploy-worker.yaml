@@ -56,6 +56,8 @@ jobs:
 
         - name: Install dependencies
           run: |
+            corepack enable
+            yarn set version 4.2.0
             yarn install
     
 
