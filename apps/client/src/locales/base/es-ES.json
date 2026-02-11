@@ -34,5 +34,12 @@
   "cookie-policy": "Política de cookies.",
   "accept-all": "Aceptar todo",
   "reject": "Rechazar",
-  "cookie-consent-title": "Política de cookies"
+  "cookie-consent-title": "Política de cookies",
+  "search_placeholder": "Ingrese el código del plan (ej.: CYC9101A)",
+  "search_button": "Buscar",
+  "search_loading": "Cargando...",
+  "search_error": "Error al obtener el currículo",
+  "no_results": "No se encontraron datos",
+  "download_markdown": "Descargar Markdown",
+  "download_json": "Descargar JSON"
 }

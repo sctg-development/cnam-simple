@@ -34,5 +34,12 @@
   "cookie-policy": "Politique de cookies.",
   "accept-all": "Accepter tout",
   "reject": "Rejeter",
-  "cookie-consent-title": "Politique de cookies"
+  "cookie-consent-title": "Politique de cookies",
+  "search_placeholder": "Entrez le code du cursus (ex : CYC9101A)",
+  "search_button": "Rechercher",
+  "search_loading": "Chargement...",
+  "search_error": "Erreur lors de la récupération du cursus",
+  "no_results": "Aucune donnée trouvée",
+  "download_markdown": "Télécharger Markdown",
+  "download_json": "Télécharger JSON"
 }

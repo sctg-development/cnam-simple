@@ -34,5 +34,12 @@
   "cookie-policy": "Cookie Policy.",
   "accept-all": "Accept All",
   "reject": "Reject",
-  "cookie-consent-title": "Cookies policy"
+  "cookie-consent-title": "Cookies policy",
+  "search_placeholder": "Enter curriculum code (e.g., CYC9101A)",
+  "search_button": "Search",
+  "search_loading": "Loading...",
+  "search_error": "Error fetching curriculum",
+  "no_results": "No data found",
+  "download_markdown": "Download Markdown",
+  "download_json": "Download JSON"
 }

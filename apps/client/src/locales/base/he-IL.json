@@ -34,5 +34,12 @@
   "cookie-policy": "מדיניות עוגיות.",
   "accept-all": "קבל את הכל",
   "reject": "לִדחוֹת",
-  "cookie-consent-title": "מדיניות עוגיות"
+  "cookie-consent-title": "מדיניות עוגיות",
+  "search_placeholder": "הזן את קוד התכנית (למשל: CYC9101A)",
+  "search_button": "חיפוש",
+  "search_loading": "טוען...",
+  "search_error": "שגיאה בשליפת התכנית",
+  "no_results": "לא נמצאו נתונים",
+  "download_markdown": "הורדת Markdown",
+  "download_json": "הורדת JSON"
 }

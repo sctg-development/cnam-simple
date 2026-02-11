@@ -34,5 +34,12 @@
   "cookie-policy": "سياسة ملفات تعريف الارتباط.",
   "accept-all": "قبول كل شيء",
   "reject": "يرفض",
-  "cookie-consent-title": "سياسة ملفات تعريف الارتباط"
+  "cookie-consent-title": "سياسة ملفات تعريف الارتباط",
+  "search_placeholder": "أدخل رمز المنهج (مثال: CYC9101A)",
+  "search_button": "بحث",
+  "search_loading": "جارٍ التحميل...",
+  "search_error": "خطأ في جلب المنهج",
+  "no_results": "لم يتم العثور على بيانات",
+  "download_markdown": "تحميل Markdown",
+  "download_json": "تحميل JSON"
 }

@@ -34,5 +34,12 @@
   "cookie-policy": "饼干政策。",
   "accept-all": "接受全部",
   "reject": "拒绝",
-  "cookie-consent-title": "Cookies政策"
+  "cookie-consent-title": "Cookies政策",
+  "search_placeholder": "输入课程代码（例如：CYC9101A）",
+  "search_button": "搜索",
+  "search_loading": "加载中...",
+  "search_error": "获取课程时出错",
+  "no_results": "未找到数据",
+  "download_markdown": "下载 Markdown",
+  "download_json": "下载 JSON"
 }
