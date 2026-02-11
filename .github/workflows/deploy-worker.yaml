@@ -108,7 +108,7 @@ jobs:
             node -e '
             const fs = require("fs");
             let s = fs.readFileSync("wrangler.jsonc.bak", "utf8");
-            s = s.replace(/^[ \t]*\/\/[ \t]*"vars".*$/m, `,"vars": {  "TURBO_TEAM": "${process.env.TURBO_TEAM}", "TURBO_TOKEN": "${process.env.TURBO_TOKEN}", "CLOUDFLARE_BACKEND": "${process.env.CLOUDFLARE_BACKEND}", "CORS_ORIGIN": "${process.env.CORS_ORIGIN}", "CNAM_FORMATION_CODE": "${process.env.CNAM_FORMATION_CODE}", "CNAM_BEDEO_URL": "${process.env.CNAM_BEDEO_URL}", "CNAM_BEDEO_CURSUS_PATH": "${process.env.CNAM_BEDEO_CURSUS_PATH}", "CNAM_BEDEO_UNITE_VIEW_PATH": "${process.env.CNAM_BEDEO_UNITE_VIEW_PATH}", "SCRAPER_CACHE_OVERRIDE": "${process.env.SCRAPER_CACHE_OVERRIDE}", "SCRAPER_CACHE_TTL": "${process.env.SCRAPER_CACHE_TTL}" }`);
+            s = s.replace(/^[ \t]*\/\/[ \t]*"vars".*$/m, `"vars": {  "TURBO_TEAM": "${process.env.TURBO_TEAM}", "TURBO_TOKEN": "${process.env.TURBO_TOKEN}", "CLOUDFLARE_BACKEND": "${process.env.CLOUDFLARE_BACKEND}", "CORS_ORIGIN": "${process.env.CORS_ORIGIN}", "CNAM_FORMATION_CODE": "${process.env.CNAM_FORMATION_CODE}", "CNAM_BEDEO_URL": "${process.env.CNAM_BEDEO_URL}", "CNAM_BEDEO_CURSUS_PATH": "${process.env.CNAM_BEDEO_CURSUS_PATH}", "CNAM_BEDEO_UNITE_VIEW_PATH": "${process.env.CNAM_BEDEO_UNITE_VIEW_PATH}", "SCRAPER_CACHE_OVERRIDE": "${process.env.SCRAPER_CACHE_OVERRIDE}", "SCRAPER_CACHE_TTL": "${process.env.SCRAPER_CACHE_TTL}" }`);
             s = s.replace(/^[ \t]*\/\/[ \t]*"routes".*$/m, `,"routes": [{ "pattern": "${process.env.DOMAIN_NAME}", "custom_domain": true }]`);
             fs.writeFileSync("wrangler.jsonc", s, "utf8");
             console.log(s);
