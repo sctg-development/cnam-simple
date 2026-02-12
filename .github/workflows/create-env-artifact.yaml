@@ -25,7 +25,7 @@ jobs:
 
       - name: Encrypt .env file
         run: |
-          openssl enc -aes-256-cbc -salt -in .env -out .env.enc -iter 10000  -k "${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
+          openssl enc -aes-256-cbc -salt -in .env -out .env.enc -iter 10000  -pass pass:"${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
           rm .env
 
       - name: Upload shared .env artifact

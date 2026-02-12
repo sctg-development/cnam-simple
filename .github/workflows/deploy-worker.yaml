@@ -93,14 +93,17 @@ jobs:
             name: shared-env       
             path: .
 
-        # .env.enc was encrypted with openssl enc -aes-256-cbc -salt -in .env -out .env.enc -iter 10000  -k "${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
+        # .env.enc was encrypted with openssl enc -aes-256-cbc -salt -in .env -out .env.enc -iter 10000  -pass pass:"${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
         # Decrypt it using the same key and parameters
         - name: Decrypt .env file
           run: |
-            openssl enc -aes-256-cbc -d -salt -in .env.enc -out .env -iter 10000 -k "${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
+            openssl enc -aes-256-cbc -d -salt -in .env.enc -out .env -iter 10000 -pass pass:"${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
             rm .env.enc
-            cat .env
-
+            # validate .env content by simply checking the presence of DOMAIN_NAME=${{ secrets.DOMAIN_NAME }} with or without quotes, to avoid issues with decryption producing an invalid .env file
+            if ! grep -q "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" .env && ! grep -q "DOMAIN_NAME=\"${{ secrets.DOMAIN_NAME }}\"" .env; then
+              echo "Decrypted .env file does not contain expected DOMAIN_NAME value"
+              exit 1
+            fi
         - name: Replace "// vars.*" in wrangler.jsonc with a json string
           run: |
             cd apps/cloudflare-worker
