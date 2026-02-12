@@ -40,11 +40,12 @@ permissions:
     attestations: write
 
 jobs:
-  generate-env:
-    uses: ./.github/workflows/generate-env-artifact.yml
-    
+  create-env:
+    uses: ./.github/workflows/create-env-artifact.yaml
+    secrets: inherit
+
   build:
-    needs: generate-env
+    needs: create-env
     runs-on: ubuntu-latest
 
     steps:
@@ -52,12 +53,6 @@ jobs:
           uses: actions/checkout@v6
           with:
               submodules: true
-
-        - name: Download .env artifact
-          uses: actions/download-artifact@v6
-          with:
-            name: env-file
-            path: .
 
         - name: Set up Node.js
           uses: actions/setup-node@v6
@@ -90,6 +85,14 @@ jobs:
           run: |
             corepack enable
             yarn install --immutable
+    
+
+        - name: Download shared .env artifact
+          uses: actions/download-artifact@v5
+          with:
+            name: shared-env       
+            path: .
+
 
         - name: Replace "// vars.*" in wrangler.jsonc with a json string
           run: |

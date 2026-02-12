@@ -1,13 +1,13 @@
-name: Generate .env artifact
+name: Create shared .env artifact
 
 on:
-  workflow_call:
+  workflow_call: {}
 
 jobs:
-  generate-env:
+  create-env:
     runs-on: ubuntu-latest
     steps:
-      - name: Create .env file
+      - name: Create .env file (shared secrets from deploy-worker.yaml)
         run: |
           echo "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" > .env
           echo "TURBO_TEAM=${{ secrets.TURBO_TEAM }}" >> .env
@@ -21,23 +21,11 @@ jobs:
           echo "SCRAPER_CACHE_OVERRIDE=${{ secrets.SCRAPER_CACHE_OVERRIDE }}" >> .env
           echo "SCRAPER_CACHE_TTL=${{ secrets.SCRAPER_CACHE_TTL }}" >> .env
           echo "SCRAPPER_LEVEL_2_CHECKPOINT=${{ secrets.SCRAPPER_LEVEL_2_CHECKPOINT }}" >> .env
-          echo "VITE_BASE_PATH=/${{ github.event.repository.name }}/" >> .env
+          echo "VITE_BASE_PATH=${{ github.event.repository.name }}" >> .env
 
-          # ensure file exists and is non-empty (fallback)
-          if [ ! -f .env ] || [ ! -s .env ]; then
-            echo "# GENERATED_EMPTY_ENV" > .env
-          fi
-
-          # debug output to help diagnose CI runs
-          echo "-- .env content start --"
-          sed -n '1,200p' .env || true
-          echo "-- .env content end --"
-
-      - name: Upload .env artifact
-        uses: actions/upload-artifact@v5
+      - name: Upload shared .env artifact
+        uses: actions/upload-artifact@v6
         with:
-          name: env-file
-          path: .env
-          if-no-files-found: error
-          overwrite: true
+          name: shared-env
           include-hidden-files: true
+          path: .env

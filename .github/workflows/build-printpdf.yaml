@@ -15,11 +15,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  generate-env:
-    uses: ./.github/workflows/generate-env-artifact.yml
+  create-env:
+    uses: ./.github/workflows/create-env-artifact.yaml
+    secrets: inherit
 
   deploy:
-    needs: generate-env
+    needs: create-env
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,11 +31,12 @@ jobs:
         with:
           submodules: true
 
-      - name: Download .env artifact
-        uses: actions/download-artifact@v6
+      - name: Download shared .env artifact
+        uses: actions/download-artifact@v5
         with:
-          name: env-file
+          name: shared-env
           path: .
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
