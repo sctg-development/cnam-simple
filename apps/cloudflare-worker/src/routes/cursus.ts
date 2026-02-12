@@ -77,7 +77,8 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Handle cache override with password if api-key is provided and force is true
 				let forcedByOverride = false;
-				if (apiKey && force) {				// Password Validation Pattern: Validate credentials for privileged operations					const passwordHash = env.SCRAPER_CACHE_OVERRIDE as string;
+				if (apiKey && force) {				// Password Validation Pattern: Validate credentials for privileged operations					
+					const passwordHash = env.SCRAPER_CACHE_OVERRIDE as string;
 					if (passwordHash && validateScraperPassword(apiKey, passwordHash)) {
 						// eslint-disable-next-line no-console
 						console.log(`[Route] Cache override validated for ${code}`);
