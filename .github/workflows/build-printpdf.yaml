@@ -47,9 +47,35 @@ jobs:
         with:
           target: wasm32-unknown-unknown
           toolchain: stable
+
+      - name: Cache wasm-pack binary
+        id: wasm-pack-cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.cargo/bin/wasm-pack
+          key: ${{ runner.os }}-wasm-pack-${{ hashFiles('**/libs/printpdf/Cargo.toml','**/Cargo.lock') }}
+
       - name: Install wasm-pack
         shell: bash
-        run: cd libs/printpdf && cargo install wasm-pack
+        run: |
+          if [ -x "$HOME/.cargo/bin/wasm-pack" ]; then
+            echo "wasm-pack found in cache: $HOME/.cargo/bin/wasm-pack"
+            "$HOME/.cargo/bin/wasm-pack" --version || true
+          else
+            echo "wasm-pack not found in cache — installing via cargo"
+            cd libs/printpdf && cargo install wasm-pack
+          fi
+          
+      - name: Cache Cargo registry and build output
+        id: cargo-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            libs/printpdf/target
+          key: ${{ runner.os }}-cargo-printpdf-${{ hashFiles('**/libs/printpdf/Cargo.toml','**/Cargo.lock') }}
+
       - name: wasm-pack build
         shell: bash
         run: |
