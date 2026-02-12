@@ -103,6 +103,11 @@ jobs:
             exit 1
           fi
 
+      - name: Workaround bug for heroui and mono repo
+        run: |
+          source .env
+          ./build-reproductible-dev.sh
+
       - name: Build project
         # You can change the base path to your repository name
         run: |
