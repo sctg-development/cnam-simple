@@ -203,10 +203,8 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Initialize services
 				const cache = new KVCache(env.CACHE as KVNamespace);
-				// Resource Pool Management Pattern: Reusable browser instance for multiple scraping operations
+				// Browser instance will be created lazily only when needed (Level 1 or Level 2 scraping)
 				let browserInstance: Browser | null = null;
-				// Create browser instance once
-    			browserInstance = await browserLaunch(env.CFBROWSER);
 
 				const scraper = new CNAMScraper(env);
 
@@ -293,6 +291,11 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 					// eslint-disable-next-line no-console
 					console.log(`[Route] Cache miss or forced refresh for ${code}`);
 
+					// Create browser instance only when needed (for Level 1 scraping)
+					if (!browserInstance) {
+						browserInstance = await browserLaunch(env.CFBROWSER);
+					}
+
 					// Scrape fresh Level 1 data
 					baseData = await scraper.scrapeCurriculumLevel1(
 						code,
@@ -365,6 +368,11 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 						if (unitUrlsToScrape.length > 0) {
 							// Scrape Level 2 details (with concurrency limits due to timeout constraints, cache & cursusCode for checkpointing)
 							try {
+								// Create browser instance only when needed (for Level 2 scraping)
+								if (!browserInstance) {
+									browserInstance = await browserLaunch(env.CFBROWSER);
+								}
+
 								const enrichedUnits = await scraper.scrapeCurriculumLevel2(
 									unitUrlsToScrape,
 									{ timeout, cache, cursusCode: code },
