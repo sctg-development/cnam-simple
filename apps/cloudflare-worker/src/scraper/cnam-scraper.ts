@@ -27,6 +27,7 @@ import type { Browser, Page } from "@cloudflare/playwright";
 import { CurriculumPageParser as CursusPageParser } from "./parsers";
 import type { CursusLevel1, ScraperOptions } from "./types";
 import { KVCache } from "../cache/kv-cache";
+import { CloudflareSessionPool } from "./session-pool";
 
 /**
  * CNAM Curriculum Web Scraper: Template Method Pattern
@@ -56,22 +57,24 @@ export class CNAMScraper {
 	/**
 	 * Scrape level 1 curriculum structure: Strategy Pattern
 	 * Extracts hierarchical year and unit structure from web page
+	 * Manages its own browser instance with session pooling
 	 *
 	 * @param code - Curriculum code (e.g., CYC9101A) - validated before processing
 	 * @param options - Scraper options for timeout and retry behavior
-	 * @param cfbrowser - Cloudflare Playwright browser resource
+	 * @param env - Environment with CFBROWSER binding for launching browser
 	 * @returns Parsed curriculum structure with type safety
 	 */
 	async scrapeCurriculumLevel1(
 		code: string,
 		options: ScraperOptions = {},
-		cfbrowser: Browser,
+		env: Env,
 	): Promise<CursusLevel1> {
 		// eslint-disable-next-line no-console
 		console.log(`[Scraper] Starting Level 1 scrape for code: ${code}`);
 
 		const timeout = options.timeout || 60000; // Default 60 seconds
-		let browserInstance: Browser | null = null;
+		const browserInstance = await launch(env.CFBROWSER);
+		const sessionPool = new CloudflareSessionPool(browserInstance, { maxSessions: 1 });
 		let page: Page | null = null;
 
 		try {
@@ -80,11 +83,8 @@ export class CNAMScraper {
 				throw new Error(`Invalid curriculum code format: ${code}`);
 			}
 
-			// Create browser instance using Cloudflare Playwright
-			browserInstance = cfbrowser;
-
-			// Create new page context with FR locale
-			page = await browserInstance.newPage({ locale: "fr-FR" });
+			// Create page with pooled session
+			page = await sessionPool.createPage({ locale: "fr-FR" });
 
 			// Set a reasonable timeout
 			page.setDefaultTimeout(timeout);
@@ -151,14 +151,18 @@ export class CNAMScraper {
 				years: [],
 			};
 		} finally {
-			// Cleanup: close browser instance
+			// Cleanup: close page and release session back to pool
 			if (page) {
-				await page.close().catch((err: any) => {
+				await sessionPool.closePage(page as any);
+			}
+			await sessionPool.clear();
+			// Close browser instance
+			if (browserInstance) {
+				await browserInstance.close().catch((err: any) => {
 					// eslint-disable-next-line no-console
-					console.warn(`[Scraper] Error closing page:`, err);
+					console.warn(`[Scraper] Error closing browser:`, err);
 				});
 			}
-			// Note: Do not close browserInstance here as it is managed externally
 		}
 	}
 
@@ -199,16 +203,17 @@ export class CNAMScraper {
 	/**
 	 * Scrape level 2 (unit detail pages)
 	 * Extracts full unit information including content and bibliography
+	 * Manages its own browser instance with session pooling
 	 *
 	 * @param unitUrls - Array of unit URLs to scrape
-	 * @param options - Scraper options
-	 * @param browser - Cloudflare Browser binding
+	 * @param options - Scraper options including cache and cursusCode
+	 * @param env - Environment with CFBROWSER binding for launching browser
 	 * @returns Array of enriched unit data
 	 */
 	async scrapeCurriculumLevel2(
 		unitUrls: Array<{ code: string; url: string }>,
 		options: ScraperOptions & { cache?: KVCache; cursusCode?: string } = {},
-		browser: Browser,
+		env: Env,
 	): Promise<any[]> {
 		const cache: KVCache | undefined = (options as any).cache;
 		const cursusCode: string | undefined = (options as any).cursusCode;
@@ -218,8 +223,15 @@ export class CNAMScraper {
 		);
 
 		const timeout = options.timeout || 30000;
-		const concurrencyLimit = 2; // Maximum 2 concurrent requests to avoid overwhelming server
+		const concurrencyLimit = 1; // Maximum 2 concurrent requests to avoid overwhelming server
 		const results: any[] = [];
+
+		// Launch browser instance for this scraping session
+		const browserInstance = await launch(env.CFBROWSER);
+		// Create session pool for reusable sessions
+		const sessionPool = new CloudflareSessionPool(browserInstance, {
+			maxSessions: Math.max(2, concurrencyLimit),
+		});
 
 		// Helper to sleep
 		const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -230,9 +242,6 @@ export class CNAMScraper {
 		let processedCount = 0;
 
 		try {
-			// Create browser instance
-			const browserInstance = browser;
-
 			try {
 				// Process units with concurrency limit
 				for (let i = 0; i < unitUrls.length; i += concurrencyLimit) {
@@ -241,7 +250,7 @@ export class CNAMScraper {
 					// Process batch in parallel
 					const batchResults = await Promise.allSettled(
 						batch.map((unit) =>
-							this.scrapeSingleUnit(unit, timeout, browserInstance),
+							this.scrapeSingleUnit(unit, timeout, sessionPool),
 						),
 					);
 
@@ -331,7 +340,8 @@ export class CNAMScraper {
 					}
 				}
 			} finally {
-				// Note: Do not close browserInstance here as it is managed externally
+				// Clear session pool
+				await sessionPool.clear();
 			}
 
 			// eslint-disable-next-line no-console
@@ -344,29 +354,38 @@ export class CNAMScraper {
 				`[Scraper] Error during Level 2 scraping:`,
 				error,
 			);
+		} finally {
+			// Close browser instance
+			if (browserInstance) {
+				await browserInstance.close().catch((err: any) => {
+					// eslint-disable-next-line no-console
+					console.warn(`[Scraper] Error closing browser:`, err);
+				});
+			}
 		}
 
 		return results;
 	}
 
 	/**
-	 * Scrape a single unit detail page
+	 * Scrape a single unit detail page using session pooling
+	 * Acquires a session from the pool, uses it, and releases it back for reuse
 	 *
 	 * @param unit - Unit with code and URL
 	 * @param timeout - Request timeout in milliseconds
-	 * @param browser - Browser instance
+	 * @param sessionPool - Cloudflare session pool for reusable sessions
 	 * @returns Enriched unit object
 	 */
 	private async scrapeSingleUnit(
 		unit: { code: string; url: string },
 		timeout: number,
-		browser: any,
+		sessionPool: CloudflareSessionPool,
 	): Promise<any> {
-		let page: Page | null = null;
+		let page: Page & { sessionName?: string } | null = null;
 
 		try {
-			// Create page for this unit
-			page = await browser.newPage({ locale: "fr-FR" });
+			// Create page with pooled session
+			page = await sessionPool.createPage({ locale: "fr-FR" });
 			if (!page) {
 				throw new Error("Failed to create page for unit: " + unit.code);
 			}
@@ -426,12 +445,9 @@ export class CNAMScraper {
 			// Return unit with just the code on error
 			return { code: unit.code, name: unit.code };
 		} finally {
-			// Close page
+			// Close page and release session back to pool for reuse
 			if (page) {
-				await page.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(`[Scraper] Error closing page:`, err);
-				});
+				await sessionPool.closePage(page);
 			}
 		}
 	}

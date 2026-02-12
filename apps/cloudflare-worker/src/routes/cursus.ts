@@ -23,8 +23,6 @@
  */
 
 import { Router } from "./router";
-import { launch as browserLaunch } from "@cloudflare/playwright";
-import type { Browser } from "@cloudflare/playwright";
 import { CNAMScraper } from "../scraper/cnam-scraper";
 import { KVCache } from "../cache/kv-cache";
 import type { CursusLevel1, CursusApiResponse, Unit } from "../scraper/types";
@@ -203,11 +201,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Initialize services
 				const cache = new KVCache(env.CACHE as KVNamespace);
-				// Browser instance will be created lazily only when needed (Level 1 or Level 2 scraping)
-				let browserInstance: Browser | null = null;
-
-				const scraper = new CNAMScraper(env);
-
+			const scraper = new CNAMScraper(env);
 				// Load cache upfront if not forcing
 				const cachedRich = !force && !forcedByOverride ? await cache.get<any>(code, "rich") : null;
 				const cachedData = !force && !forcedByOverride ? await cache.get<CursusLevel1>(code) : null;
@@ -291,16 +285,11 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 					// eslint-disable-next-line no-console
 					console.log(`[Route] Cache miss or forced refresh for ${code}`);
 
-					// Create browser instance only when needed (for Level 1 scraping)
-					if (!browserInstance) {
-						browserInstance = await browserLaunch(env.CFBROWSER);
-					}
-
 					// Scrape fresh Level 1 data
 					baseData = await scraper.scrapeCurriculumLevel1(
 						code,
 						{ timeout },
-						browserInstance,
+						env,
 					);
 
 					// Validate we got meaningful data
@@ -368,22 +357,17 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 						if (unitUrlsToScrape.length > 0) {
 							// Scrape Level 2 details (with concurrency limits due to timeout constraints, cache & cursusCode for checkpointing)
 							try {
-								// Create browser instance only when needed (for Level 2 scraping)
-								if (!browserInstance) {
-									browserInstance = await browserLaunch(env.CFBROWSER);
-								}
-
 								const enrichedUnits = await scraper.scrapeCurriculumLevel2(
 									unitUrlsToScrape,
 									{ timeout, cache, cursusCode: code },
-									browserInstance,
+									env,
 								);
 
 								// Merge enriched units into the data structure
 								dataToEnrich = mergeEnrichedUnits(dataToEnrich, enrichedUnits);
 							// Mark all freshly enriched units as rich: true
 							// This ensures the cache state reflects that these units have been processed
-							const enrichedCodes = new Set(enrichedUnits.map((u) => u.code));
+							const enrichedCodes = new Set(enrichedUnits.map((u: any) => u.code));
 							for (const year of dataToEnrich.years || []) {
 								for (const unit of year.units || []) {
 									if (enrichedCodes.has(unit.code)) {

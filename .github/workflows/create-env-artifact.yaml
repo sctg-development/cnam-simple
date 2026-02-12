@@ -13,6 +13,7 @@ jobs:
           echo "TURBO_TEAM=${{ secrets.TURBO_TEAM }}" >> .env
           echo "TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}" >> .env
           echo "CLOUDFLARE_BACKEND=${{ secrets.CLOUDFLARE_BACKEND }}" >> .env
+          echo "CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES=${{ secrets.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES }}" >> .env
           echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> .env
           echo "CNAM_FORMATION_CODE=${{ secrets.CNAM_FORMATION_CODE }}" >> .env
           echo "CNAM_BEDEO_URL=${{ secrets.CNAM_BEDEO_URL }}" >> .env
