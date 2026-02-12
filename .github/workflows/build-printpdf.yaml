@@ -16,12 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  create-env:
-    uses: ./.github/workflows/create-env-artifact.yaml
-    secrets: inherit
 
   build-printpdf:
-    needs: create-env
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
