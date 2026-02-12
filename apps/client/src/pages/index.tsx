@@ -41,7 +41,6 @@ function SearchBar() {
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [enrichmentStatus, setEnrichmentStatus] = useState<string | null>(null);
   // Keep the API data (JSON) and let the viewer component generate markdown
   // and the download blobs. The SearchBar will render download links when
   // the viewer exposes them through `onGenerated`.
@@ -57,7 +56,6 @@ function SearchBar() {
   // Callback Memoization Pattern: Prevents unnecessary re-renders of dependent children
   const handleSearch = useCallback(async (codeToSearch?: string) => {
     setError(null);
-    setEnrichmentStatus(null);
     setData(null);
 
     const trimmed = (codeToSearch ?? code).trim();
@@ -81,15 +79,6 @@ function SearchBar() {
         setLoading(false);
 
         return;
-      }
-
-      // Check if enrichment was interrupted (less than 100% enriched)
-      if (json.enrichedPercent !== undefined && json.enrichedPercent < 100) {
-        setEnrichmentStatus(
-          `⚠️ ${t("scraping_interrupted", { 
-            defaultValue: `Scraping interrupted at {{percent}}%` 
-          }).replace("{{percent}}", String(json.enrichedPercent))}`
-        );
       }
 
       // Keep the raw JSON and let the viewer generate markdown + blobs
@@ -151,8 +140,6 @@ function SearchBar() {
 
       <div className="mt-4">
         {error && <div className="text-red-500">{error}</div>}
-        
-        {enrichmentStatus && <div className="text-amber-600 font-semibold">{enrichmentStatus}</div>}
 
         {data && (
           <>
