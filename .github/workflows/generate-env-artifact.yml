@@ -2,35 +2,6 @@ name: Generate .env artifact
 
 on:
   workflow_call:
-    inputs:
-      vite_base_path:
-        required: false
-        type: string
-    secrets:
-      DOMAIN_NAME:
-        required: false
-      TURBO_TEAM:
-        required: false
-      TURBO_TOKEN:
-        required: false
-      CLOUDFLARE_BACKEND:
-        required: false
-      CORS_ORIGIN:
-        required: false
-      CNAM_FORMATION_CODE:
-        required: false
-      CNAM_BEDEO_URL:
-        required: false
-      CNAM_BEDEO_CURSUS_PATH:
-        required: false
-      CNAM_BEDEO_UNITE_VIEW_PATH:
-        required: false
-      SCRAPER_CACHE_OVERRIDE:
-        required: false
-      SCRAPER_CACHE_TTL:
-        required: false
-      SCRAPPER_LEVEL_2_CHECKPOINT:
-        required: false
 
 jobs:
   generate-env:
