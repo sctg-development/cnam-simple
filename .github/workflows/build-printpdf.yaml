@@ -15,16 +15,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  generate-env:
+    uses: ./.github/workflows/generate-env-artifact.yml
+
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+    needs: generate-env
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
         with:
           submodules: true
+
+      - name: Download .env artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: env-file
+          path: .
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:

@@ -40,7 +40,11 @@ permissions:
     attestations: write
 
 jobs:
+  generate-env:
+    uses: ./.github/workflows/generate-env-artifact.yml
+    
   build:
+    needs: generate-env
     runs-on: ubuntu-latest
 
     steps:
@@ -48,6 +52,12 @@ jobs:
           uses: actions/checkout@v6
           with:
               submodules: true
+
+        - name: Download .env artifact
+          uses: actions/download-artifact@v6
+          with:
+            name: env-file
+            path: .
 
         - name: Set up Node.js
           uses: actions/setup-node@v6
@@ -80,22 +90,6 @@ jobs:
           run: |
             corepack enable
             yarn install --immutable
-    
-
-        - name: Create .env file
-          run: |
-            echo "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" > .env
-            echo "TURBO_TEAM=${{ secrets.TURBO_TEAM }}" >> .env
-            echo "TURBO_TOKEN=${{ secrets.TURBO_TOKEN }}" >> .env
-            echo "CLOUDFLARE_BACKEND=${{ secrets.CLOUDFLARE_BACKEND }}" >> .env
-            echo "CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}" >> .env
-            echo "CNAM_FORMATION_CODE=${{ secrets.CNAM_FORMATION_CODE }}" >> .env
-            echo "CNAM_BEDEO_URL=${{ secrets.CNAM_BEDEO_URL }}" >> .env
-            echo "CNAM_BEDEO_CURSUS_PATH=${{ secrets.CNAM_BEDEO_CURSUS_PATH }}" >> .env
-            echo "CNAM_BEDEO_UNITE_VIEW_PATH=${{ secrets.CNAM_BEDEO_UNITE_VIEW_PATH }}" >> .env
-            echo "SCRAPER_CACHE_OVERRIDE=${{ secrets.SCRAPER_CACHE_OVERRIDE }}" >> .env
-            echo "SCRAPER_CACHE_TTL=${{ secrets.SCRAPER_CACHE_TTL }}" >> .env
-            echo "SCRAPPER_LEVEL_2_CHECKPOINT=${{ secrets.SCRAPPER_LEVEL_2_CHECKPOINT }}" >> .env
 
         - name: Replace "// vars.*" in wrangler.jsonc with a json string
           run: |
