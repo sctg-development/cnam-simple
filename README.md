@@ -232,14 +232,14 @@ yarn test                # Mode watch
 - [x] Validation password SHA512-crypt
 - [x] Query params `?enrich=true` et `?api-key=xxx`
 - [x] Invalidation de cache sécurisée
-- [ ] Tests d'intégration avec bedeo.cnam.fr réel
-- [ ] UI React pour recherche de Cursus
+- [x] Tests d'intégration avec bedeo.cnam.fr réel
+- [x] UI React pour recherche de Cursus
 - [ ] Optimisation pour limite 30s
 
-### Phase 4+ - Production 📋 Planifiée
-- [ ] Déploiement Cloudflare
-- [ ] Configuration CORS
-- [ ] Rate limiting
+### Phase 4+ - Production 🔄 En cours
+- [x] Déploiement Cloudflare
+- [x] Configuration CORS
+- [x] Rate limiting
 - [ ] Monitoring et logs
 - [ ] Documentation API complète
 
