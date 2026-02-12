@@ -78,6 +78,7 @@ export interface CursusApiResponse {
 	cached?: boolean;
 	scrapedAt?: string;
 	error?: string;
+	enrichedPercent?: number;
 }
 
 /**
