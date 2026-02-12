@@ -381,7 +381,16 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 								// Merge enriched units into the data structure
 								dataToEnrich = mergeEnrichedUnits(dataToEnrich, enrichedUnits);
-
+							// Mark all freshly enriched units as rich: true
+							// This ensures the cache state reflects that these units have been processed
+							const enrichedCodes = new Set(enrichedUnits.map((u) => u.code));
+							for (const year of dataToEnrich.years || []) {
+								for (const unit of year.units || []) {
+									if (enrichedCodes.has(unit.code)) {
+										unit.rich = true;
+									}
+								}
+							}
 								// eslint-disable-next-line no-console
 								console.log(`[Route] Enrichment complete for ${code}`);
 
