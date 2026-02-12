@@ -6,7 +6,7 @@
 
 **CNAM+ Simple** est une application web scraper dédiée à l'extraction et la mise en cache des données de la formation continue du CNAM (Conservatoire National des Arts et Métiers) depuis le portail [bedeo.cnam.fr](https://bedeo.cnam.fr).
 
-Le projet est construit selon une architecture **monorepo Turbo** avec:
+Le projet est construit selon une architecture **monorepo Turbo** basée sur le template [SCTG Vite/React](https://github.com/sctg-development/vite-react-heroui-auth0-template) avec:
 - **Frontend**: Application React/Vite (client léger)
 - **Backend**: Cloudflare Worker (API serverless)
 
