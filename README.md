@@ -1,10 +1,10 @@
 ![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=code)
 ![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=comments)
-# CNAM+ Simple - Curriculum Web Scraper
+# CNAM+ Simple - Cursus Web Scraper
 
 ## 📋 Vue d'ensemble
 
-**CNAM+ Simple** est une application web scraper dédiée à l'extraction et la mise en cache des données curriculaires de la formation continue du CNAM (Conservatoire National des Arts et Métiers) depuis le portail [bedeo.cnam.fr](https://bedeo.cnam.fr).
+**CNAM+ Simple** est une application web scraper dédiée à l'extraction et la mise en cache des données de la formation continue du CNAM (Conservatoire National des Arts et Métiers) depuis le portail [bedeo.cnam.fr](https://bedeo.cnam.fr).
 
 Le projet est construit selon une architecture **monorepo Turbo** avec:
 - **Frontend**: Application React/Vite (client léger)
@@ -12,7 +12,7 @@ Le projet est construit selon une architecture **monorepo Turbo** avec:
 
 ## 🎯 Objectifs du projet
 
-1. **Scraper les données curriculaires** du site CNAM de manière efficace et fiable
+1. **Scraper les données de cursus** du site CNAM de manière efficace et fiable
 2. **Mettre en cache** les résultats pour réduire les appels aux serveurs CNAM
 3. **Exposer une API REST** sécurisée avec contrôle de cache
 4. **Supporter deux niveaux d'enrichissement**:
@@ -101,7 +101,7 @@ GET /api/cursus/<code>
 **Exemples de requêtes:**
 
 ```bash
-# Curriculum basic (Level 1 avec cache)
+# Cursus basic (Level 1 avec cache)
 curl "http://localhost:8787/api/cursus/CYC9101A"
 
 # Enrichissement Level 2 (peut être long)
@@ -127,7 +127,7 @@ curl "http://localhost:8787/api/cursus/CYC9101A?api-key=cleartext&force=true"
 {
   "success": true,
   "data": {
-    "name": "Titre du Curriculum",
+    "name": "Titre du Cursus",
     "code": "CYC9101A",
     "audience_access": "Tout public",
     "objectives": "Description des objectifs",
