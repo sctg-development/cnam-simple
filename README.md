@@ -17,6 +17,11 @@ Le projet est construit selon une architecture **monorepo Turbo** avec:
    - **Level 1**: Structure curriculaire (années, unités, codes)
    - **Level 2**: Détails complets des unités (objectifs, contenu, bibliographie)
 
+## Note sur le déploiement et les limitations du plan Cloudflare ⚠️
+Le projet **fonctionne complètement en local** et **fonctionne également sur un Cloudflare Worker payant** (ce dernier permet des durées CPU par requête plus longues nécessaires pour produire des descriptions complètes). En revanche, la **version actuellement déployée en production utilise un Worker sur le plan gratuit**, dont les limites CPU par requête peuvent empêcher la **génération intégrale** des descriptions longues — d'où des réponses tronquées ou incomplètes en production.
+
+Le fichier [`examples/CYC9101A.md`](examples/CYC9101A.md) a **été généré sur un Worker du plan payant** (c'est pourquoi il contient la description intégrale). Si vous voulez reproduire ce résultat en production, il est recommandé de déployer le service sur un Worker payant ou d'implémenter un job asynchrone côté backend pour traiter les enrichissements longue durée.
+
 ## 🏗️ Architecture
 
 ```
