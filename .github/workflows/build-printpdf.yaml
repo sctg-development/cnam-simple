@@ -40,7 +40,11 @@ jobs:
         run: |
           openssl enc -aes-256-cbc -d -salt -in .env.enc -out .env -iter 10000 -pass pass:"${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
           rm .env.enc
-          cat .env
+          # validate .env content by simply checking the presence of DOMAIN_NAME=${{ secrets.DOMAIN_NAME }} with or without quotes, to avoid issues with decryption producing an invalid .env file
+          if ! grep -q "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" .env && ! grep -q "DOMAIN_NAME=\"${{ secrets.DOMAIN_NAME }}\"" .env; then
+            echo "Decrypted .env file does not contain expected DOMAIN_NAME value"
+            exit 1
+          fi
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
@@ -65,7 +69,7 @@ jobs:
             echo "wasm-pack not found in cache — installing via cargo"
             cd libs/printpdf && cargo install wasm-pack
           fi
-          
+
       - name: Cache Cargo registry and build output
         id: cargo-cache
         uses: actions/cache@v5
