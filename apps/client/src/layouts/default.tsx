@@ -17,6 +17,7 @@
  */
 import type React from "react";
 
+// Layout Composition: Wrapper component providing structural consistency
 import { LinkUniversal } from "../components/link-universal";
 import { siteConfig } from "../config/site";
 import { Trans, useTranslation } from "react-i18next";
@@ -27,14 +28,18 @@ export default function DefaultLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Template Method Pattern: Consistent layout structure with configurable content area
   const { t } = useTranslation();
 
   return (
     <div className="relative flex flex-col h-screen">
+      {/* Navigation Component: Reusable header UI */}
       <Navbar />
+      {/* Main Content Area: Dynamic children composition */}
       <main className="container mx-auto max-w-7xl px-6 grow pt-16">
         {children}
       </main>
+      {/* Footer: Consistent branding and navigation */}
       <footer className="w-full flex items-center justify-center py-3">
         <LinkUniversal
           isExternal

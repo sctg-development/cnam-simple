@@ -25,8 +25,9 @@
 import { Router } from "./router";
 import { setupCurriculumRoutes } from "./cursus";
 
+// Route Registry Pattern: Centralized route registration through modular setup functions
 export const setupRoutes = (router: Router, env: Env) => {
-	// Preserve the original root response for backwards compatibility
+	// Composition of route modules: Each domain has its own setup function
 	router.get("/", async () => {
 		return new Response("Welcome to the CNAM-SIMPLE API - see https://github.com/sctg-development/cnam-simple", {
 			status: 200,
@@ -42,6 +43,6 @@ export const setupRoutes = (router: Router, env: Env) => {
 		});
 	});
 
-	// Setup cursus routes
+	// Setup cursus routes: Modular route composition
 	setupCurriculumRoutes(router, env);
 };

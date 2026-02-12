@@ -1,7 +1,8 @@
 /**
- * Reusable SearchControl component
+ * Reusable SearchControl component: Facade pattern for search functionality
  * - Provides a search input with the same style as the template
  * - Calls `onSearch(code)` when the user presses Enter or clicks the button
+ * - Encapsulates input state and event handling logic
  */
 
 import React from "react";
@@ -19,6 +20,7 @@ export interface SearchControlProps {
   inputWidthClass?: string;
 }
 
+// Prop-driven Configuration Pattern: Flexible component parameterization
 export default function SearchControl({ initialValue = "", onSearch, isLoading = false, inputWidthClass = "w-64" }: SearchControlProps) {
   const { t } = useTranslation();
   const [value, setValue] = React.useState(initialValue);

@@ -25,7 +25,10 @@
 import { sha512crypt } from "sha512crypt-node";
 
 /**
- * Validate a plain text password against a SHA512-crypt hash
+ * Password Validation: Cryptographic Hash Verification
+ * SHA512-crypt comparison for secure credential validation
+ * Uses salted hashing to prevent rainbow table attacks
+ *
  * Generated with: openssl passwd -6 <password>
  *
  * @param plainPassword - Plain text password to validate
@@ -47,17 +50,18 @@ export function validateScraperPassword(
 		}
 
 		// Extract salt from hash (SHA512-crypt format: $6$salt$hash)
+		// Salt Extraction Pattern: Parse hash structure to recover original salt
 		const hashParts = hash.split("$");
 		if (hashParts.length < 4 || hashParts[1] !== "6") {
 			// eslint-disable-next-line no-console
-			console.warn("[Auth] Invalid hash format");
+			console.warn("[Auth] Invalid SHA512-crypt hash format");
 			return false;
 		}
 
-		const salt = hashParts[2]; // Extract salt part
+		const salt = hashParts[2]; // Extract salt: $6$salt$hash
 
-		// Hash the plain password using the extracted salt
-		// sha512crypt expects format: $6$salt or $6$rounds=X$salt
+		// Cryptographic Comparison: HMAC-style verification against stored hash
+		// Uses salt from original hash to ensure deterministic hashing
 		const hashedPassword = sha512crypt(plainPassword, "$6$" + salt);
 
 		// Compare the generated hash with the stored hash

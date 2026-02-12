@@ -37,13 +37,9 @@ type LinkUniversalProps = Omit<LinkProps, "as"> & {
 }
 
 /**
- * LinkUniversal is a polymorphic link component that intelligently chooses
- * between HeroUI's <Link> component (for internal/react-router navigation)
- * and a native <a> tag (for external internet links).
- *
- * This wrapper solves the issue where HeroUI Link 2.2.25 has limited support
- * for react-router integration, allowing seamless switching between routing modes.
- *
+ * LinkUniversal: Polymorphic Link Component
+ * Adapter Pattern: Intelligently switches between HeroUI Link (internal routing)
+ * and native <a> tag (external links) while maintaining consistent styling
  * @example
  * // Use HeroUI Link for internal routes
  * <LinkUniversal href="/about" color="primary">About</LinkUniversal>
@@ -54,7 +50,7 @@ type LinkUniversalProps = Omit<LinkProps, "as"> & {
  */
 export const LinkUniversal = forwardRef<HTMLAnchorElement, LinkUniversalProps>(
   ({ isInternet = false, children, className, href, color, size, underline, isDisabled, disableAnimation, isExternal, showAnchorIcon, anchorIcon, ...props }, ref) => {
-    // If not an internet link, use HeroUI Link component (supports react-router)
+    // Conditional Rendering Strategy: Routes to appropriate implementation based on link type
     if (!isInternet) {
       return (
         <Link

@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 
+// Component Composition & Separation of Concerns: Layered provider hierarchy
 import { CookieConsentProvider } from "./contexts/cookie-consent-context";
 import { CookieConsent } from "./components/cookie-consent";
 import { PageNotFound } from "./pages/404";
@@ -10,6 +11,7 @@ import PricingPage from "@/pages/pricing";
 import BlogPage from "@/pages/blog";
 import AboutPage from "@/pages/about";
 
+// Declarative Routing: Route-based component composition
 export function App() {
   return (
     <CookieConsentProvider>

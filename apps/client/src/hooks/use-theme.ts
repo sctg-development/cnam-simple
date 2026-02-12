@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+// Custom Hook Pattern with Memoization: Optimizes derived state calculations
 const ThemeProps = {
   key: "theme",
   light: "light",
@@ -17,6 +18,7 @@ export const useTheme = (defaultTheme?: Theme) => {
     return storedTheme || (defaultTheme ?? ThemeProps.light);
   });
 
+  // Memoization Pattern: Prevents unnecessary re-renders of dependent components
   const isDark = useMemo(() => {
     return theme === ThemeProps.dark;
   }, [theme]);

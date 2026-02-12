@@ -33,7 +33,7 @@ export default function DocsPage() {
             <h2 className="font-semibold mt-2">{t("docs.overview.title")}</h2>
             <p className="mt-2">{t("docs.overview.p")}</p>
 
-            {/* Disclaimer / Warning: Not affiliated with CNAM and results are not guaranteed */}
+            {/* ARIA Alert Pattern: Accessible disclaimer for screen readers */}
             <div role="alert" className="mt-4 p-4 bg-yellow-50 border-l-4 border-amber-400 rounded">
               <p className="font-semibold">{t("docs.warning.title")}</p>
               <p className="mt-1 text-sm">{t("docs.warning.p")}</p>

@@ -32,12 +32,13 @@ import { validateScraperPassword } from "../utils/password-validator";
 
 /**
  * Setup cursus routes
- * Handles API endpoints for cursus data
+ * Handles API endpoints for curriculum data with caching and scraping strategies
  */
 export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 	/**
 	 * GET /api/cursus/<code>
-	 * Retrieve cursus data (Level 1: years and units)
+	 * Retrieve curriculum data with optional enrichment
+	 * Cache & Security Pattern: Validates credentials before allowing cache override
 	 *
 	 * Query parameters:
 	 * - force: boolean (force scrape even if cached)
@@ -76,8 +77,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Handle cache override with password if api-key is provided and force is true
 				let forcedByOverride = false;
-				if (apiKey && force) {
-					const passwordHash = env.SCRAPER_CACHE_OVERRIDE as string;
+				if (apiKey && force) {				// Password Validation Pattern: Validate credentials for privileged operations					const passwordHash = env.SCRAPER_CACHE_OVERRIDE as string;
 					if (passwordHash && validateScraperPassword(apiKey, passwordHash)) {
 						// eslint-disable-next-line no-console
 						console.log(`[Route] Cache override validated for ${code}`);
@@ -97,7 +97,8 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 
 				// Initialize services
 				const cache = new KVCache(env.CACHE as KVNamespace);
-				let browserInstance: Browser | null = null; // Reusable browser instance
+				// Resource Pool Management Pattern: Reusable browser instance for multiple scraping operations
+				let browserInstance: Browser | null = null;
 				// Create browser instance once
     			browserInstance = await browserLaunch(env.CFBROWSER);
 

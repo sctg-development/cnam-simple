@@ -35,6 +35,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  // Hydration Safety Pattern: Prevents mismatch between server and client rendering
   const [isMounted, setIsMounted] = useState(false);
 
   const { theme, toggleTheme } = useTheme();
@@ -57,7 +58,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     setIsMounted(true);
   }, [isMounted]);
 
-  // Prevent Hydration Mismatch
+  // Guard Clause Pattern: Safeguard against hydration mismatches in SSR environments
   if (!isMounted) return <div className="w-6 h-6" />;
 
   return (

@@ -81,6 +81,7 @@ export const I18nIcon: FC<IconSvgProps> = ({
  * <LanguageSwitch availableLanguages={availableLanguages} />
  * ```
  */
+// Strategy Pattern: Pluggable icon components for UI customization
 export const LanguageSwitch: FC<LanguageSwitchProps> = ({
   availableLanguages: availableLanguages = [
     { code: "en-US", nativeName: "English", isRTL: false, isDefault: true },
@@ -88,6 +89,7 @@ export const LanguageSwitch: FC<LanguageSwitchProps> = ({
   icon: Icon = I18nIcon,
 }) => {
   const { i18n, t } = useTranslation();
+  // Persistent State Pattern: User language preference stored in localStorage
   const [language, setLanguage] = useState<string>(
     localStorage.getItem("preferredLanguage") || i18n.language,
   );

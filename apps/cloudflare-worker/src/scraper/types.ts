@@ -23,7 +23,12 @@
  */
 
 /**
- * Bibliography entry for a unit
+ * Domain-Driven Design: Type-based curriculum data modeling
+ * Hierarchical structure reflects educational program organization
+ */
+
+/**
+ * Bibliography entry for a unit: Value Object pattern
  */
 export interface Bibliography {
 	title: string;
@@ -31,7 +36,7 @@ export interface Bibliography {
 }
 
 /**
- * Unit (EU - Élément d'Unité) details
+ * Unit (EU - Élément d'Unité) details: Entity pattern with optional fields
  */
 export interface Unit {
 	name: string;
@@ -53,7 +58,7 @@ export interface Year {
 }
 
 /**
- * Complete cursus structure
+ * Complete cursus structure: Aggregate pattern for curriculum representation
  */
 export interface Cursus {
 	name: string;
@@ -64,7 +69,8 @@ export interface Cursus {
 }
 
 /**
- * API Response for cursus endpoint
+ * API Response Wrapper: Envelope pattern for standardized API responses
+ * Provides circuit breaker semantics: success flag, data payload, and error field
  */
 export interface CursusApiResponse {
 	success: boolean;

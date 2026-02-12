@@ -24,7 +24,7 @@
 import { Router } from "./routes/router";
 import { setupRoutes } from "./routes";
 
-// NOTE: We now use a small Router class to organize routes and permission checks.
+// Route Organization Pattern: Separation of concerns - router initialization and setup
 
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {

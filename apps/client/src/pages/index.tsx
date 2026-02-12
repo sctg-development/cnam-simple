@@ -29,8 +29,9 @@ import DefaultLayout from "@/layouts/default";
 import type { CursusApiResponse, Cursus } from "@/types";
 
 /**
- * SearchBar component for curriculum lookups.
- *
+ * SearchBar Component: API Integration & Data Orchestration
+ * - Client-side orchestrator pattern: Manages API calls, response parsing, and component communication
+ * - Separation of concerns: Delegates markdown/PDF generation to specialized child components
  * - Manages search input and request state
  * - Calls the backend and receives curriculum JSON
  * - Converts JSON into markdown and prepares download blobs
@@ -52,6 +53,7 @@ function SearchBar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Callback Memoization Pattern: Prevents unnecessary re-renders of dependent children
   const handleSearch = useCallback(async (codeToSearch?: string) => {
     setError(null);
     setData(null);
@@ -60,8 +62,10 @@ function SearchBar() {
 
     if (!trimmed) return setError(t("search_error"));
 
+    // Async Error Handling: Try-catch wrapper for API calls
     setLoading(true);
     try {
+      // Environment-aware Configuration: Backend URL from build environment
       const base = (import.meta.env as any).CLOUDFLARE_BACKEND || "";
       // eslint-disable-next-line no-console
       console.log("Fetching data for code:", trimmed, "from backend:", base);

@@ -38,6 +38,7 @@ import i18nextHttpBackend, {
   type HttpBackendOptions,
 } from "i18next-http-backend";
 
+// Internationalization Architecture: Polyglot support with RTL language handling
 export interface AvailableLanguage {
   code: string; // ISO 639-1 language code
   nativeName: string; // Native name of the language
@@ -45,6 +46,7 @@ export interface AvailableLanguage {
   isDefault?: boolean; // Default language
 }
 
+// Configuration-driven Language Registry: Extensible multi-language support
 export const availableLanguages: AvailableLanguage[] = [
   { code: "en-US", nativeName: "English", isRTL: false, isDefault: true },
   { code: "fr-FR", nativeName: "Français", isRTL: false },
@@ -56,10 +58,12 @@ export const availableLanguages: AvailableLanguage[] = [
 
 const fallbackLng = "en-US";
 
+// i18n Initialization: Backend integration with persistent user preferences
 i18n
   .use(i18nextHttpBackend)
   .use(initReactI18next) // passes i18n down to react-i18next
   .init<HttpBackendOptions>({
+    // Preference Persistence Pattern: Respect user language choice across sessions
     lng:
       localStorage.getItem("preferredLanguage") ||
       availableLanguages.find((lang) => lang.isDefault)?.code ||

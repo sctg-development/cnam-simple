@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+// Security Pattern: Input sanitization against XSS vulnerabilities
 import DOMPurify from "dompurify";
 import type { Cursus } from "../types";
 import printdfInit from '@/printpdf/printpdf.js';
@@ -21,6 +22,7 @@ export default function PdfTransformer({ data, fileName }: Props) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Error Handling & State Management: Explicit state validation and error tracking
     async function handleDownload() {
         if (!confirm("The PDF generation is under heavy development and currently does not work. Running it is just for testing purposes, but it will fail. Do you want to proceed?")) {
             setError("PDF generation cancelled by user.");
@@ -34,12 +36,13 @@ export default function PdfTransformer({ data, fileName }: Props) {
             // Generate HTML directly from the JSON structure (no markdown -> HTML roundtrip)
             const html = generateHtml(data, t);
 
+            // Data Validation & Sanitization: Whitelist-based HTML sanitization
             const safeHtml = DOMPurify.sanitize(html, {
                 ALLOWED_TAGS: ['html', 'head', 'body', 'title', 'h1', 'h2', 'h3', 'h4', 'p', 'div', 'span', 'strong', 'em', 'ul', 'li', 'section', 'article'],
                 ALLOWED_ATTR: ['id', 'class', 'style'],
                 WHOLE_DOCUMENT: true,
                 FORCE_BODY: false
-            }); // Sanitize the generated HTML to prevent any potential issues
+            });
 
             console.log("HTML before DOMPurify (first 500 chars):", html.substring(0, 500));
             console.log("HTML after DOMPurify (first 500 chars):", safeHtml.substring(0, 500));

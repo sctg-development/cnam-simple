@@ -34,6 +34,7 @@ import { marked } from "marked";
 import { useTranslation } from "react-i18next";
 import type { Cursus } from "@/types";
 
+// Document Generation Pattern: Dynamic markdown rendering with i18n support
 /** Props for the viewer component */
 export interface CnamMarkdownViewerProps {
   /** Curriculum JSON data as returned by the API */
@@ -61,7 +62,7 @@ export interface CnamMarkdownViewerProps {
 export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownViewerProps) {
   const { t } = useTranslation();
 
-  // Generate markdown from data and localize section titles via i18n
+  // Memoization Pattern: Expensive markdown generation cached and recalculated only on data/locale change
   const markdown = React.useMemo(() => {
     if (!data) return "";
     const lines: string[] = [];
@@ -94,7 +95,8 @@ export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownVi
     return lines.join("\n\n");
   }, [data, t]);
 
-  // Create blob URLs for downloads; keep refs so we can revoke on cleanup
+  // Resource Management Pattern: Blob-based downloads with cleanup on unmount
+  // Keep refs so we can revoke on cleanup
   const mdBlobUrlRef = React.useRef<string | null>(null);
   const jsonBlobUrlRef = React.useRef<string | null>(null);
 

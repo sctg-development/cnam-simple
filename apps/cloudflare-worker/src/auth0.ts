@@ -24,7 +24,8 @@
 import * as jose from "jose";
 
 /**
- * Verify a JWT token against the Auth0 JWKS
+ * JWT Verification Pattern: Validates tokens against remote JWKS endpoints
+ * Supports multiple authentication providers (Auth0, Dex) with Provider Strategy Pattern
  * @param token a JWT token
  * @param env the environment variables
  * @returns a promise that resolves to the payload of the JWT token
@@ -36,10 +37,11 @@ export const verifyToken = async (
 	let jwksUrl = "";
 
 	// If provider is Auth0 we use the AUTH0_DOMAIN for creating the JWKS URL
+	// Provider Strategy Pattern: Conditional configuration based on environment
 	if (env.AUTHENTICATION_PROVIDER_TYPE === "auth0") {
 		jwksUrl = `https://${env.AUTH0_DOMAIN}/.well-known/jwks.json`;
 	} else if (env.AUTHENTICATION_PROVIDER_TYPE === "dex") {
-		// If provider is Dex we use the DEX_JWKS_ENDPOINT for creating the JWKS URL
+		// Alternative provider support demonstrates extensibility
 		jwksUrl = env.DEX_JWKS_ENDPOINT;
 	} else {
 		throw new Error(
@@ -48,6 +50,7 @@ export const verifyToken = async (
 	}
 	const JWKS = jose.createRemoteJWKSet(new URL(jwksUrl));
 
+	// Cryptographic verification: Ensures token integrity and authenticity
 	const { payload } = await jose.jwtVerify(token, JWKS, {
 		issuer: `https://${env.AUTH0_DOMAIN}/`,
 		audience: env.AUTH0_AUDIENCE,
@@ -57,7 +60,7 @@ export const verifyToken = async (
 };
 
 /**
- * Check if a token has a given permission
+ * Permission-based Access Control Pattern: Array-based permission evaluation
  * @param token a JWT token
  * @param permission a permission or an array of permissions
  * @param env the environment variables

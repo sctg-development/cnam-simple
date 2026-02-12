@@ -24,6 +24,7 @@ import {
   ReactNode,
 } from "react";
 
+// Provider Pattern: Encapsulates shared state management across component tree
 export type CookieConsentStatus = "pending" | "accepted" | "rejected";
 
 interface CookieConsentContextType {
@@ -91,6 +92,7 @@ export const CookieConsentProvider: FC<{ children: ReactNode }> = ({
   );
 };
 
+// Custom Hook Pattern: Abstracts context consumption with built-in error handling
 export const useCookieConsent = () => {
   const context = useContext(CookieConsentContext);
 

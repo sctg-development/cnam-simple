@@ -27,11 +27,13 @@ import { JWTPayload } from "jose";
 
 import { checkPermissions } from "../auth0";
 
+// Type-safe Handler Pattern: Strong typing for route handlers
 type RouteHandler = (
 	request: Request & { params: Record<string, string>; user?: any },
 	env: Env,
 ) => Promise<Response>;
 
+// Routing Configuration: Declarative route definition structure
 interface Route {
 	path: string;
 	method: string;
@@ -41,12 +43,14 @@ interface Route {
 	compiled?: URLPattern | null;
 }
 
+// Router Pattern: Centralized request routing with permission-based access control
 export class Router {
 	jwtPayload: JWTPayload = {};
 	userPermissions: string[] = [];
 	routes: Route[] = [];
 	corsHeaders: Record<string, string>;
 
+	// Dependency Injection: Environment configuration passed to constructor
 	constructor(env: Env) {
 		this.corsHeaders = {
 			"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -56,6 +60,7 @@ export class Router {
 		};
 	}
 
+	// Builder Pattern: Fluent method chaining for route registration
 	get(path: string, handler: RouteHandler, permission?: string) {
 		this.routes.push({
 			...this.compileRoute(path),

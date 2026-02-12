@@ -27,6 +27,7 @@ declare module "@react-types/shared" {
   }
 }
 
+// Composition & Dependency Injection: Provider component delegates functionality to HeroUIProvider
 export function Provider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 

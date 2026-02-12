@@ -15,6 +15,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
+// Component Dependency & Composition: Modular UI component assembly
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
 import { LinkUniversal } from "./link-universal";
@@ -44,6 +45,7 @@ import {
 import { Logo } from "@/components/icons";
 import { availableLanguages } from "@/i18n";
 
+// Callback-based Event Handling: Callback pattern for parent-child communication
 export const Navbar = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();

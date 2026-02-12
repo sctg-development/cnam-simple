@@ -33,11 +33,12 @@ import { buttonGradient } from "./primitives";
 
 import { siteConfig } from "@/config/site";
 
+// Conditional Rendering Pattern: Component visibility based on state management
 export const CookieConsent: React.FC = () => {
   const { t } = useTranslation();
   const { cookieConsent, acceptCookies, rejectCookies } = useCookieConsent();
 
-  // État pour contrôler la visibilité du modal
+  // Modal visibility driven by consent state and configuration
   const isOpen = cookieConsent === "pending" && siteConfig().needCookieConsent;
 
   return (

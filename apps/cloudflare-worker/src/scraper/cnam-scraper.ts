@@ -29,8 +29,9 @@ import type { CursusLevel1, ScraperOptions } from "./types";
 import { KVCache } from "../cache/kv-cache";
 
 /**
- * CNAM Curriculum Scraper using Cloudflare Playwright
- * Level 1: Scrapes the main cursus page to extract years and units
+ * CNAM Curriculum Web Scraper: Template Method Pattern
+ * Encapsulates browser automation with page parsing and error handling
+ * Integrates with KVCache for intelligent caching strategy
  */
 export class CNAMScraper {
 	private bedeoCnamUrl: string;
@@ -53,13 +54,13 @@ export class CNAMScraper {
 	}
 
 	/**
-	 * Scrape level 1 (main cursus page)
-	 * Extracts year and unit structure
+	 * Scrape level 1 curriculum structure: Strategy Pattern
+	 * Extracts hierarchical year and unit structure from web page
 	 *
-	 * @param code - Curriculum code (e.g., CYC9101A)
-	 * @param options - Scraper options
-	 * @param cfbrowser - Cloudflare Playwright browser options
-	 * @returns Parsed cursus structure
+	 * @param code - Curriculum code (e.g., CYC9101A) - validated before processing
+	 * @param options - Scraper options for timeout and retry behavior
+	 * @param cfbrowser - Cloudflare Playwright browser resource
+	 * @returns Parsed curriculum structure with type safety
 	 */
 	async scrapeCurriculumLevel1(
 		code: string,
@@ -74,9 +75,9 @@ export class CNAMScraper {
 		let page: Page | null = null;
 
 		try {
-			// Validate cursus code format
+			// Input Validation Pattern: Reject invalid data early
 			if (!this.isValidCurriculumCode(code)) {
-				throw new Error(`Invalid cursus code format: ${code}`);
+				throw new Error(`Invalid curriculum code format: ${code}`);
 			}
 
 			// Create browser instance using Cloudflare Playwright

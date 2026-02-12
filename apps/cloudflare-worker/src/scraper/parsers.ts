@@ -26,16 +26,18 @@ import type { Page } from "@cloudflare/playwright";
 import type { CursusLevel1, Unit, Bibliography } from "./types";
 
 /**
- * Parser for CNAM cursus page (Level 1)
- * Extracts the main cursus structure: years and units
+ * DOM Parser: Extract-Transform-Load Pattern
+ * Converts unstructured HTML DOM into strongly-typed curriculum data structures
+ * Implements resilient parsing with graceful degradation on missing elements
  */
 export class CurriculumPageParser {
 	/**
-	 * Parse the main cursus page to extract years and units
+	 * Parse primary curriculum data: DOM traversal & data extraction
+	 * Graceful degradation: Continues parsing even if optional sections missing
 	 *
-	 * @param page - Playwright page instance
-	 * @param code - Curriculum code (e.g., CYC9101A)
-	 * @returns Parsed cursus structure with years and units
+	 * @param page - Playwright page instance (provides DOM query interface)
+	 * @param code - Curriculum identifier
+	 * @returns Parsed structure with years and units
 	 */
 	static async parseCurriculumPage(
 		page: Page,
@@ -50,7 +52,7 @@ export class CurriculumPageParser {
 		};
 
 		try {
-			// Extract audience_access and objectives from presentation section
+			// Graceful Degradation Pattern: Continue parsing even if optional sections fail
 			try {
 				result.audience_access =
 					await this.getAudienceAccess(page);
@@ -58,10 +60,10 @@ export class CurriculumPageParser {
 			} catch (error) {
 				// eslint-disable-next-line no-console
 				console.warn(
-					`[Parser] Error extracting presentation data:`,
+					`[Parser] Optional presentation data extraction failed:`,
 					error,
 				);
-				// Continue even if presentation data is not found
+				// Continue parsing - presentation is optional
 			}
 
 			// Verify that the cursus_schema element exists

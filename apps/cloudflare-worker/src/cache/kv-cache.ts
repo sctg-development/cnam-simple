@@ -31,8 +31,9 @@ export interface CacheEntry<T> {
 }
 
 /**
- * KV Cache Manager for Cloudflare Workers
- * Handles caching of cursus data with TTL support
+ * KV Cache Manager: Abstraction Layer for Cloudflare KV Storage
+ * Implements TTL-based expiration with namespace-based key generation
+ * Provides transparent caching for expensive web scraping operations
  */
 export class KVCache {
 	private kvNamespace: KVNamespace;
@@ -42,10 +43,9 @@ export class KVCache {
 	}
 
 	/**
-	 * Generate a cache key for a cursus code.
-	 * If a suffix is provided it will be placed before the code, e.g.:
-	 *  - generateKey('CYC9101A') -> 'cnam:cursus:CYC9101A'
-	 *  - generateKey('CYC9101A', 'rich') -> 'cnam:cursus:rich:CYC9101A'
+	 * Key Namespacing Strategy: Hierarchical key structure for organizational clarity
+	 * Example: 'cnam:cursus:CYC9101A' or 'cnam:cursus:rich:CYC9101A'
+	 * This enables efficient batch operations and key-space organization
 	 */
 	private generateKey(code: string, suffix?: string): string {
 		const codeUpper = code.toUpperCase();
@@ -57,7 +57,8 @@ export class KVCache {
 	}
 
 	/**
-	 * Get cached cursus data
+	 * Retrieve cached entry with automatic TTL validation
+	 * Time-to-Live Pattern: Transparently handles expired entries
 	 */
 	async get<T>(code: string, suffix?: string): Promise<T | null> {
 		try {

@@ -1,3 +1,5 @@
+![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=code)
+![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=comments)
 # CNAM+ Simple - Curriculum Web Scraper
 
 ## 📋 Vue d'ensemble
