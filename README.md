@@ -16,7 +16,7 @@ Le projet est construit selon une architecture **monorepo Turbo** avec:
 2. **Mettre en cache** les résultats pour réduire les appels aux serveurs CNAM
 3. **Exposer une API REST** sécurisée avec contrôle de cache
 4. **Supporter deux niveaux d'enrichissement**:
-   - **Level 1**: Structure curriculaire (années, unités, codes)
+   - **Level 1**: Structure de Cursus (années, unités, codes)
    - **Level 2**: Détails complets des unités (objectifs, contenu, bibliographie)
 
 ## Note sur le déploiement et les limitations du plan Cloudflare ⚠️
@@ -73,9 +73,9 @@ cnam+simple/
 
 ## 🔍 Processus de scraping
 
-### Level 1: Structure Curriculaire (5-10s)
+### Level 1: Structure de Cursus (5-10s)
 1. Navigation vers `https://bedeo.cnam.fr/public/cursus/view/{code}`
-2. Extraction XPath du schéma curriculaire (`#cursus_schema`)
+2. Extraction XPath du schéma de Cursus (`#cursus_schema`)
 3. Récupération:
    - **Années**: Structure d'études
    - **Unités**: Codes, noms, crédits par année
@@ -216,7 +216,7 @@ yarn test                # Mode watch
 ## ✅ État du projet
 
 ### Phase 1 - Level 1 Scraping ✅ Complétée
-- [x] Extraction XPath curriculaire
+- [x] Extraction XPath de Cursus
 - [x] Cache KV avec TTL
 - [x] Routes API GET/DELETE
 - [x] 46 tests unitaires validés
@@ -233,7 +233,7 @@ yarn test                # Mode watch
 - [x] Query params `?enrich=true` et `?api-key=xxx`
 - [x] Invalidation de cache sécurisée
 - [ ] Tests d'intégration avec bedeo.cnam.fr réel
-- [ ] UI React pour recherche curriculaire
+- [ ] UI React pour recherche de Cursus
 - [ ] Optimisation pour limite 30s
 
 ### Phase 4+ - Production 📋 Planifiée
@@ -256,7 +256,7 @@ Le projet utilise **Vitest** avec le pool `@cloudflare/vitest-pool-workers` pour
 
 ## 🚀 Prochaines étapes
 
-1. **Tests réels**: Valider sur bedeo.cnam.fr avec vrais codes curriculaires
+1. **Tests réels**: Valider sur bedeo.cnam.fr avec vrais codes de Cursuss
 2. **Optimisation timeout**: Gérer Level 2 complet malgré limite 30s
 3. **Frontend**: Composants React pour recherche et affichage
 4. **Déploiement**: Publication sur Cloudflare Workers
