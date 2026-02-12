@@ -55,8 +55,8 @@ export class CurriculumPageParser {
 			// Graceful Degradation Pattern: Continue parsing even if optional sections fail
 			try {
 				result.audience_access =
-					await this.getAudienceAccess(page);
-				result.objectives = await this.getObjectives(page);
+					await this.getAudienceAccess(page) || undefined;
+				result.objectives = await this.getObjectives(page) || undefined;
 			} catch (error) {
 				// eslint-disable-next-line no-console
 				console.warn(
