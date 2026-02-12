@@ -1,5 +1,6 @@
 name: Build printpdf wasm
 on:
+  workflow_call: {}
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -44,7 +45,7 @@ jobs:
           openssl enc -aes-256-cbc -d -salt -in .env.enc -out .env -iter 10000 -k "${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
           rm .env.enc
           cat .env
-          
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
         with:
