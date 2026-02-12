@@ -1,5 +1,5 @@
-![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=code)
-![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=comments)
+![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=code&type=TypeScript,TSX)
+![](https://tokeisrv.sctg.eu.org/b1/github/sctg-development/cnam-simple?category=comments&type=TypeScript,TSX)
 # CNAM+ Simple - Cursus Web Scraper
 
 ## 📋 Vue d'ensemble
