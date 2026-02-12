@@ -63,6 +63,8 @@ function SearchBar() {
     setLoading(true);
     try {
       const base = (import.meta.env as any).CLOUDFLARE_BACKEND || "";
+      // eslint-disable-next-line no-console
+      console.log("Fetching data for code:", trimmed, "from backend:", base);
       const res = await fetch(
         `${base}/api/cursus/${encodeURIComponent(trimmed)}?enrich=true`,
       );
