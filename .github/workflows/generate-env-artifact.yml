@@ -52,8 +52,21 @@ jobs:
           echo "SCRAPPER_LEVEL_2_CHECKPOINT=${{ secrets.SCRAPPER_LEVEL_2_CHECKPOINT }}" >> .env
           echo "VITE_BASE_PATH=/${{ github.event.repository.name }}/" >> .env
 
+          # ensure file exists and is non-empty (fallback)
+          if [ ! -f .env ] || [ ! -s .env ]; then
+            echo "# GENERATED_EMPTY_ENV" > .env
+          fi
+
+          # debug output to help diagnose CI runs
+          echo "-- .env content start --"
+          sed -n '1,200p' .env || true
+          echo "-- .env content end --"
+
       - name: Upload .env artifact
         uses: actions/upload-artifact@v5
         with:
           name: env-file
           path: .env
+          if-no-files-found: error
+          overwrite: true
+          include-hidden-files: true
