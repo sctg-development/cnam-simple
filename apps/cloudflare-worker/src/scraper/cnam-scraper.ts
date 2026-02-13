@@ -75,7 +75,7 @@ export class CNAMScraper {
 
 		const timeout = options.timeout || 60000; // Default 60 seconds
 		const browserInstance = await launch(env.CFBROWSER);
-		const maxSessions = parseInt((env.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES as string) || "2", 10);
+		const maxSessions = parseInt((env.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES as string) || "1", 10);
 		const sessionPool = new CloudflareSessionPool(browserInstance, { maxSessions });
 		let page: Page | null = null;
 
@@ -225,14 +225,14 @@ export class CNAMScraper {
 		);
 
 		const timeout = options.timeout || 30000;
-		const concurrencyLimit = 1; // Maximum 2 concurrent requests to avoid overwhelming server
 		const results: any[] = [];
 
 		// Launch browser instance for this scraping session
 		const browserInstance = await launch(env.CFBROWSER);
+		const maxSessions = parseInt((env.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES as string) || "1", 10);
 		// Create session pool for reusable sessions
 		const sessionPool = new CloudflareSessionPool(browserInstance, {
-			maxSessions: Math.max(2, concurrencyLimit),
+			maxSessions,
 		});
 
 		// Helper to sleep
@@ -246,8 +246,8 @@ export class CNAMScraper {
 		try {
 			try {
 				// Process units with concurrency limit
-				for (let i = 0; i < unitUrls.length; i += concurrencyLimit) {
-					const batch = unitUrls.slice(i, i + concurrencyLimit);
+				for (let i = 0; i < unitUrls.length; i += maxSessions) {
+					const batch = unitUrls.slice(i, i + maxSessions);
 
 					// Process batch in parallel
 					const batchResults = await Promise.allSettled(
@@ -337,7 +337,7 @@ export class CNAMScraper {
 					}
 
 					// Add small delay between batches to be respectful
-					if (i + concurrencyLimit < unitUrls.length) {
+					if (i + maxSessions < unitUrls.length) {
 						await sleep(1000);
 					}
 				}
