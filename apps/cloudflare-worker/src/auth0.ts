@@ -31,32 +31,32 @@ import * as jose from "jose";
  * @returns a promise that resolves to the payload of the JWT token
  */
 export const verifyToken = async (
-	token: string,
-	env: Env,
+  token: string,
+  env: Env,
 ): Promise<jose.JWTPayload> => {
-	let jwksUrl = "";
+  let jwksUrl = "";
 
-	// If provider is Auth0 we use the AUTH0_DOMAIN for creating the JWKS URL
-	// Provider Strategy Pattern: Conditional configuration based on environment
-	if (env.AUTHENTICATION_PROVIDER_TYPE === "auth0") {
-		jwksUrl = `https://${env.AUTH0_DOMAIN}/.well-known/jwks.json`;
-	} else if (env.AUTHENTICATION_PROVIDER_TYPE === "dex") {
-		// Alternative provider support demonstrates extensibility
-		jwksUrl = env.DEX_JWKS_ENDPOINT;
-	} else {
-		throw new Error(
-			`Unsupported authentication provider: ${env.AUTHENTICATION_PROVIDER_TYPE}`,
-		);
-	}
-	const JWKS = jose.createRemoteJWKSet(new URL(jwksUrl));
+  // If provider is Auth0 we use the AUTH0_DOMAIN for creating the JWKS URL
+  // Provider Strategy Pattern: Conditional configuration based on environment
+  if (env.AUTHENTICATION_PROVIDER_TYPE === "auth0") {
+    jwksUrl = `https://${env.AUTH0_DOMAIN}/.well-known/jwks.json`;
+  } else if (env.AUTHENTICATION_PROVIDER_TYPE === "dex") {
+    // Alternative provider support demonstrates extensibility
+    jwksUrl = env.DEX_JWKS_ENDPOINT;
+  } else {
+    throw new Error(
+      `Unsupported authentication provider: ${env.AUTHENTICATION_PROVIDER_TYPE}`,
+    );
+  }
+  const JWKS = jose.createRemoteJWKSet(new URL(jwksUrl));
 
-	// Cryptographic verification: Ensures token integrity and authenticity
-	const { payload } = await jose.jwtVerify(token, JWKS, {
-		issuer: `https://${env.AUTH0_DOMAIN}/`,
-		audience: env.AUTH0_AUDIENCE,
-	});
+  // Cryptographic verification: Ensures token integrity and authenticity
+  const { payload } = await jose.jwtVerify(token, JWKS, {
+    issuer: `https://${env.AUTH0_DOMAIN}/`,
+    audience: env.AUTH0_AUDIENCE,
+  });
 
-	return payload;
+  return payload;
 };
 
 /**
@@ -67,29 +67,29 @@ export const verifyToken = async (
  * @returns a promise that resolves to an object with a boolean access field and the payload of the JWT token
  */
 export const checkPermissions = async (
-	token: string,
-	permission: string | string[],
-	env: Env,
+  token: string,
+  permission: string | string[],
+  env: Env,
 ): Promise<{
-	access: boolean;
-	payload: jose.JWTPayload;
-	permissions: string[];
+  access: boolean;
+  payload: jose.JWTPayload;
+  permissions: string[];
 }> => {
-	const payload = await verifyToken(token, env);
-	let access = false;
-	let permissions: string[] = [];
+  const payload = await verifyToken(token, env);
+  let access = false;
+  let permissions: string[] = [];
 
-	if (payload.permissions && Array.isArray(payload.permissions)) {
-		permissions = payload.permissions as string[];
-	}
+  if (payload.permissions && Array.isArray(payload.permissions)) {
+    permissions = payload.permissions as string[];
+  }
 
-	if (typeof permission === "string") {
-		access = (payload.permissions as string[]).includes(permission);
-	} else {
-		access = permission.some((p) =>
-			(payload.permissions as string[]).includes(p),
-		);
-	}
+  if (typeof permission === "string") {
+    access = (payload.permissions as string[]).includes(permission);
+  } else {
+    access = permission.some((p) =>
+      (payload.permissions as string[]).includes(p),
+    );
+  }
 
-	return { access, payload, permissions };
+  return { access, payload, permissions };
 };

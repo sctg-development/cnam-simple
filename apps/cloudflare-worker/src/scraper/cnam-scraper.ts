@@ -22,13 +22,15 @@
  * SOFTWARE.
  */
 
-import { launch } from "@cloudflare/playwright";
-import type { Browser, Page } from "@cloudflare/playwright";
-import { CursusPageParser as CursusPageParser } from "./parsers";
+import type { Page } from "@cloudflare/playwright";
 import type { CursusLevel1, ScraperOptions } from "./types";
+
+import { launch } from "@cloudflare/playwright";
+
 import { KVCache } from "../cache/kv-cache";
+
+import { CursusPageParser as CursusPageParser } from "./parsers";
 import { CloudflareSessionPool } from "./session-pool";
-import { parse } from "path";
 
 /**
  * CNAM Cursus Web Scraper: Template Method Pattern
@@ -36,421 +38,439 @@ import { parse } from "path";
  * Integrates with KVCache for intelligent caching strategy
  */
 export class CNAMScraper {
-	private bedeoCnamUrl: string;
-	private bedeoUniteViewPath: string;
-	private bedeoFormationPath: string;
-	private checkpointSize: number;
+  private bedeoCnamUrl: string;
+  private bedeoUniteViewPath: string;
+  private bedeoFormationPath: string;
+  private checkpointSize: number;
 
-	constructor(env: Env) {
-		this.bedeoCnamUrl =
-			(env.CNAM_BEDEO_URL as string) || "https://bedeo.cnam.fr";
-		this.bedeoFormationPath =
-			(env.CNAM_BEDEO_CURSUS_PATH as string) ||
-			"public/cursus/view/";
-		this.bedeoUniteViewPath =
-			(env.CNAM_BEDEO_UNITE_VIEW_PATH as string) ||
-			"/public/unite/view/";
+  constructor(env: Env) {
+    this.bedeoCnamUrl =
+      (env.CNAM_BEDEO_URL as string) || "https://bedeo.cnam.fr";
+    this.bedeoFormationPath =
+      (env.CNAM_BEDEO_CURSUS_PATH as string) || "public/cursus/view/";
+    this.bedeoUniteViewPath =
+      (env.CNAM_BEDEO_UNITE_VIEW_PATH as string) || "/public/unite/view/";
 
-		// Number of units processed between checkpoints
-		this.checkpointSize = parseInt((env.SCRAPPER_LEVEL_2_CHECKPOINT as string) || "25", 10);
-	}
+    // Number of units processed between checkpoints
+    this.checkpointSize = parseInt(
+      (env.SCRAPPER_LEVEL_2_CHECKPOINT as string) || "25",
+      10,
+    );
+  }
 
-	/**
-	 * Scrape level 1 cursus structure: Strategy Pattern
-	 * Extracts hierarchical year and unit structure from web page
-	 * Manages its own browser instance with session pooling
-	 *
-	 * @param code - Cursus code (e.g., CYC9101A) - validated before processing
-	 * @param options - Scraper options for timeout and retry behavior
-	 * @param env - Environment with CFBROWSER binding for launching browser
-	 * @returns Parsed cursus structure with type safety
-	 */
-	async scrapeCursusLevel1(
-		code: string,
-		options: ScraperOptions = {},
-		env: Env,
-	): Promise<CursusLevel1> {
-		// eslint-disable-next-line no-console
-		console.log(`[Scraper] Starting Level 1 scrape for code: ${code}`);
+  /**
+   * Scrape level 1 cursus structure: Strategy Pattern
+   * Extracts hierarchical year and unit structure from web page
+   * Manages its own browser instance with session pooling
+   *
+   * @param code - Cursus code (e.g., CYC9101A) - validated before processing
+   * @param options - Scraper options for timeout and retry behavior
+   * @param env - Environment with CFBROWSER binding for launching browser
+   * @returns Parsed cursus structure with type safety
+   */
+  async scrapeCursusLevel1(
+    code: string,
+    options: ScraperOptions = {},
+    env: Env,
+  ): Promise<CursusLevel1> {
+    console.log(`[Scraper] Starting Level 1 scrape for code: ${code}`);
 
-		const timeout = options.timeout || 60000; // Default 60 seconds
-		const browserInstance = await launch(env.CFBROWSER);
-		const maxSessions = parseInt((env.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES as string) || "1", 10);
-		const sessionPool = new CloudflareSessionPool(browserInstance, { maxSessions });
-		let page: Page | null = null;
+    const timeout = options.timeout || 60000; // Default 60 seconds
+    const browserInstance = await launch(env.CFBROWSER);
+    const maxSessions = parseInt(
+      (env.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES as string) || "1",
+      10,
+    );
+    const sessionPool = new CloudflareSessionPool(browserInstance, {
+      maxSessions,
+    });
+    let page: Page | null = null;
 
-		try {
-			// Input Validation Pattern: Reject invalid data early
-			if (!this.isValidCursusCode(code)) {
-				throw new Error(`Invalid cursus code format: ${code}`);
-			}
+    try {
+      // Input Validation Pattern: Reject invalid data early
+      if (!this.isValidCursusCode(code)) {
+        throw new Error(`Invalid cursus code format: ${code}`);
+      }
 
-			// Create page with pooled session
-			page = await sessionPool.createPage({ locale: "fr-FR" });
+      // Create page with pooled session
+      page = await sessionPool.createPage({ locale: "fr-FR" });
 
-			// Set a reasonable timeout
-			page.setDefaultTimeout(timeout);
-			page.setDefaultNavigationTimeout(timeout);
+      // Set a reasonable timeout
+      page.setDefaultTimeout(timeout);
+      page.setDefaultNavigationTimeout(timeout);
 
-			// Configure User-Agent and headers for Cloudflare Playwright
-			await page.route("**/*", (route: any) =>
-				route.continue({
-					headers: {
-						...route.request().headers(),
-						"User-Agent":
-							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15",
-					},
-				}),
-			);
+      // Configure User-Agent and headers for Cloudflare Playwright
+      await page.route("**/*", (route: any) =>
+        route.continue({
+          headers: {
+            ...route.request().headers(),
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15",
+          },
+        }),
+      );
 
-			// Build the cursus URL
-			const cursusUrl = this.buildCursusUrl(code);
-			// eslint-disable-next-line no-console
-			console.log(`[Scraper] Navigating to: ${cursusUrl}`);
+      // Build the cursus URL
+      const cursusUrl = this.buildCursusUrl(code);
 
-			// Navigate to the cursus page
-			await page.goto(cursusUrl, {
-				waitUntil: "networkidle",
-				timeout,
-			});
+      console.log(`[Scraper] Navigating to: ${cursusUrl}`);
 
-			// Wait for the cursus_schema to be present
-			await page.waitForSelector('div[id="cursus_schema"]', {
-				timeout: 10000,
-			});
+      // Navigate to the cursus page
+      await page.goto(cursusUrl, {
+        waitUntil: "networkidle",
+        timeout,
+      });
 
-			// eslint-disable-next-line no-console
-			console.log(
-				`[Scraper] Page loaded successfully for code: ${code}`,
-			);
+      // Wait for the cursus_schema to be present
+      await page.waitForSelector('div[id="cursus_schema"]', {
+        timeout: 10000,
+      });
 
-			// Parse the cursus page
-			const cursusData =
-				await CursusPageParser.parseCursusPage(page, code);
+      console.log(`[Scraper] Page loaded successfully for code: ${code}`);
 
-			// Try to get cursus title
-			const title = await CursusPageParser.getCursusTitle(page);
-			if (title) {
-				cursusData.name = title;
-			}
+      // Parse the cursus page
+      const cursusData = await CursusPageParser.parseCursusPage(page, code);
 
-			// eslint-disable-next-line no-console
-			console.log(
-				`[Scraper] Level 1 scraping completed for code: ${code}`,
-			);
+      // Try to get cursus title
+      const title = await CursusPageParser.getCursusTitle(page);
 
-			return cursusData;
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error(
-				`[Scraper] Error during Level 1 scraping for ${code}:`,
-				error,
-			);
+      if (title) {
+        cursusData.name = title;
+      }
 
-			// Return partial data on error
-			return {
-				code,
-				years: [],
-			};
-		} finally {
-			// Cleanup: close page and release session back to pool
-			if (page) {
-				await sessionPool.closePage(page as any);
-			}
-			await sessionPool.clear();
-			// Close browser instance
-			if (browserInstance) {
-				await browserInstance.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(`[Scraper] Error closing browser:`, err);
-				});
-			}
-		}
-	}
+      console.log(`[Scraper] Level 1 scraping completed for code: ${code}`);
 
-	/**
-	 * Validate cursus code format
-	 * Expected format: 3-8 characters, alphanumeric
-	 *
-	 * @param code - Cursus code to validate
-	 * @returns True if valid
-	 */
-	private isValidCursusCode(code: string): boolean {
-		const pattern = /^[A-Z0-9]{3,8}$/i;
-		return pattern.test(code);
-	}
+      return cursusData;
+    } catch (error) {
+      console.error(
+        `[Scraper] Error during Level 1 scraping for ${code}:`,
+        error,
+      );
 
-	/**
-	 * Build the full URL for a cursus
-	 *
-	 * @param code - Cursus code
-	 * @returns Full URL
-	 */
-	private buildCursusUrl(code: string): string {
-		const baseUrl = `${this.bedeoCnamUrl}/${this.bedeoFormationPath}`;
-		return `${baseUrl}${code}`;
-	}
+      // Return partial data on error
+      return {
+        code,
+        years: [],
+      };
+    } finally {
+      // Cleanup: close page and release session back to pool
+      if (page) {
+        await sessionPool.closePage(page as any);
+      }
+      await sessionPool.clear();
+      // Close browser instance
+      if (browserInstance) {
+        await browserInstance.close().catch((err: any) => {
+          console.warn(`[Scraper] Error closing browser:`, err);
+        });
+      }
+    }
+  }
 
-	/**
-	 * Build the full URL for a unit/EU
-	 *
-	 * @param code - Unit code
-	 * @returns Full URL
-	 */
-	buildUnitUrl(code: string): string {
-		const baseUrl = `${this.bedeoCnamUrl}${this.bedeoUniteViewPath}`;
-		return `${baseUrl}${code}`;
-	}
+  /**
+   * Validate cursus code format
+   * Expected format: 3-8 characters, alphanumeric
+   *
+   * @param code - Cursus code to validate
+   * @returns True if valid
+   */
+  private isValidCursusCode(code: string): boolean {
+    const pattern = /^[A-Z0-9]{3,8}$/i;
 
-	/**
-	 * Scrape level 2 (unit detail pages)
-	 * Extracts full unit information including content and bibliography
-	 * Manages its own browser instance with session pooling
-	 *
-	 * @param unitUrls - Array of unit URLs to scrape
-	 * @param options - Scraper options including cache and cursusCode
-	 * @param env - Environment with CFBROWSER binding for launching browser
-	 * @returns Array of enriched unit data
-	 */
-	async scrapeCursusLevel2(
-		unitUrls: Array<{ code: string; url: string }>,
-		options: ScraperOptions & { cache?: KVCache; cursusCode?: string } = {},
-		env: Env,
-	): Promise<any[]> {
-		const cache: KVCache | undefined = (options as any).cache;
-		const cursusCode: string | undefined = (options as any).cursusCode;
-		// eslint-disable-next-line no-console
-		console.log(
-			`[Scraper] Starting Level 2 scrape for ${unitUrls.length} units`,
-		);
+    return pattern.test(code);
+  }
 
-		const timeout = options.timeout || 30000;
-		const results: any[] = [];
+  /**
+   * Build the full URL for a cursus
+   *
+   * @param code - Cursus code
+   * @returns Full URL
+   */
+  private buildCursusUrl(code: string): string {
+    const baseUrl = `${this.bedeoCnamUrl}/${this.bedeoFormationPath}`;
 
-		// Launch browser instance for this scraping session
-		const browserInstance = await launch(env.CFBROWSER);
-		const maxSessions = parseInt((env.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES as string) || "1", 10);
-		// Create session pool for reusable sessions
-		const sessionPool = new CloudflareSessionPool(browserInstance, {
-			maxSessions,
-		});
+    return `${baseUrl}${code}`;
+  }
 
-		// Helper to sleep
-		const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+  /**
+   * Build the full URL for a unit/EU
+   *
+   * @param code - Unit code
+   * @returns Full URL
+   */
+  buildUnitUrl(code: string): string {
+    const baseUrl = `${this.bedeoCnamUrl}${this.bedeoUniteViewPath}`;
 
-		// Per-checkpoint tracking
-		const enrichedMap: Record<string, any> = {};
-		let processedSinceLastCheckpoint: string[] = [];
-		let processedCount = 0;
+    return `${baseUrl}${code}`;
+  }
 
-		try {
-			try {
-				// Process units with concurrency limit
-				for (let i = 0; i < unitUrls.length; i += maxSessions) {
-					const batch = unitUrls.slice(i, i + maxSessions);
+  /**
+   * Scrape level 2 (unit detail pages)
+   * Extracts full unit information including content and bibliography
+   * Manages its own browser instance with session pooling
+   *
+   * @param unitUrls - Array of unit URLs to scrape
+   * @param options - Scraper options including cache and cursusCode
+   * @param env - Environment with CFBROWSER binding for launching browser
+   * @returns Array of enriched unit data
+   */
+  async scrapeCursusLevel2(
+    unitUrls: Array<{ code: string; url: string }>,
+    options: ScraperOptions & { cache?: KVCache; cursusCode?: string } = {},
+    env: Env,
+  ): Promise<any[]> {
+    const cache: KVCache | undefined = (options as any).cache;
+    const cursusCode: string | undefined = (options as any).cursusCode;
 
-					// Process batch in parallel
-					const batchResults = await Promise.allSettled(
-						batch.map((unit) =>
-							this.scrapeSingleUnit(unit, timeout, sessionPool),
-						),
-					);
+    console.log(
+      `[Scraper] Starting Level 2 scrape for ${unitUrls.length} units`,
+    );
 
-					// Collect results and update processed count
-					for (let bi = 0; bi < batchResults.length; bi++) {
-						const result = batchResults[bi];
-						const originalUnit = batch[bi];
-						if (result.status === "fulfilled") {
-							const unitData = result.value;
-							results.push(unitData);
-							if (unitData && unitData.code) {
-								enrichedMap[unitData.code] = unitData;
-								processedSinceLastCheckpoint.push(unitData.code);
-							}
-						} else {
-							// eslint-disable-next-line no-console
-							console.error(`[Scraper] Failed to scrape unit:`, result.reason);
-						}
+    const timeout = options.timeout || 30000;
+    const results: any[] = [];
 
-						processedCount++;
+    // Launch browser instance for this scraping session
+    const browserInstance = await launch(env.CFBROWSER);
+    const maxSessions = parseInt(
+      (env.CLOUDFLARE_WORKER_MAX_BROWSER_INSTANCES as string) || "1",
+      10,
+    );
+    // Create session pool for reusable sessions
+    const sessionPool = new CloudflareSessionPool(browserInstance, {
+      maxSessions,
+    });
 
-						// Checkpoint when reaching configured size
-						if (cache && cursusCode && processedSinceLastCheckpoint.length >= this.checkpointSize) {
-							console.log(`[Scraper Checkpoint] Checkpointing after processing ${processedCount} units...`);
-							try {
-								const lockToken = await cache.tryAcquireLock(cursusCode, 60);
-								if (!lockToken) {
-									// eslint-disable-next-line no-console
-									console.warn(`[Scraper Checkpoint] Could not acquire lock for checkpointing ${cursusCode}, will retry on next checkpoint`);
-								} else {
-									// Read base and rich caches
-									const base = (await cache.get<CursusLevel1>(cursusCode)) || { code: cursusCode, years: [] };
-									const rich = (await cache.get<any>(cursusCode, "rich")) || { code: cursusCode, years: JSON.parse(JSON.stringify(base.years || [])) };
+    // Helper to sleep
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-									// Mark units in base as rich = true
-									for (const year of base.years || []) {
-										for (const unit of year.units) {
-											if (unit.code && enrichedMap[unit.code]) {
-												unit.rich = true;
-											}
-										}
-									}
+    // Per-checkpoint tracking
+    const enrichedMap: Record<string, any> = {};
+    let processedSinceLastCheckpoint: string[] = [];
+    let processedCount = 0;
 
-									// Merge enriched units into rich structure (replace or append)
-									for (const code of processedSinceLastCheckpoint) {
-										const enriched = enrichedMap[code];
-										let inserted = false;
-										for (const year of rich.years || []) {
-											for (let u = 0; u < (year.units || []).length; u++) {
-												if (year.units[u].code === code) {
-													year.units[u] = enriched;
-													inserted = true;
-													break;
-												}
-											}
-											if (inserted) break;
-										}
-										if (!inserted) {
-											if (!rich.years) rich.years = [];
-											rich.years[0] = rich.years[0] || { year: "", units: [] };
-											rich.years[0].units.push(enriched);
-										}
-									}
+    try {
+      try {
+        // Process units with concurrency limit
+        for (let i = 0; i < unitUrls.length; i += maxSessions) {
+          const batch = unitUrls.slice(i, i + maxSessions);
 
-									// Write back base and rich caches
-									const ttl = Number(process.env.SCRAPER_CACHE_TTL) || 2592000;
-									await cache.set(cursusCode, base, ttl);
-									// Respect one-write-per-second restriction on the same key
-									await sleep(1100);
-									await cache.set(cursusCode, rich, ttl, "rich");
-									await cache.setMetadata(cursusCode, { lastCheckpoint: processedCount, lastWriteAt: new Date().toISOString() }, 86400, "rich");
-									processedSinceLastCheckpoint = [];
-									// Release lock
-									await cache.releaseLock(cursusCode, lockToken);
-									console.log(`[Scraper Checkpoint] Checkpoint completed for ${cursusCode} at ${processedCount} units processed.`);
-								}
-							} catch (err) {
-								// eslint-disable-next-line no-console
-								console.error(`[Scraper] Error during checkpoint for ${cursusCode}:`, err);
-							}
-						}
-					}
+          // Process batch in parallel
+          const batchResults = await Promise.allSettled(
+            batch.map((unit) =>
+              this.scrapeSingleUnit(unit, timeout, sessionPool),
+            ),
+          );
 
-					// Add small delay between batches to be respectful
-					if (i + maxSessions < unitUrls.length) {
-						await sleep(1000);
-					}
-				}
-			} finally {
-				// Clear session pool
-				await sessionPool.clear();
-			}
+          // Collect results and update processed count
+          for (let bi = 0; bi < batchResults.length; bi++) {
+            const result = batchResults[bi];
+            const originalUnit = batch[bi];
 
-			// eslint-disable-next-line no-console
-			console.log(
-				`[Scraper] Level 2 scraping completed for ${results.length} units`,
-			);
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error(
-				`[Scraper] Error during Level 2 scraping:`,
-				error,
-			);
-		} finally {
-			// Close browser instance
-			if (browserInstance) {
-				await browserInstance.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(`[Scraper] Error closing browser:`, err);
-				});
-			}
-		}
+            if (result.status === "fulfilled") {
+              const unitData = result.value;
 
-		return results;
-	}
+              results.push(unitData);
+              if (unitData && unitData.code) {
+                enrichedMap[unitData.code] = unitData;
+                processedSinceLastCheckpoint.push(unitData.code);
+              }
+            } else {
+              console.error(`[Scraper] Failed to scrape unit:`, result.reason);
+            }
 
-	/**
-	 * Scrape a single unit detail page using session pooling
-	 * Acquires a session from the pool, uses it, and releases it back for reuse
-	 *
-	 * @param unit - Unit with code and URL
-	 * @param timeout - Request timeout in milliseconds
-	 * @param sessionPool - Cloudflare session pool for reusable sessions
-	 * @returns Enriched unit object
-	 */
-	private async scrapeSingleUnit(
-		unit: { code: string; url: string },
-		timeout: number,
-		sessionPool: CloudflareSessionPool,
-	): Promise<any> {
-		let page: Page & { sessionName?: string } | null = null;
+            processedCount++;
 
-		try {
-			// Create page with pooled session
-			page = await sessionPool.createPage({ locale: "fr-FR" });
-			if (!page) {
-				throw new Error("Failed to create page for unit: " + unit.code);
-			}
-			page.setDefaultTimeout(timeout);
-			page.setDefaultNavigationTimeout(timeout);
+            // Checkpoint when reaching configured size
+            if (
+              cache &&
+              cursusCode &&
+              processedSinceLastCheckpoint.length >= this.checkpointSize
+            ) {
+              console.log(
+                `[Scraper Checkpoint] Checkpointing after processing ${processedCount} units...`,
+              );
+              try {
+                const lockToken = await cache.tryAcquireLock(cursusCode, 60);
 
-			// Configure User-Agent
-			await page.route("**/*", (route: any) =>
-				route.continue({
-					headers: {
-						...route.request().headers(),
-						"User-Agent":
-							"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15",
-					},
-				}),
-			);
+                if (!lockToken) {
+                  console.warn(
+                    `[Scraper Checkpoint] Could not acquire lock for checkpointing ${cursusCode}, will retry on next checkpoint`,
+                  );
+                } else {
+                  // Read base and rich caches
+                  const base = (await cache.get<CursusLevel1>(cursusCode)) || {
+                    code: cursusCode,
+                    years: [],
+                  };
+                  const rich = (await cache.get<any>(cursusCode, "rich")) || {
+                    code: cursusCode,
+                    years: JSON.parse(JSON.stringify(base.years || [])),
+                  };
 
-			// eslint-disable-next-line no-console
-			console.log(
-				`[Scraper] Fetching unit details for ${unit.code}...`,
-			);
+                  // Mark units in base as rich = true
+                  for (const year of base.years || []) {
+                    for (const unit of year.units) {
+                      if (unit.code && enrichedMap[unit.code]) {
+                        unit.rich = true;
+                      }
+                    }
+                  }
 
-			// Navigate to unit page
-			await page.goto(unit.url, {
-				waitUntil: "networkidle",
-				timeout,
-			});
+                  // Merge enriched units into rich structure (replace or append)
+                  for (const code of processedSinceLastCheckpoint) {
+                    const enriched = enrichedMap[code];
+                    let inserted = false;
 
-			// Wait for presentation section to be ready
-			await page.waitForSelector(
-				'//*[@id="presentation"]',
-				{
-					timeout: 5000,
-				},
-			).catch(() => {
-				// Presentation section might not exist, continue anyway
-				// eslint-disable-next-line no-console
-				console.warn(
-					`[Scraper] Presentation section not found for ${unit.code}`,
-				);
-			});
+                    for (const year of rich.years || []) {
+                      for (let u = 0; u < (year.units || []).length; u++) {
+                        if (year.units[u].code === code) {
+                          year.units[u] = enriched;
+                          inserted = true;
+                          break;
+                        }
+                      }
+                      if (inserted) break;
+                    }
+                    if (!inserted) {
+                      if (!rich.years) rich.years = [];
+                      rich.years[0] = rich.years[0] || { year: "", units: [] };
+                      rich.years[0].units.push(enriched);
+                    }
+                  }
 
-			// Parse the unit detail page
-			const enrichedUnit =
-				await CursusPageParser.parseUnitDetailPage(
-					page,
-					unit.code,
-				);
+                  // Write back base and rich caches
+                  const ttl = Number(process.env.SCRAPER_CACHE_TTL) || 2592000;
 
-			return enrichedUnit;
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error(
-				`[Scraper] Error scraping unit ${unit.code}:`,
-				error,
-			);
-			// Return unit with just the code on error
-			return { code: unit.code, name: unit.code };
-		} finally {
-			// Close page and release session back to pool for reuse
-			if (page) {
-				await sessionPool.closePage(page);
-			}
-		}
-	}
+                  await cache.set(cursusCode, base, ttl);
+                  // Respect one-write-per-second restriction on the same key
+                  await sleep(1100);
+                  await cache.set(cursusCode, rich, ttl, "rich");
+                  await cache.setMetadata(
+                    cursusCode,
+                    {
+                      lastCheckpoint: processedCount,
+                      lastWriteAt: new Date().toISOString(),
+                    },
+                    86400,
+                    "rich",
+                  );
+                  processedSinceLastCheckpoint = [];
+                  // Release lock
+                  await cache.releaseLock(cursusCode, lockToken);
+                  console.log(
+                    `[Scraper Checkpoint] Checkpoint completed for ${cursusCode} at ${processedCount} units processed.`,
+                  );
+                }
+              } catch (err) {
+                console.error(
+                  `[Scraper] Error during checkpoint for ${cursusCode}:`,
+                  err,
+                );
+              }
+            }
+          }
+
+          // Add small delay between batches to be respectful
+          if (i + maxSessions < unitUrls.length) {
+            await sleep(1000);
+          }
+        }
+      } finally {
+        // Clear session pool
+        await sessionPool.clear();
+      }
+
+      console.log(
+        `[Scraper] Level 2 scraping completed for ${results.length} units`,
+      );
+    } catch (error) {
+      console.error(`[Scraper] Error during Level 2 scraping:`, error);
+    } finally {
+      // Close browser instance
+      if (browserInstance) {
+        await browserInstance.close().catch((err: any) => {
+          console.warn(`[Scraper] Error closing browser:`, err);
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * Scrape a single unit detail page using session pooling
+   * Acquires a session from the pool, uses it, and releases it back for reuse
+   *
+   * @param unit - Unit with code and URL
+   * @param timeout - Request timeout in milliseconds
+   * @param sessionPool - Cloudflare session pool for reusable sessions
+   * @returns Enriched unit object
+   */
+  private async scrapeSingleUnit(
+    unit: { code: string; url: string },
+    timeout: number,
+    sessionPool: CloudflareSessionPool,
+  ): Promise<any> {
+    let page: (Page & { sessionName?: string }) | null = null;
+
+    try {
+      // Create page with pooled session
+      page = await sessionPool.createPage({ locale: "fr-FR" });
+      if (!page) {
+        throw new Error("Failed to create page for unit: " + unit.code);
+      }
+      page.setDefaultTimeout(timeout);
+      page.setDefaultNavigationTimeout(timeout);
+
+      // Configure User-Agent
+      await page.route("**/*", (route: any) =>
+        route.continue({
+          headers: {
+            ...route.request().headers(),
+            "User-Agent":
+              "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0.1 Safari/605.1.15",
+          },
+        }),
+      );
+
+      console.log(`[Scraper] Fetching unit details for ${unit.code}...`);
+
+      // Navigate to unit page
+      await page.goto(unit.url, {
+        waitUntil: "networkidle",
+        timeout,
+      });
+
+      // Wait for presentation section to be ready
+      await page
+        .waitForSelector('//*[@id="presentation"]', {
+          timeout: 5000,
+        })
+        .catch(() => {
+          // Presentation section might not exist, continue anyway
+
+          console.warn(
+            `[Scraper] Presentation section not found for ${unit.code}`,
+          );
+        });
+
+      // Parse the unit detail page
+      const enrichedUnit = await CursusPageParser.parseUnitDetailPage(
+        page,
+        unit.code,
+      );
+
+      return enrichedUnit;
+    } catch (error) {
+      console.error(`[Scraper] Error scraping unit ${unit.code}:`, error);
+
+      // Return unit with just the code on error
+      return { code: unit.code, name: unit.code };
+    } finally {
+      // Close page and release session back to pool for reuse
+      if (page) {
+        await sessionPool.closePage(page);
+      }
+    }
+  }
 }

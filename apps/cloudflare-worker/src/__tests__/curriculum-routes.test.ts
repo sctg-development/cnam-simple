@@ -22,446 +22,452 @@
  * SOFTWARE.
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { KVCache } from "../cache/kv-cache";
 import type { CursusLevel1, CursusApiResponse } from "../scraper/types";
 
+import { describe, it, expect, beforeEach, vi } from "vitest";
+
+import { KVCache } from "../cache/kv-cache";
+
 describe("Cursus Routes - API Contract", () => {
-	let mockKVNamespace: any;
+  let mockKVNamespace: any;
 
-	beforeEach(() => {
-		// Create mock KV namespace
-		mockKVNamespace = {
-			get: vi.fn().mockResolvedValue(null),
-			put: vi.fn().mockResolvedValue(undefined),
-			delete: vi.fn().mockResolvedValue(undefined),
-			list: vi.fn().mockResolvedValue({ keys: [] }),
-		};
-	});
+  beforeEach(() => {
+    // Create mock KV namespace
+    mockKVNamespace = {
+      get: vi.fn().mockResolvedValue(null),
+      put: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn().mockResolvedValue({ keys: [] }),
+    };
+  });
 
-	describe("Response Structure Validation", () => {
-		it("should return valid success response structure", () => {
-			const successResponse: CursusApiResponse = {
-				success: true,
-				data: {
-					name: "Test Cursus",
-					code: "CYC9101A",
-					EU: [
-						{
-							year: "Year 1",
-							units: [
-								{
-									name: "Unit 1",
-									code: "ENG110",
-									url: "https://example.com/unit1",
-								},
-							],
-						},
-					],
-				},
-				cached: false,
-				scrapedAt: new Date().toISOString(),
-			};
+  describe("Response Structure Validation", () => {
+    it("should return valid success response structure", () => {
+      const successResponse: CursusApiResponse = {
+        success: true,
+        data: {
+          name: "Test Cursus",
+          code: "CYC9101A",
+          EU: [
+            {
+              year: "Year 1",
+              units: [
+                {
+                  name: "Unit 1",
+                  code: "ENG110",
+                  url: "https://example.com/unit1",
+                },
+              ],
+            },
+          ],
+        },
+        cached: false,
+        scrapedAt: new Date().toISOString(),
+      };
 
-			expect(successResponse.success).toBe(true);
-			expect(successResponse.data).toBeDefined();
-			expect(successResponse.data?.code).toBe("CYC9101A");
-			expect(successResponse.data?.EU).toBeDefined();
-			expect(Array.isArray(successResponse.data?.EU)).toBe(true);
-		});
+      expect(successResponse.success).toBe(true);
+      expect(successResponse.data).toBeDefined();
+      expect(successResponse.data?.code).toBe("CYC9101A");
+      expect(successResponse.data?.EU).toBeDefined();
+      expect(Array.isArray(successResponse.data?.EU)).toBe(true);
+    });
 
-		it("should return valid error response structure", () => {
-			const errorResponse: CursusApiResponse = {
-				success: false,
-				error: "Cursus not found",
-			};
+    it("should return valid error response structure", () => {
+      const errorResponse: CursusApiResponse = {
+        success: false,
+        error: "Cursus not found",
+      };
 
-			expect(errorResponse.success).toBe(false);
-			expect(errorResponse.error).toBeDefined();
-			expect(errorResponse.data).toBeUndefined();
-		});
+      expect(errorResponse.success).toBe(false);
+      expect(errorResponse.error).toBeDefined();
+      expect(errorResponse.data).toBeUndefined();
+    });
 
-		it("should include cache status in response", () => {
-			const cachedResponse: CursusApiResponse = {
-				success: true,
-				data: {
-					name: "Test",
-					code: "CYC9101A",
-					EU: [],
-				},
-				cached: true,
-			};
+    it("should include cache status in response", () => {
+      const cachedResponse: CursusApiResponse = {
+        success: true,
+        data: {
+          name: "Test",
+          code: "CYC9101A",
+          EU: [],
+        },
+        cached: true,
+      };
 
-			expect(cachedResponse.cached).toBe(true);
-			expect(cachedResponse.scrapedAt).toBeUndefined();
-		});
+      expect(cachedResponse.cached).toBe(true);
+      expect(cachedResponse.scrapedAt).toBeUndefined();
+    });
 
-		it("should differentiate between cached and fresh responses", () => {
-			const cachedResponse: CursusApiResponse = {
-				success: true,
-				cached: true,
-			};
+    it("should differentiate between cached and fresh responses", () => {
+      const cachedResponse: CursusApiResponse = {
+        success: true,
+        cached: true,
+      };
 
-			const freshResponse: CursusApiResponse = {
-				success: true,
-				cached: false,
-				scrapedAt: new Date().toISOString(),
-			};
+      const freshResponse: CursusApiResponse = {
+        success: true,
+        cached: false,
+        scrapedAt: new Date().toISOString(),
+      };
 
-			expect(cachedResponse.cached).toBe(true);
-			expect(cachedResponse.scrapedAt).toBeUndefined();
+      expect(cachedResponse.cached).toBe(true);
+      expect(cachedResponse.scrapedAt).toBeUndefined();
 
-			expect(freshResponse.cached).toBe(false);
-			expect(freshResponse.scrapedAt).toBeDefined();
-		});
-	});
+      expect(freshResponse.cached).toBe(false);
+      expect(freshResponse.scrapedAt).toBeDefined();
+    });
+  });
 
-	describe("KVCache Integration", () => {
-		it("should create cache instance with correct KV namespace", () => {
-			const cache = new KVCache(mockKVNamespace);
-			expect(cache).toBeDefined();
-			expect(cache).toBeInstanceOf(KVCache);
-		});
+  describe("KVCache Integration", () => {
+    it("should create cache instance with correct KV namespace", () => {
+      const cache = new KVCache(mockKVNamespace);
 
-		it("should handle cache operations", async () => {
-			const cache = new KVCache(mockKVNamespace);
-			const testData: CursusLevel1 = {
-				code: "CYC9101A",
-				years: [],
-			};
+      expect(cache).toBeDefined();
+      expect(cache).toBeInstanceOf(KVCache);
+    });
 
-			const setResult = await cache.set("CYC9101A", testData);
-			expect(setResult).toBe(true);
+    it("should handle cache operations", async () => {
+      const cache = new KVCache(mockKVNamespace);
+      const testData: CursusLevel1 = {
+        code: "CYC9101A",
+        years: [],
+      };
 
-			const invalidateResult = await cache.invalidate("CYC9101A");
-			expect(invalidateResult).toBe(true);
-		});
+      const setResult = await cache.set("CYC9101A", testData);
 
-		it("should generate consistent cache keys", async () => {
-			const cache = new KVCache(mockKVNamespace);
+      expect(setResult).toBe(true);
 
-			await cache.set("CYC9101A", { code: "CYC9101A", years: [] });
-			await cache.get("CYC9101A");
+      const invalidateResult = await cache.invalidate("CYC9101A");
 
-			// Verify that put and get were called
-			expect(mockKVNamespace.put).toHaveBeenCalled();
-		});
+      expect(invalidateResult).toBe(true);
+    });
 
-		it("should handle metadata retrieval", async () => {
-			const cache = new KVCache(mockKVNamespace);
+    it("should generate consistent cache keys", async () => {
+      const cache = new KVCache(mockKVNamespace);
 
-			// Mock a cached entry
-			mockKVNamespace.get.mockResolvedValueOnce({
-				timestamp: new Date().toISOString(),
-				expiresAt: new Date(Date.now() + 86400000).toISOString(),
-				data: { code: "CYC9101A", years: [] },
-			});
+      await cache.set("CYC9101A", { code: "CYC9101A", years: [] });
+      await cache.get("CYC9101A");
 
-			const metadata = await cache.getMetadata("CYC9101A");
-			expect(metadata).toBeDefined();
-			if (metadata) {
-				expect(metadata.timestamp).toBeDefined();
-				expect(metadata.expiresAt).toBeDefined();
-			}
-		});
-	});
+      // Verify that put and get were called
+      expect(mockKVNamespace.put).toHaveBeenCalled();
+    });
 
-	describe("Error Handling", () => {
-		it("should handle missing cursus gracefully", async () => {
-			mockKVNamespace.get.mockResolvedValueOnce(null);
+    it("should handle metadata retrieval", async () => {
+      const cache = new KVCache(mockKVNamespace);
 
-			const cache = new KVCache(mockKVNamespace);
-			const result = await cache.get("NONEXISTENT");
+      // Mock a cached entry
+      mockKVNamespace.get.mockResolvedValueOnce({
+        timestamp: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+        data: { code: "CYC9101A", years: [] },
+      });
 
-			expect(result).toBeNull();
-		});
+      const metadata = await cache.getMetadata("CYC9101A");
 
-		it("should handle KV namespace errors", async () => {
-			mockKVNamespace.put.mockRejectedValueOnce(
-				new Error("KV storage full"),
-			);
+      expect(metadata).toBeDefined();
+      if (metadata) {
+        expect(metadata.timestamp).toBeDefined();
+        expect(metadata.expiresAt).toBeDefined();
+      }
+    });
+  });
 
-			const cache = new KVCache(mockKVNamespace);
-			const result = await cache.set("CYC9101A", {
-				code: "CYC9101A",
-				years: [],
-			});
+  describe("Error Handling", () => {
+    it("should handle missing cursus gracefully", async () => {
+      mockKVNamespace.get.mockResolvedValueOnce(null);
 
-			expect(result).toBe(false);
-		});
+      const cache = new KVCache(mockKVNamespace);
+      const result = await cache.get("NONEXISTENT");
 
-		it("should recover from cache retrieval errors", async () => {
-			const errorKV = {
-				get: vi.fn().mockRejectedValue(new Error("Cache unavailable")),
-				put: vi.fn().mockResolvedValue(undefined),
-				delete: vi.fn().mockResolvedValue(undefined),
-				list: vi.fn().mockResolvedValue({ keys: [] }),
-			};
+      expect(result).toBeNull();
+    });
 
-			const cache = new KVCache(errorKV as any);
-			const result = await cache.get("CYC9101A");
+    it("should handle KV namespace errors", async () => {
+      mockKVNamespace.put.mockRejectedValueOnce(new Error("KV storage full"));
 
-			expect(result).toBeNull();
-		});
-	});
+      const cache = new KVCache(mockKVNamespace);
+      const result = await cache.set("CYC9101A", {
+        code: "CYC9101A",
+        years: [],
+      });
 
-	describe("Cursus Data Structures", () => {
-		it("should validate cursus page level 1 structure", () => {
-			const level1Data: CursusLevel1 = {
-				code: "CYC9101A",
-				name: "Cursus Title",
-				years: [
-					{
-						year: "Year 1",
-						units: [
-							{
-								name: "Unit A",
-								code: "ENG110",
-								url: "https://bedeo.cnam.fr/public/unite/view/ENG110",
-							},
-							{
-								name: "Unit B",
-								code: "MATH110",
-							},
-						],
-					},
-					{
-						year: "Year 2",
-						units: [
-							{
-								name: "Unit C",
-								code: "ENG210",
-								url: "https://bedeo.cnam.fr/public/unite/view/ENG210",
-							},
-						],
-					},
-				],
-			};
+      expect(result).toBe(false);
+    });
 
-			expect(level1Data.code).toBe("CYC9101A");
-			expect(level1Data.years).toHaveLength(2);
-			expect(level1Data.years[0].units).toHaveLength(2);
-			expect(level1Data.years[1].units).toHaveLength(1);
-		});
+    it("should recover from cache retrieval errors", async () => {
+      const errorKV = {
+        get: vi.fn().mockRejectedValue(new Error("Cache unavailable")),
+        put: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+        list: vi.fn().mockResolvedValue({ keys: [] }),
+      };
 
-		it("should support optional unit properties", () => {
-			const unitWithOptionals = {
-				name: "Unit A",
-				code: "ENG110",
-				url: "https://bedeo.cnam.fr/public/unite/view/ENG110",
-			};
+      const cache = new KVCache(errorKV as any);
+      const result = await cache.get("CYC9101A");
 
-			const unitMinimal = {
-				name: "Unit B",
-			};
+      expect(result).toBeNull();
+    });
+  });
 
-			expect(unitWithOptionals.name).toBeDefined();
-			expect(unitWithOptionals.code).toBeDefined();
-			expect(unitWithOptionals.url).toBeDefined();
+  describe("Cursus Data Structures", () => {
+    it("should validate cursus page level 1 structure", () => {
+      const level1Data: CursusLevel1 = {
+        code: "CYC9101A",
+        name: "Cursus Title",
+        years: [
+          {
+            year: "Year 1",
+            units: [
+              {
+                name: "Unit A",
+                code: "ENG110",
+                url: "https://bedeo.cnam.fr/public/unite/view/ENG110",
+              },
+              {
+                name: "Unit B",
+                code: "MATH110",
+              },
+            ],
+          },
+          {
+            year: "Year 2",
+            units: [
+              {
+                name: "Unit C",
+                code: "ENG210",
+                url: "https://bedeo.cnam.fr/public/unite/view/ENG210",
+              },
+            ],
+          },
+        ],
+      };
 
-			expect(unitMinimal.name).toBeDefined();
-			expect(unitMinimal.code).toBeUndefined();
-		});
+      expect(level1Data.code).toBe("CYC9101A");
+      expect(level1Data.years).toHaveLength(2);
+      expect(level1Data.years[0].units).toHaveLength(2);
+      expect(level1Data.years[1].units).toHaveLength(1);
+    });
 
-		it("should support empty cursus", () => {
-			const emptyCursus: CursusLevel1 = {
-				code: "UNKNOWN",
-				years: [],
-			};
+    it("should support optional unit properties", () => {
+      const unitWithOptionals = {
+        name: "Unit A",
+        code: "ENG110",
+        url: "https://bedeo.cnam.fr/public/unite/view/ENG110",
+      };
 
-			expect(emptyCursus.code).toBe("UNKNOWN");
-			expect(emptyCursus.years).toEqual([]);
-		});
-	});
+      const unitMinimal = {
+        name: "Unit B",
+      };
 
-	describe("Query Parameter Handling", () => {
-		it("should parse force query parameter", () => {
-			const url = new URL("http://localhost/api/cursus/CYC9101A?force=true");
-			const force = url.searchParams.get("force") === "true";
+      expect(unitWithOptionals.name).toBeDefined();
+      expect(unitWithOptionals.code).toBeDefined();
+      expect(unitWithOptionals.url).toBeDefined();
 
-			expect(force).toBe(true);
-		});
+      expect(unitMinimal.name).toBeDefined();
+      expect(unitMinimal.code).toBeUndefined();
+    });
 
-		it("should parse timeout query parameter", () => {
-			const url = new URL(
-				"http://localhost/api/cursus/CYC9101A?timeout=45000",
-			);
-			const timeout = url.searchParams.get("timeout")
-				? parseInt(url.searchParams.get("timeout") || "30000", 10)
-				: 30000;
+    it("should support empty cursus", () => {
+      const emptyCursus: CursusLevel1 = {
+        code: "UNKNOWN",
+        years: [],
+      };
 
-			expect(timeout).toBe(45000);
-		});
+      expect(emptyCursus.code).toBe("UNKNOWN");
+      expect(emptyCursus.years).toEqual([]);
+    });
+  });
 
-		it("should handle default timeout when not provided", () => {
-			const url = new URL("http://localhost/api/cursus/CYC9101A");
-			const timeout = url.searchParams.get("timeout")
-				? parseInt(url.searchParams.get("timeout") || "30000", 10)
-				: 30000;
+  describe("Query Parameter Handling", () => {
+    it("should parse force query parameter", () => {
+      const url = new URL("http://localhost/api/cursus/CYC9101A?force=true");
+      const force = url.searchParams.get("force") === "true";
 
-			expect(timeout).toBe(30000);
-		});
+      expect(force).toBe(true);
+    });
 
-		it("should handle invalid timeout values", () => {
-			const url = new URL(
-				"http://localhost/api/cursus/CYC9101A?timeout=invalid",
-			);
-			const timeout = url.searchParams.get("timeout")
-				? parseInt(url.searchParams.get("timeout") || "30000", 10)
-				: 30000;
+    it("should parse timeout query parameter", () => {
+      const url = new URL("http://localhost/api/cursus/CYC9101A?timeout=45000");
+      const timeout = url.searchParams.get("timeout")
+        ? parseInt(url.searchParams.get("timeout") || "30000", 10)
+        : 30000;
 
-			// parseInt("invalid", 10) returns NaN
-			// The pattern should handle this gracefully
-			expect(isNaN(timeout) || timeout === 30000).toBe(true);
-		});
-	});
+      expect(timeout).toBe(45000);
+    });
+
+    it("should handle default timeout when not provided", () => {
+      const url = new URL("http://localhost/api/cursus/CYC9101A");
+      const timeout = url.searchParams.get("timeout")
+        ? parseInt(url.searchParams.get("timeout") || "30000", 10)
+        : 30000;
+
+      expect(timeout).toBe(30000);
+    });
+
+    it("should handle invalid timeout values", () => {
+      const url = new URL(
+        "http://localhost/api/cursus/CYC9101A?timeout=invalid",
+      );
+      const timeout = url.searchParams.get("timeout")
+        ? parseInt(url.searchParams.get("timeout") || "30000", 10)
+        : 30000;
+
+      // parseInt("invalid", 10) returns NaN
+      // The pattern should handle this gracefully
+      expect(isNaN(timeout) || timeout === 30000).toBe(true);
+    });
+  });
 });
 
 describe("Cursus API Routes", () => {
-	let mockRouter: any;
-	let mockEnv: any;
-	let mockKVNamespace: any;
+  let mockRouter: any;
+  let mockEnv: any;
+  let mockKVNamespace: any;
 
-	beforeEach(() => {
-		// Create mock KV namespace
-		mockKVNamespace = {
-			get: vi.fn().mockResolvedValue(null),
-			put: vi.fn().mockResolvedValue(undefined),
-			delete: vi.fn().mockResolvedValue(undefined),
-			list: vi.fn().mockResolvedValue({ keys: [] }),
-		};
+  beforeEach(() => {
+    // Create mock KV namespace
+    mockKVNamespace = {
+      get: vi.fn().mockResolvedValue(null),
+      put: vi.fn().mockResolvedValue(undefined),
+      delete: vi.fn().mockResolvedValue(undefined),
+      list: vi.fn().mockResolvedValue({ keys: [] }),
+    };
 
-		// Create mock router with corsHeaders
-		mockRouter = {
-			corsHeaders: {
-				"Access-Control-Allow-Origin": "http://localhost:3000",
-				"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-				"Access-Control-Allow-Headers": "Content-Type, Authorization",
-				"Content-Type": "application/json",
-			},
-			get: vi.fn(),
-			delete: vi.fn(),
-		};
+    // Create mock router with corsHeaders
+    mockRouter = {
+      corsHeaders: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Content-Type": "application/json",
+      },
+      get: vi.fn(),
+      delete: vi.fn(),
+    };
 
-		// Create mock environment
-		mockEnv = {
-			CACHE: mockKVNamespace,
-			CFBROWSER: null,
-			CNAM_BEDEO_URL: "https://bedeo.cnam.fr",
-			CNAM_BEDEO_CURSUS_PATH: "public/cursus/view/",
-			CNAM_BEDEO_UNITE_VIEW_PATH: "/public/unite/view/",
-		} as unknown as Env;
-	});
+    // Create mock environment
+    mockEnv = {
+      CACHE: mockKVNamespace,
+      CFBROWSER: null,
+      CNAM_BEDEO_URL: "https://bedeo.cnam.fr",
+      CNAM_BEDEO_CURSUS_PATH: "public/cursus/view/",
+      CNAM_BEDEO_UNITE_VIEW_PATH: "/public/unite/view/",
+    } as unknown as Env;
+  });
 
-	describe("Response structure validation", () => {
-		it("should return valid success response structure", () => {
-			const successResponse: CursusApiResponse = {
-				success: true,
-				data: {
-					name: "Test Cursus",
-					code: "CYC9101A",
-					EU: [
-						{
-							year: "Year 1",
-							units: [
-								{
-									name: "Unit 1",
-									code: "ENG110",
-									url: "https://example.com/unit1",
-								},
-							],
-						},
-					],
-				},
-				cached: false,
-				scrapedAt: new Date().toISOString(),
-			};
+  describe("Response structure validation", () => {
+    it("should return valid success response structure", () => {
+      const successResponse: CursusApiResponse = {
+        success: true,
+        data: {
+          name: "Test Cursus",
+          code: "CYC9101A",
+          EU: [
+            {
+              year: "Year 1",
+              units: [
+                {
+                  name: "Unit 1",
+                  code: "ENG110",
+                  url: "https://example.com/unit1",
+                },
+              ],
+            },
+          ],
+        },
+        cached: false,
+        scrapedAt: new Date().toISOString(),
+      };
 
-			expect(successResponse.success).toBe(true);
-			expect(successResponse.data).toBeDefined();
-			expect(successResponse.data?.code).toBe("CYC9101A");
-			expect(successResponse.data?.EU).toBeDefined();
-			expect(Array.isArray(successResponse.data?.EU)).toBe(true);
-		});
+      expect(successResponse.success).toBe(true);
+      expect(successResponse.data).toBeDefined();
+      expect(successResponse.data?.code).toBe("CYC9101A");
+      expect(successResponse.data?.EU).toBeDefined();
+      expect(Array.isArray(successResponse.data?.EU)).toBe(true);
+    });
 
-		it("should return valid error response structure", () => {
-			const errorResponse: CursusApiResponse = {
-				success: false,
-				error: "Cursus not found",
-			};
+    it("should return valid error response structure", () => {
+      const errorResponse: CursusApiResponse = {
+        success: false,
+        error: "Cursus not found",
+      };
 
-			expect(errorResponse.success).toBe(false);
-			expect(errorResponse.error).toBeDefined();
-			expect(errorResponse.data).toBeUndefined();
-		});
+      expect(errorResponse.success).toBe(false);
+      expect(errorResponse.error).toBeDefined();
+      expect(errorResponse.data).toBeUndefined();
+    });
 
-		it("should include cache status in response", () => {
-			const cachedResponse: CursusApiResponse = {
-				success: true,
-				data: {
-					name: "Test",
-					code: "CYC9101A",
-					EU: [],
-				},
-				cached: true,
-			};
+    it("should include cache status in response", () => {
+      const cachedResponse: CursusApiResponse = {
+        success: true,
+        data: {
+          name: "Test",
+          code: "CYC9101A",
+          EU: [],
+        },
+        cached: true,
+      };
 
-			expect(cachedResponse.cached).toBe(true);
-			expect(cachedResponse.scrapedAt).toBeUndefined();
-		});
-	});
+      expect(cachedResponse.cached).toBe(true);
+      expect(cachedResponse.scrapedAt).toBeUndefined();
+    });
+  });
 
-	describe("KVCache integration in routes", () => {
-		it("should create cache instance with correct KV namespace", () => {
-			const cache = new KVCache(mockKVNamespace);
-			expect(cache).toBeDefined();
-			expect(cache).toBeInstanceOf(KVCache);
-		});
+  describe("KVCache integration in routes", () => {
+    it("should create cache instance with correct KV namespace", () => {
+      const cache = new KVCache(mockKVNamespace);
 
-		it("should handle cache operations", async () => {
-			const cache = new KVCache(mockKVNamespace);
-			const testData: CursusLevel1 = {
-				code: "CYC9101A",
-				years: [],
-			};
+      expect(cache).toBeDefined();
+      expect(cache).toBeInstanceOf(KVCache);
+    });
 
-			const setResult = await cache.set("CYC9101A", testData);
-			expect(setResult).toBe(true);
+    it("should handle cache operations", async () => {
+      const cache = new KVCache(mockKVNamespace);
+      const testData: CursusLevel1 = {
+        code: "CYC9101A",
+        years: [],
+      };
 
-			const invalidateResult = await cache.invalidate("CYC9101A");
-			expect(invalidateResult).toBe(true);
-		});
+      const setResult = await cache.set("CYC9101A", testData);
 
-		it("should generate consistent cache keys", async () => {
-			const cache = new KVCache(mockKVNamespace);
+      expect(setResult).toBe(true);
 
-			await cache.set("CYC9101A", { code: "CYC9101A", years: [] });
-			await cache.get("CYC9101A");
+      const invalidateResult = await cache.invalidate("CYC9101A");
 
-			// Verify that put and get were called
-			expect(mockKVNamespace.put).toHaveBeenCalled();
-		});
-	});
+      expect(invalidateResult).toBe(true);
+    });
 
-	describe("Error responses", () => {
-		it("should handle missing cursus gracefully", async () => {
-			mockKVNamespace.get.mockResolvedValueOnce(null);
+    it("should generate consistent cache keys", async () => {
+      const cache = new KVCache(mockKVNamespace);
 
-			const cache = new KVCache(mockKVNamespace);
-			const result = await cache.get("NONEXISTENT");
+      await cache.set("CYC9101A", { code: "CYC9101A", years: [] });
+      await cache.get("CYC9101A");
 
-			expect(result).toBeNull();
-		});
+      // Verify that put and get were called
+      expect(mockKVNamespace.put).toHaveBeenCalled();
+    });
+  });
 
-		it("should handle KV namespace errors", async () => {
-			mockKVNamespace.put.mockRejectedValueOnce(
-				new Error("KV storage full"),
-			);
+  describe("Error responses", () => {
+    it("should handle missing cursus gracefully", async () => {
+      mockKVNamespace.get.mockResolvedValueOnce(null);
 
-			const cache = new KVCache(mockKVNamespace);
-			const result = await cache.set("CYC9101A", { code: "CYC9101A", years: [] });
+      const cache = new KVCache(mockKVNamespace);
+      const result = await cache.get("NONEXISTENT");
 
-			expect(result).toBe(false);
-		});
-	});
+      expect(result).toBeNull();
+    });
+
+    it("should handle KV namespace errors", async () => {
+      mockKVNamespace.put.mockRejectedValueOnce(new Error("KV storage full"));
+
+      const cache = new KVCache(mockKVNamespace);
+      const result = await cache.set("CYC9101A", {
+        code: "CYC9101A",
+        years: [],
+      });
+
+      expect(result).toBe(false);
+    });
+  });
 });

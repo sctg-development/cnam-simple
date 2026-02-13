@@ -27,11 +27,11 @@ import { setupRoutes } from "./routes";
 // Route Organization Pattern: Separation of concerns - router initialization and setup
 
 export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
-		const router = new Router(env);
+  async fetch(request: Request, env: Env): Promise<Response> {
+    const router = new Router(env);
 
-		setupRoutes(router, env);
+    setupRoutes(router, env);
 
-		return await router.handleRequest(request, env);
-	},
+    return await router.handleRequest(request, env);
+  },
 } satisfies ExportedHandler<Env>;

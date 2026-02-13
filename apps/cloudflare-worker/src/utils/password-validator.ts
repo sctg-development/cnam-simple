@@ -36,51 +36,46 @@ import { sha512crypt } from "sha512crypt-node";
  * @returns true if password matches hash, false otherwise
  */
 export function validateScraperPassword(
-	plainPassword: string,
-	hash: string,
+  plainPassword: string,
+  hash: string,
 ): boolean {
-	try {
-		// Validate that we have both inputs
-		if (!plainPassword || !hash) {
-			// eslint-disable-next-line no-console
-			console.warn(
-				"[Auth] Missing password or hash for validation",
-			);
-			return false;
-		}
+  try {
+    // Validate that we have both inputs
+    if (!plainPassword || !hash) {
+      console.warn("[Auth] Missing password or hash for validation");
 
-		// Extract salt from hash (SHA512-crypt format: $6$salt$hash)
-		// Salt Extraction Pattern: Parse hash structure to recover original salt
-		const hashParts = hash.split("$");
-		if (hashParts.length < 4 || hashParts[1] !== "6") {
-			// eslint-disable-next-line no-console
-			console.warn("[Auth] Invalid SHA512-crypt hash format");
-			return false;
-		}
+      return false;
+    }
 
-		const salt = hashParts[2]; // Extract salt: $6$salt$hash
+    // Extract salt from hash (SHA512-crypt format: $6$salt$hash)
+    // Salt Extraction Pattern: Parse hash structure to recover original salt
+    const hashParts = hash.split("$");
 
-		// Cryptographic Comparison: HMAC-style verification against stored hash
-		// Uses salt from original hash to ensure deterministic hashing
-		const hashedPassword = sha512crypt(plainPassword, "$6$" + salt);
+    if (hashParts.length < 4 || hashParts[1] !== "6") {
+      console.warn("[Auth] Invalid SHA512-crypt hash format");
 
-		// Compare the generated hash with the stored hash
-		const isValid = hashedPassword === hash;
+      return false;
+    }
 
-		if (isValid) {
-			// eslint-disable-next-line no-console
-			console.log("[Auth] Password validation successful");
-		} else {
-			// eslint-disable-next-line no-console
-			console.warn(
-				"[Auth] Password validation failed - invalid password",
-			);
-		}
+    const salt = hashParts[2]; // Extract salt: $6$salt$hash
 
-		return isValid;
-	} catch (error) {
-		// eslint-disable-next-line no-console
-		console.error("[Auth] Error during password validation:", error);
-		return false;
-	}
+    // Cryptographic Comparison: HMAC-style verification against stored hash
+    // Uses salt from original hash to ensure deterministic hashing
+    const hashedPassword = sha512crypt(plainPassword, "$6$" + salt);
+
+    // Compare the generated hash with the stored hash
+    const isValid = hashedPassword === hash;
+
+    if (isValid) {
+      console.log("[Auth] Password validation successful");
+    } else {
+      console.warn("[Auth] Password validation failed - invalid password");
+    }
+
+    return isValid;
+  } catch (error) {
+    console.error("[Auth] Error during password validation:", error);
+
+    return false;
+  }
 }

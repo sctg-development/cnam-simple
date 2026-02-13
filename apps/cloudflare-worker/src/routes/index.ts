@@ -27,22 +27,25 @@ import { setupCursusRoutes } from "./cursus";
 
 // Route Registry Pattern: Centralized route registration through modular setup functions
 export const setupRoutes = (router: Router, env: Env) => {
-	// Composition of route modules: Each domain has its own setup function
-	router.get("/", async () => {
-		return new Response("Welcome to the CNAM-SIMPLE API - see https://github.com/sctg-development/cnam-simple", {
-			status: 200,
-			headers: { "Content-Type": "text/plain" },
-		});
-	});
+  // Composition of route modules: Each domain has its own setup function
+  router.get("/", async () => {
+    return new Response(
+      "Welcome to the CNAM-SIMPLE API - see https://github.com/sctg-development/cnam-simple",
+      {
+        status: 200,
+        headers: { "Content-Type": "text/plain" },
+      },
+    );
+  });
 
-	// Simple health check (public)
-	router.get("/health", async () => {
-		return new Response(JSON.stringify({ success: true, status: "ok" }), {
-			status: 200,
-			headers: { ...router.corsHeaders, "Content-Type": "application/json" },
-		});
-	});
+  // Simple health check (public)
+  router.get("/health", async () => {
+    return new Response(JSON.stringify({ success: true, status: "ok" }), {
+      status: 200,
+      headers: { ...router.corsHeaders, "Content-Type": "application/json" },
+    });
+  });
 
-	// Setup cursus routes: Modular route composition
-	setupCursusRoutes(router, env);
+  // Setup cursus routes: Modular route composition
+  setupCursusRoutes(router, env);
 };

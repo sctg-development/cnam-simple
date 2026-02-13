@@ -29,311 +29,308 @@ import { checkPermissions } from "../auth0";
 
 // Type-safe Handler Pattern: Strong typing for route handlers
 type RouteHandler = (
-	request: Request & { params: Record<string, string>; user?: any },
-	env: Env,
+  request: Request & { params: Record<string, string>; user?: any },
+  env: Env,
 ) => Promise<Response>;
 
 // Routing Configuration: Declarative route definition structure
 interface Route {
-	path: string;
-	method: string;
-	handler: RouteHandler;
-	permission?: string;
-	// Compiled URLPattern for advanced matching (Rocket-style <> syntax)
-	compiled?: URLPattern | null;
+  path: string;
+  method: string;
+  handler: RouteHandler;
+  permission?: string;
+  // Compiled URLPattern for advanced matching (Rocket-style <> syntax)
+  compiled?: URLPattern | null;
 }
 
 // Router Pattern: Centralized request routing with permission-based access control
 export class Router {
-	jwtPayload: JWTPayload = {};
-	userPermissions: string[] = [];
-	routes: Route[] = [];
-	corsHeaders: Record<string, string>;
+  jwtPayload: JWTPayload = {};
+  userPermissions: string[] = [];
+  routes: Route[] = [];
+  corsHeaders: Record<string, string>;
 
-	// Dependency Injection: Environment configuration passed to constructor
-	constructor(env: Env) {
-		this.corsHeaders = {
-			"Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-			"Access-Control-Allow-Origin": env.CORS_ORIGIN,
-			"Access-Control-Allow-Headers": "Content-Type, Authorization",
-			"Content-Type": "application/json",
-		};
-	}
+  // Dependency Injection: Environment configuration passed to constructor
+  constructor(env: Env) {
+    this.corsHeaders = {
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Origin": env.CORS_ORIGIN,
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Content-Type": "application/json",
+    };
+  }
 
-	// Builder Pattern: Fluent method chaining for route registration
-	get(path: string, handler: RouteHandler, permission?: string) {
-		this.routes.push({
-			...this.compileRoute(path),
-			path,
-			method: "GET",
-			handler,
-			permission,
-		});
-	}
+  // Builder Pattern: Fluent method chaining for route registration
+  get(path: string, handler: RouteHandler, permission?: string) {
+    this.routes.push({
+      ...this.compileRoute(path),
+      path,
+      method: "GET",
+      handler,
+      permission,
+    });
+  }
 
-	post(path: string, handler: RouteHandler, permission?: string) {
-		this.routes.push({
-			...this.compileRoute(path),
-			path,
-			method: "POST",
-			handler,
-			permission,
-		});
-	}
+  post(path: string, handler: RouteHandler, permission?: string) {
+    this.routes.push({
+      ...this.compileRoute(path),
+      path,
+      method: "POST",
+      handler,
+      permission,
+    });
+  }
 
-	put(path: string, handler: RouteHandler, permission?: string) {
-		this.routes.push({
-			...this.compileRoute(path),
-			path,
-			method: "PUT",
-			handler,
-			permission,
-		});
-	}
+  put(path: string, handler: RouteHandler, permission?: string) {
+    this.routes.push({
+      ...this.compileRoute(path),
+      path,
+      method: "PUT",
+      handler,
+      permission,
+    });
+  }
 
-	delete(path: string, handler: RouteHandler, permission?: string) {
-		this.routes.push({
-			...this.compileRoute(path),
-			path,
-			method: "DELETE",
-			handler,
-			permission,
-		});
-	}
+  delete(path: string, handler: RouteHandler, permission?: string) {
+    this.routes.push({
+      ...this.compileRoute(path),
+      path,
+      method: "DELETE",
+      handler,
+      permission,
+    });
+  }
 
-	/**
-	 * Compile a route path supporting Rocket-style parameters:
-	 * - <name> -> :name
-	 * - <name..> -> :name* (catch-all)
-	 *
-	 * Returns an object with an optional URLPattern or null if not necessary.
-	 */
-	private compileRoute(path: string): { compiled?: URLPattern | null } {
-		// Quick detection: only compile if the route contains '<' and '>'
-		if (!path.includes("<") || !path.includes(">")) return { compiled: null };
+  /**
+   * Compile a route path supporting Rocket-style parameters:
+   * - <name> -> :name
+   * - <name..> -> :name* (catch-all)
+   *
+   * Returns an object with an optional URLPattern or null if not necessary.
+   */
+  private compileRoute(path: string): { compiled?: URLPattern | null } {
+    // Quick detection: only compile if the route contains '<' and '>'
+    if (!path.includes("<") || !path.includes(">")) return { compiled: null };
 
-		// Convert `<name..>` to `:name*` and `<name>` to `:name`
-		// Keep it simple (strings only) per choice
-		const converted = path
-			.replace(/<([a-zA-Z0-9_]+)\.\.>/g, ":$1*")
-			.replace(/<([a-zA-Z0-9_]+)>/g, ":$1");
+    // Convert `<name..>` to `:name*` and `<name>` to `:name`
+    // Keep it simple (strings only) per choice
+    const converted = path
+      .replace(/<([a-zA-Z0-9_]+)\.\.>/g, ":$1*")
+      .replace(/<([a-zA-Z0-9_]+)>/g, ":$1");
 
-		try {
-			const pattern = new URLPattern({ pathname: converted });
+    try {
+      const pattern = new URLPattern({ pathname: converted });
 
-			return { compiled: pattern };
-		} catch (e) {
-			// If URLPattern is not available or pattern invalid, fallback to null
-			// (caller will use the legacy matchPath)
-			// eslint-disable-next-line no-console
-			console.warn("Failed to compile route pattern:", converted, e);
+      return { compiled: pattern };
+    } catch (e) {
+      // If URLPattern is not available or pattern invalid, fallback to null
+      // (caller will use the legacy matchPath)
 
-			return { compiled: null };
-		}
-	}
+      console.warn("Failed to compile route pattern:", converted, e);
 
-	async handleUnauthorizedRequest(): Promise<Response> {
-		return new Response(
-			JSON.stringify({ success: false, error: "Unauthorized" }),
-			{
-				status: 403,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
-	}
+      return { compiled: null };
+    }
+  }
 
-	async handleRequest(request: Request, env: Env): Promise<Response> {
-		if (request.method === "OPTIONS") {
-			return new Response(null, {
-				status: 204,
-				headers: {
-					...this.corsHeaders,
-					"Access-Control-Allow-Credentials": "true",
-				},
-			});
-		}
+  async handleUnauthorizedRequest(): Promise<Response> {
+    return new Response(
+      JSON.stringify({ success: false, error: "Unauthorized" }),
+      {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
 
-		const url = new URL(request.url);
-		const { pathname } = url;
+  async handleRequest(request: Request, env: Env): Promise<Response> {
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          ...this.corsHeaders,
+          "Access-Control-Allow-Credentials": "true",
+        },
+      });
+    }
 
-		// Rate limiting (uses binding RATE_LIMITER if present)
-		try {
-			const ip = request.headers.get("CF-Connecting-IP") || "unknown";
-			const userId = this.jwtPayload.sub || "anonymous";
-			const endpoint = pathname;
-			const rateLimitKey = `${ip}:${userId}:${endpoint}`;
+    const url = new URL(request.url);
+    const { pathname } = url;
 
-			if (env.RATE_LIMITER) {
-				const { success } = await env.RATE_LIMITER.limit({ key: rateLimitKey });
+    // Rate limiting (uses binding RATE_LIMITER if present)
+    try {
+      const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+      const userId = this.jwtPayload.sub || "anonymous";
+      const endpoint = pathname;
+      const rateLimitKey = `${ip}:${userId}:${endpoint}`;
 
-				if (!success) {
-					return new Response(
-						JSON.stringify(`429 Failure – rate limit exceeded for ${pathname}`),
-						{
-							status: 429,
-							headers: {
-								...this.corsHeaders,
-								"X-RateLimit-Limit": "10",
-								"X-RateLimit-Remaining": "0",
-								"X-RateLimit-Reset": "60",
-								"Retry-After": "60",
-							},
-						},
-					);
-				}
-			}
-		} catch (e) {
-			// eslint-disable-next-line no-console
-			console.error("Rate limiter error:", e);
-			// ignore rate limiter errors and continue
-		}
+      if (env.RATE_LIMITER) {
+        const { success } = await env.RATE_LIMITER.limit({ key: rateLimitKey });
 
-		for (const route of this.routes) {
-			if (route.method !== request.method) continue;
+        if (!success) {
+          return new Response(
+            JSON.stringify(`429 Failure – rate limit exceeded for ${pathname}`),
+            {
+              status: 429,
+              headers: {
+                ...this.corsHeaders,
+                "X-RateLimit-Limit": "10",
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": "60",
+                "Retry-After": "60",
+              },
+            },
+          );
+        }
+      }
+    } catch (e) {
+      console.error("Rate limiter error:", e);
+      // ignore rate limiter errors and continue
+    }
 
-			let match: Record<string, string> | null = null;
+    for (const route of this.routes) {
+      if (route.method !== request.method) continue;
 
-			// If we have a compiled URLPattern, use it (supports Rocket-style <name> syntax)
-			if (route.compiled) {
-				try {
-					const urlObj = new URL(request.url);
-					const res = route.compiled.exec(urlObj);
+      let match: Record<string, string> | null = null;
 
-					if (res && res.pathname && res.pathname.groups) {
-						// Convert groups (may include undefined entries) to strings
-						for (const [k, v] of Object.entries(res.pathname.groups)) {
-							if (v !== undefined) {
-								(match || (match = {}))[k] = v;
-							}
-						}
-					}
-				} catch (e) {
-					// eslint-disable-next-line no-console
-					console.warn("Error matching URLPattern for route:", route.path, e);
-					// ignore URLPattern errors and fallback to legacy matching
-				}
-			}
+      // If we have a compiled URLPattern, use it (supports Rocket-style <name> syntax)
+      if (route.compiled) {
+        try {
+          const urlObj = new URL(request.url);
+          const res = route.compiled.exec(urlObj);
 
-			// Fallback to legacy matching if no match from URLPattern
-			if (!match) {
-				match = this.matchPath(route.path, pathname);
-			}
+          if (res && res.pathname && res.pathname.groups) {
+            // Convert groups (may include undefined entries) to strings
+            for (const [k, v] of Object.entries(res.pathname.groups)) {
+              if (v !== undefined) {
+                (match || (match = {}))[k] = v;
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("Error matching URLPattern for route:", route.path, e);
+          // ignore URLPattern errors and fallback to legacy matching
+        }
+      }
 
-			if (!match) continue;
+      // Fallback to legacy matching if no match from URLPattern
+      if (!match) {
+        match = this.matchPath(route.path, pathname);
+      }
 
-			if (route.permission) {
-				if (!request.headers.has("Authorization")) {
-					return new Response(
-						JSON.stringify({
-							success: false,
-							error: "Authentication required",
-						}),
-						{
-							status: 401,
-							headers: { ...this.corsHeaders },
-						},
-					);
-				}
+      if (!match) continue;
 
-				const token = request.headers.get("Authorization")?.split(" ")[1];
+      if (route.permission) {
+        if (!request.headers.has("Authorization")) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Authentication required",
+            }),
+            {
+              status: 401,
+              headers: { ...this.corsHeaders },
+            },
+          );
+        }
 
-				if (!token) {
-					return new Response(
-						JSON.stringify({
-							success: false,
-							error: "Invalid authorization header",
-						}),
-						{
-							status: 401,
-							headers: { ...this.corsHeaders },
-						},
-					);
-				}
+        const token = request.headers.get("Authorization")?.split(" ")[1];
 
-				const { access, payload, permissions } = await checkPermissions(
-					token,
-					route.permission,
-					env,
-				);
+        if (!token) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Invalid authorization header",
+            }),
+            {
+              status: 401,
+              headers: { ...this.corsHeaders },
+            },
+          );
+        }
 
-				this.userPermissions = permissions;
-				this.jwtPayload = payload;
+        const { access, payload, permissions } = await checkPermissions(
+          token,
+          route.permission,
+          env,
+        );
 
-				if (!access) {
-					return new Response(
-						JSON.stringify({
-							success: false,
-							error: "Insufficient permissions",
-						}),
-						{
-							status: 403,
-							headers: { ...this.corsHeaders },
-						},
-					);
-				}
+        this.userPermissions = permissions;
+        this.jwtPayload = payload;
 
-				(request as any).user = payload;
-			}
+        if (!access) {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: "Insufficient permissions",
+            }),
+            {
+              status: 403,
+              headers: { ...this.corsHeaders },
+            },
+          );
+        }
 
-			(request as any).params = match;
+        (request as any).user = payload;
+      }
 
-			try {
-				return await route.handler(
-					request as Request & { params: Record<string, string>; user?: any },
-					env,
-				);
-			} catch (error) {
-				// eslint-disable-next-line no-console
-				console.error("Route handler error:", error);
+      (request as any).params = match;
 
-				return new Response(
-					JSON.stringify({ success: false, error: "Internal server error" }),
-					{
-						status: 500,
-						headers: { ...this.corsHeaders },
-					},
-				);
-			}
-		}
+      try {
+        return await route.handler(
+          request as Request & { params: Record<string, string>; user?: any },
+          env,
+        );
+      } catch (error) {
+        console.error("Route handler error:", error);
 
-		return new Response(
-			JSON.stringify({ success: false, error: "Not found" }),
-			{
-				status: 404,
-				headers: { ...this.corsHeaders },
-			},
-		);
-	}
+        return new Response(
+          JSON.stringify({ success: false, error: "Internal server error" }),
+          {
+            status: 500,
+            headers: { ...this.corsHeaders },
+          },
+        );
+      }
+    }
 
-	private matchPath(
-		routePath: string,
-		pathname: string,
-	): Record<string, string> | null {
-		const routeParts = routePath.split("/");
-		const pathParts = pathname.split("/");
+    return new Response(
+      JSON.stringify({ success: false, error: "Not found" }),
+      {
+        status: 404,
+        headers: { ...this.corsHeaders },
+      },
+    );
+  }
 
-		if (routeParts.length !== pathParts.length) {
-			return null;
-		}
+  private matchPath(
+    routePath: string,
+    pathname: string,
+  ): Record<string, string> | null {
+    const routeParts = routePath.split("/");
+    const pathParts = pathname.split("/");
 
-		const params: Record<string, string> = {};
+    if (routeParts.length !== pathParts.length) {
+      return null;
+    }
 
-		for (let i = 0; i < routeParts.length; i++) {
-			const routePart = routeParts[i];
-			const pathPart = pathParts[i];
+    const params: Record<string, string> = {};
 
-			if (routePart.startsWith(":")) {
-				const paramName = routePart.slice(1);
+    for (let i = 0; i < routeParts.length; i++) {
+      const routePart = routeParts[i];
+      const pathPart = pathParts[i];
 
-				params[paramName] = pathPart;
-				continue;
-			}
+      if (routePart.startsWith(":")) {
+        const paramName = routePart.slice(1);
 
-			if (routePart !== pathPart) {
-				return null;
-			}
-		}
+        params[paramName] = pathPart;
+        continue;
+      }
 
-		return params;
-	}
+      if (routePart !== pathPart) {
+        return null;
+      }
+    }
+
+    return params;
+  }
 }

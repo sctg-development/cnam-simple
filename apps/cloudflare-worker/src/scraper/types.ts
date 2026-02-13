@@ -31,41 +31,41 @@
  * Bibliography entry for a unit: Value Object pattern
  */
 export interface Bibliography {
-	title: string;
-	author: string;
+  title: string;
+  author: string;
 }
 
 /**
  * Unit (EU - Élément d'Unité) details: Entity pattern with optional fields
  */
 export interface Unit {
-	name: string;
-	code?: string;
-	url?: string;
-	rich?: boolean;
-	audience_access?: string;
-	objectives?: string;
-	content?: string;
-	bibliography?: Bibliography[];
+  name: string;
+  code?: string;
+  url?: string;
+  rich?: boolean;
+  audience_access?: string;
+  objectives?: string;
+  content?: string;
+  bibliography?: Bibliography[];
 }
 
 /**
  * Year section in a cursus
  */
 export interface Year {
-	year: number | string;
-	units: Unit[];
+  year: number | string;
+  units: Unit[];
 }
 
 /**
  * Complete cursus structure: Aggregate pattern for cursus representation
  */
 export interface Cursus {
-	name: string;
-	code: string;
-	audience_access?: string;
-	objectives?: string;
-	EU: Year[];
+  name: string;
+  code: string;
+  audience_access?: string;
+  objectives?: string;
+  EU: Year[];
 }
 
 /**
@@ -73,33 +73,33 @@ export interface Cursus {
  * Provides circuit breaker semantics: success flag, data payload, and error field
  */
 export interface CursusApiResponse {
-	success: boolean;
-	data?: Cursus;
-	cached?: boolean;
-	scrapedAt?: string;
-	error?: string;
-	enrichedPercent?: number;
+  success: boolean;
+  data?: Cursus;
+  cached?: boolean;
+  scrapedAt?: string;
+  error?: string;
+  enrichedPercent?: number;
 }
 
 /**
  * Cursus parsing result
  */
 export interface CursusLevel1 {
-	code: string;
-	name?: string;
-	audience_access?: string;
-	objectives?: string;
-	years: {
-		year: string | number;
-		units: Unit[];
-	}[];
+  code: string;
+  name?: string;
+  audience_access?: string;
+  objectives?: string;
+  years: {
+    year: string | number;
+    units: Unit[];
+  }[];
 }
 
 /**
  * Scraper options
  */
 export interface ScraperOptions {
-	timeout?: number;
-	force?: boolean;
-	parallel?: boolean;
+  timeout?: number;
+  force?: boolean;
+  parallel?: boolean;
 }

@@ -22,26 +22,30 @@
  * SOFTWARE.
  */
 
-import { Router } from "./router";
+import type { CursusLevel1, CursusApiResponse, Unit } from "../scraper/types";
+
 import { CNAMScraper } from "../scraper/cnam-scraper";
 import { KVCache } from "../cache/kv-cache";
-import type { CursusLevel1, CursusApiResponse, Unit } from "../scraper/types";
 import { validateScraperPassword } from "../utils/password-validator";
+
+import { Router } from "./router";
 
 /**
  * Utility: Find units that haven't been enriched yet (rich !== true)
  * Traverses all years and identifies units with rich flag missing or false
  */
 function findUnfinishedUnits(cursusData: CursusLevel1): Unit[] {
-	const unfinished: Unit[] = [];
-	for (const year of cursusData.years || []) {
-		for (const unit of year.units || []) {
-			if (!unit.rich) {
-				unfinished.push(unit);
-			}
-		}
-	}
-	return unfinished;
+  const unfinished: Unit[] = [];
+
+  for (const year of cursusData.years || []) {
+    for (const unit of year.units || []) {
+      if (!unit.rich) {
+        unfinished.push(unit);
+      }
+    }
+  }
+
+  return unfinished;
 }
 
 /**
@@ -49,42 +53,47 @@ function findUnfinishedUnits(cursusData: CursusLevel1): Unit[] {
  * Constructs URLs from existing unit.url or generates from unit.code
  */
 function buildUnitUrlsForUnits(
-	units: Unit[],
-	cnamBedeoUrl: string,
-	cnamBedeoUnitePath: string,
+  units: Unit[],
+  cnamBedeoUrl: string,
+  cnamBedeoUnitePath: string,
 ): Array<{ code: string; url: string }> {
-	return units
-		.map((unit) => {
-			if (!unit.code) return null;
+  return units
+    .map((unit) => {
+      if (!unit.code) return null;
 
-			const url =
-				unit.url ||
-				(unit.code ? `${cnamBedeoUrl}${cnamBedeoUnitePath}${unit.code}` : undefined);
+      const url =
+        unit.url ||
+        (unit.code
+          ? `${cnamBedeoUrl}${cnamBedeoUnitePath}${unit.code}`
+          : undefined);
 
-			if (!url) return null;
+      if (!url) return null;
 
-			return {
-				code: unit.code,
-				url,
-			};
-		})
-		.filter((u) => u !== null) as Array<{ code: string; url: string }>;
+      return {
+        code: unit.code,
+        url,
+      };
+    })
+    .filter((u) => u !== null) as Array<{ code: string; url: string }>;
 }
 
 /**
  * Utility: Merge enriched units into an existing cursus structure
  * Replaces units with their enriched versions from the enriched array
  */
-function mergeEnrichedUnits(cursusData: CursusLevel1, enrichedUnits: any[]): CursusLevel1 {
-	const enrichedMap = new Map(enrichedUnits.map((u) => [u.code, u]));
+function mergeEnrichedUnits(
+  cursusData: CursusLevel1,
+  enrichedUnits: any[],
+): CursusLevel1 {
+  const enrichedMap = new Map(enrichedUnits.map((u) => [u.code, u]));
 
-	return {
-		...cursusData,
-		years: cursusData.years.map((year) => ({
-			...year,
-			units: year.units.map((unit) => enrichedMap.get(unit.code) || unit),
-		})),
-	};
+  return {
+    ...cursusData,
+    years: cursusData.years.map((year) => ({
+      ...year,
+      units: year.units.map((unit) => enrichedMap.get(unit.code) || unit),
+    })),
+  };
 }
 
 /**
@@ -92,33 +101,39 @@ function mergeEnrichedUnits(cursusData: CursusLevel1, enrichedUnits: any[]): Cur
  * Ensures that units marked as rich in base are also marked in the data structure
  * This synchronizes the state after checkpoints which update the base cache
  */
-function applyCachedRichFlags(dataToEnrich: CursusLevel1, baseCache: CursusLevel1 | null): CursusLevel1 {
-	if (!baseCache) return dataToEnrich;
+function applyCachedRichFlags(
+  dataToEnrich: CursusLevel1,
+  baseCache: CursusLevel1 | null,
+): CursusLevel1 {
+  if (!baseCache) return dataToEnrich;
 
-	// Build a map of codes -> rich flag from base cache
-	const richFlagsFromBase = new Map<string, boolean>();
-	for (const year of baseCache.years || []) {
-		for (const unit of year.units || []) {
-			if (unit.code) {
-				richFlagsFromBase.set(unit.code, unit.rich === true);
-			}
-		}
-	}
+  // Build a map of codes -> rich flag from base cache
+  const richFlagsFromBase = new Map<string, boolean>();
 
-	// Apply these flags to the data structure
-	return {
-		...dataToEnrich,
-		years: dataToEnrich.years.map((year) => ({
-			...year,
-			units: year.units.map((unit) => {
-				const richFromBase = richFlagsFromBase.get(unit.code || "");
-				if (richFromBase !== undefined && richFromBase === true) {
-					return { ...unit, rich: true };
-				}
-				return unit;
-			}),
-		})),
-	};
+  for (const year of baseCache.years || []) {
+    for (const unit of year.units || []) {
+      if (unit.code) {
+        richFlagsFromBase.set(unit.code, unit.rich === true);
+      }
+    }
+  }
+
+  // Apply these flags to the data structure
+  return {
+    ...dataToEnrich,
+    years: dataToEnrich.years.map((year) => ({
+      ...year,
+      units: year.units.map((unit) => {
+        const richFromBase = richFlagsFromBase.get(unit.code || "");
+
+        if (richFromBase !== undefined && richFromBase === true) {
+          return { ...unit, rich: true };
+        }
+
+        return unit;
+      }),
+    })),
+  };
 }
 
 /**
@@ -126,11 +141,13 @@ function applyCachedRichFlags(dataToEnrich: CursusLevel1, baseCache: CursusLevel
  * Returns 0-100 indicating how many units have been enriched
  */
 function calculateEnrichmentPercent(cursusData: CursusLevel1): number {
-	const allUnits = cursusData.years.flatMap((y) => y.units);
-	if (allUnits.length === 0) return 100;
+  const allUnits = cursusData.years.flatMap((y) => y.units);
 
-	const richCount = allUnits.filter((u) => u.rich).length;
-	return Math.round((richCount / allUnits.length) * 100);
+  if (allUnits.length === 0) return 100;
+
+  const richCount = allUnits.filter((u) => u.rich).length;
+
+  return Math.round((richCount / allUnits.length) * 100);
 }
 
 /**
@@ -138,369 +155,383 @@ function calculateEnrichmentPercent(cursusData: CursusLevel1): number {
  * Handles API endpoints for cursus data with caching and scraping strategies
  */
 export const setupCursusRoutes = (router: Router, env: Env): void => {
-	/**
-	 * GET /api/cursus/<code>
-	 * Retrieve cursus data with optional enrichment
-	 * Cache & Security Pattern: Validates credentials before allowing cache override
-	 *
-	 * Query parameters:
-	 * - force: boolean (force scrape even if cached)
-	 * - timeout: number (custom timeout in milliseconds)
-	 * - enrich: boolean (fetch Level 2 unit details)
-	 * - api-key: string (SHA512-crypt password to allow cache invalidation)
-	 */
-	router.get(
-		"/api/cursus/<code>",
-		async (req: any, env: Env): Promise<Response> => {
-			try {
-				const { code } = req.params as { code: string };
-				const url = new URL(req.url);
+  /**
+   * GET /api/cursus/<code>
+   * Retrieve cursus data with optional enrichment
+   * Cache & Security Pattern: Validates credentials before allowing cache override
+   *
+   * Query parameters:
+   * - force: boolean (force scrape even if cached)
+   * - timeout: number (custom timeout in milliseconds)
+   * - enrich: boolean (fetch Level 2 unit details)
+   * - api-key: string (SHA512-crypt password to allow cache invalidation)
+   */
+  router.get(
+    "/api/cursus/<code>",
+    async (req: any, env: Env): Promise<Response> => {
+      try {
+        const { code } = req.params as { code: string };
+        const url = new URL(req.url);
 
-				// Parse query parameters
-				let force = url.searchParams.get("force") === "true";
-				const timeout = url.searchParams.get("timeout")
-					? parseInt(url.searchParams.get("timeout") || "30000", 10)
-					: 30000;
-				const enrich = url.searchParams.get("enrich") === "true";
-				const apiKey = url.searchParams.get("api-key");
+        // Parse query parameters
+        let force = url.searchParams.get("force") === "true";
+        const timeout = url.searchParams.get("timeout")
+          ? parseInt(url.searchParams.get("timeout") || "30000", 10)
+          : 30000;
+        const enrich = url.searchParams.get("enrich") === "true";
+        const apiKey = url.searchParams.get("api-key");
 
-				// If force is requested but no api-key was provided, ignore the force to avoid
-				// accidental cache invalidation. A valid api-key is required to override cache.
-				if (force && !apiKey) {
-					// eslint-disable-next-line no-console
-					console.warn(
-						`[Route] Force requested for ${code} but no api-key provided; ignoring force parameter to preserve cache.`,
-					);
-					force = false;
-				}
-				// eslint-disable-next-line no-console
-				console.log(
-					`[Route] GET /api/cursus/${code} (force: ${force}, timeout: ${timeout}ms, enrich: ${enrich})`,
-				);
+        // If force is requested but no api-key was provided, ignore the force to avoid
+        // accidental cache invalidation. A valid api-key is required to override cache.
+        if (force && !apiKey) {
+          console.warn(
+            `[Route] Force requested for ${code} but no api-key provided; ignoring force parameter to preserve cache.`,
+          );
+          force = false;
+        }
 
-				// Handle cache override with password if api-key is provided and force is true
-				let forcedByOverride = false;
-				if (apiKey && force) {				// Password Validation Pattern: Validate credentials for privileged operations					
-					const passwordHash = env.SCRAPER_CACHE_OVERRIDE as string;
-					if (passwordHash && validateScraperPassword(apiKey, passwordHash)) {
-						// eslint-disable-next-line no-console
-						console.log(`[Route] Cache override validated for ${code}`);
-						forcedByOverride = true;
-					} else {
-						// eslint-disable-next-line no-console
-						console.warn(`[Route] Invalid cache override password attempt for ${code}`);
-						return new Response(JSON.stringify({ success: false, error: "Invalid password" }), {
-							status: 403,
-							headers: {
-								...router.corsHeaders,
-								"Content-Type": "application/json",
-							},
-						});
-					}
-				}
+        console.log(
+          `[Route] GET /api/cursus/${code} (force: ${force}, timeout: ${timeout}ms, enrich: ${enrich})`,
+        );
 
-				// Initialize services
-				const cache = new KVCache(env.CACHE as KVNamespace);
-			const scraper = new CNAMScraper(env);
-				// Load cache upfront if not forcing
-				const cachedRich = !force && !forcedByOverride ? await cache.get<any>(code, "rich") : null;
-				const cachedData = !force && !forcedByOverride ? await cache.get<CursusLevel1>(code) : null;
+        // Handle cache override with password if api-key is provided and force is true
+        let forcedByOverride = false;
 
-				// If forced override, invalidate cache
-				if (forcedByOverride) {
-					await cache.invalidate(code);
-					// eslint-disable-next-line no-console
-					console.log(`[Route] Cache invalidated by password override for ${code}`);
-				}
+        if (apiKey && force) {
+          // Password Validation Pattern: Validate credentials for privileged operations
+          const passwordHash = env.SCRAPER_CACHE_OVERRIDE as string;
 
-				// If rich cache complete, return it immediately
-				if (cachedRich) {
-					const enrichPercent = calculateEnrichmentPercent(cachedRich);
-					// eslint-disable-next-line no-console
-					console.log(`[Route] Cache hit for ${code} (rich, ${enrichPercent}% enriched)`);
+          if (passwordHash && validateScraperPassword(apiKey, passwordHash)) {
+            console.log(`[Route] Cache override validated for ${code}`);
+            forcedByOverride = true;
+          } else {
+            console.warn(
+              `[Route] Invalid cache override password attempt for ${code}`,
+            );
 
-					// Return if not requesting enrichment OR if enrichment is complete
-					if (!enrich || enrichPercent === 100) {
-						const response: CursusApiResponse = {
-							success: true,
-							data: {
-								name: cachedRich.name || code,
-								code: cachedRich.code,
-								audience_access: cachedRich.audience_access,
-								objectives: cachedRich.objectives,
-								EU: cachedRich.years,
-							},
-							cached: true,
-							enrichedPercent: enrichPercent,
-						};
+            return new Response(
+              JSON.stringify({ success: false, error: "Invalid password" }),
+              {
+                status: 403,
+                headers: {
+                  ...router.corsHeaders,
+                  "Content-Type": "application/json",
+                },
+              },
+            );
+          }
+        }
 
-						return new Response(JSON.stringify(response), {
-							status: 200,
-							headers: {
-								...router.corsHeaders,
-								"X-Cache": enrichPercent === 100 ? "HIT-RICH-COMPLETE" : "HIT-RICH-PARTIAL",
-								"Content-Type": "application/json",
-							},
-						});
-					}
-					// If enrich=true and incomplete, continue below with cachedRich as base
-					// eslint-disable-next-line no-console
-					console.log(
-						`[Route] Cache hit but incomplete (${enrichPercent}%). Continuing enrichment for ${code}`,
-					);
-				}
-				// If base cache exists and no enrichment requested, return it
-				else if (cachedData && !enrich) {
-					// eslint-disable-next-line no-console
-					console.log(`[Route] Cache hit for ${code} (base only)`);
+        // Initialize services
+        const cache = new KVCache(env.CACHE as KVNamespace);
+        const scraper = new CNAMScraper(env);
+        // Load cache upfront if not forcing
+        const cachedRich =
+          !force && !forcedByOverride
+            ? await cache.get<any>(code, "rich")
+            : null;
+        const cachedData =
+          !force && !forcedByOverride
+            ? await cache.get<CursusLevel1>(code)
+            : null;
 
-					const response: CursusApiResponse = {
-						success: true,
-						data: {
-							name: cachedData.name || code,
-							code: cachedData.code,
-							audience_access: cachedData.audience_access,
-							objectives: cachedData.objectives,
-							EU: cachedData.years,
-						},
-						cached: true,
-					};
+        // If forced override, invalidate cache
+        if (forcedByOverride) {
+          await cache.invalidate(code);
 
-					return new Response(JSON.stringify(response), {
-						status: 200,
-						headers: {
-							...router.corsHeaders,
-							"X-Cache": "HIT",
-							"Content-Type": "application/json",
-						},
-					});
-				}
+          console.log(
+            `[Route] Cache invalidated by password override for ${code}`,
+          );
+        }
 
-				// Determine if we need to scrape Level 1
-				// Skip Level 1 if we have base cache (with or without enrichment request)
-				let baseData = cachedData;
-				const ttl = Number(env.SCRAPER_CACHE_TTL) || 2592000; // 30 days in seconds
+        // If rich cache complete, return it immediately
+        if (cachedRich) {
+          const enrichPercent = calculateEnrichmentPercent(cachedRich);
 
-				if (!baseData) {
-					// eslint-disable-next-line no-console
-					console.log(`[Route] Cache miss or forced refresh for ${code}`);
+          console.log(
+            `[Route] Cache hit for ${code} (rich, ${enrichPercent}% enriched)`,
+          );
 
-					// Scrape fresh Level 1 data
-					baseData = await scraper.scrapeCursusLevel1(
-						code,
-						{ timeout },
-						env,
-					);
+          // Return if not requesting enrichment OR if enrichment is complete
+          if (!enrich || enrichPercent === 100) {
+            const response: CursusApiResponse = {
+              success: true,
+              data: {
+                name: cachedRich.name || code,
+                code: cachedRich.code,
+                audience_access: cachedRich.audience_access,
+                objectives: cachedRich.objectives,
+                EU: cachedRich.years,
+              },
+              cached: true,
+              enrichedPercent: enrichPercent,
+            };
 
-					// Validate we got meaningful data
-					if (!baseData || baseData.years.length === 0) {
-						const errorResponse: CursusApiResponse = {
-							success: false,
-							error: `No cursus data found for code: ${code}`,
-						};
+            return new Response(JSON.stringify(response), {
+              status: 200,
+              headers: {
+                ...router.corsHeaders,
+                "X-Cache":
+                  enrichPercent === 100
+                    ? "HIT-RICH-COMPLETE"
+                    : "HIT-RICH-PARTIAL",
+                "Content-Type": "application/json",
+              },
+            });
+          }
+          // If enrich=true and incomplete, continue below with cachedRich as base
 
-						return new Response(JSON.stringify(errorResponse), {
-							status: 404,
-							headers: {
-								...router.corsHeaders,
-								"Content-Type": "application/json",
-							},
-						});
-					}
+          console.log(
+            `[Route] Cache hit but incomplete (${enrichPercent}%). Continuing enrichment for ${code}`,
+          );
+        }
+        // If base cache exists and no enrichment requested, return it
+        else if (cachedData && !enrich) {
+          console.log(`[Route] Cache hit for ${code} (base only)`);
 
-					// Cache the base result
-					await cache.set(code, baseData, ttl);
-				} else {
-					// eslint-disable-next-line no-console
-					console.log(`[Route] Using cached base data for ${code}`);
-				}
+          const response: CursusApiResponse = {
+            success: true,
+            data: {
+              name: cachedData.name || code,
+              code: cachedData.code,
+              audience_access: cachedData.audience_access,
+              objectives: cachedData.objectives,
+              EU: cachedData.years,
+            },
+            cached: true,
+          };
 
-				// Prepare data for enrichment or response
-				let dataToReturn = baseData;
+          return new Response(JSON.stringify(response), {
+            status: 200,
+            headers: {
+              ...router.corsHeaders,
+              "X-Cache": "HIT",
+              "Content-Type": "application/json",
+            },
+          });
+        }
 
-				// Enrich with Level 2 unit details if requested
-				if (enrich) {
-					// eslint-disable-next-line no-console
-					console.log(`[Route] Enriching cursus ${code} with Level 2 unit details`);
+        // Determine if we need to scrape Level 1
+        // Skip Level 1 if we have base cache (with or without enrichment request)
+        let baseData = cachedData;
+        const ttl = Number(env.SCRAPER_CACHE_TTL) || 2592000; // 30 days in seconds
 
-					// Use cached rich as base for continuation if available, otherwise use base data
-					let dataToEnrich = cachedRich || baseData;
+        if (!baseData) {
+          console.log(`[Route] Cache miss or forced refresh for ${code}`);
 
-					// If we have both cachedRich and baseData, apply rich flags from base to enrich
-					// This ensures we respect checkpoints that updated the base cache
-					if (cachedRich && baseData) {
-						dataToEnrich = applyCachedRichFlags(cachedRich, baseData);
-						// eslint-disable-next-line no-console
-						console.log(`[Route] Applied rich flags from base cache to enrich data`);
-					}
+          // Scrape fresh Level 1 data
+          baseData = await scraper.scrapeCursusLevel1(code, { timeout }, env);
 
-					// Find unfinished units
-					const unfinishedUnits = findUnfinishedUnits(dataToEnrich);
+          // Validate we got meaningful data
+          if (!baseData || baseData.years.length === 0) {
+            const errorResponse: CursusApiResponse = {
+              success: false,
+              error: `No cursus data found for code: ${code}`,
+            };
 
-					if (unfinishedUnits.length === 0) {
-						// eslint-disable-next-line no-console
-						console.log(`[Route] All units already enriched for ${code}`);
-						dataToReturn = dataToEnrich;
-					} else {
-						// eslint-disable-next-line no-console
-						console.log(
-							`[Scrapper Restarting] Found ${unfinishedUnits.length} unfinished units for ${code}`,
-						);
+            return new Response(JSON.stringify(errorResponse), {
+              status: 404,
+              headers: {
+                ...router.corsHeaders,
+                "Content-Type": "application/json",
+              },
+            });
+          }
 
-						// Build unit URLs for the unfinished units
-						const unitUrlsToScrape = buildUnitUrlsForUnits(
-							unfinishedUnits,
-							env.CNAM_BEDEO_URL as string,
-							env.CNAM_BEDEO_UNITE_VIEW_PATH as string,
-						);
+          // Cache the base result
+          await cache.set(code, baseData, ttl);
+        } else {
+          console.log(`[Route] Using cached base data for ${code}`);
+        }
 
-						if (unitUrlsToScrape.length > 0) {
-							// Scrape Level 2 details (with concurrency limits due to timeout constraints, cache & cursusCode for checkpointing)
-							try {
-								const enrichedUnits = await scraper.scrapeCursusLevel2(
-									unitUrlsToScrape,
-									{ timeout, cache, cursusCode: code },
-									env,
-								);
+        // Prepare data for enrichment or response
+        let dataToReturn = baseData;
 
-								// Merge enriched units into the data structure
-								dataToEnrich = mergeEnrichedUnits(dataToEnrich, enrichedUnits);
-							// Mark all freshly enriched units as rich: true
-							// This ensures the cache state reflects that these units have been processed
-							const enrichedCodes = new Set(enrichedUnits.map((u: any) => u.code));
-							for (const year of dataToEnrich.years || []) {
-								for (const unit of year.units || []) {
-									if (enrichedCodes.has(unit.code)) {
-										unit.rich = true;
-									}
-								}
-							}
-								// eslint-disable-next-line no-console
-								console.log(`[Route] Enrichment complete for ${code}`);
+        // Enrich with Level 2 unit details if requested
+        if (enrich) {
+          console.log(
+            `[Route] Enriching cursus ${code} with Level 2 unit details`,
+          );
 
-								// Update cache with enriched data (stored under 'rich' suffix)
-								await cache.set(code, dataToEnrich, ttl, "rich");
-							} catch (enrichError) {
-								// eslint-disable-next-line no-console
-								console.warn(
-									`[Route] Enrichment failed for ${code}, returning partially enriched data:`,
-									enrichError,
-								);
-								// Continue with partially enriched data
-							}
-						}
+          // Use cached rich as base for continuation if available, otherwise use base data
+          let dataToEnrich = cachedRich || baseData;
 
-						dataToReturn = dataToEnrich;
-					}
-				}
+          // If we have both cachedRich and baseData, apply rich flags from base to enrich
+          // This ensures we respect checkpoints that updated the base cache
+          if (cachedRich && baseData) {
+            dataToEnrich = applyCachedRichFlags(cachedRich, baseData);
 
-				const finalEnrichPercent = enrich ? calculateEnrichmentPercent(dataToReturn) : 0;
+            console.log(
+              `[Route] Applied rich flags from base cache to enrich data`,
+            );
+          }
 
-				const response: CursusApiResponse = {
-					success: true,
-					data: {
-						name: dataToReturn.name || code,
-						code: dataToReturn.code,
-						audience_access: dataToReturn.audience_access,
-						objectives: dataToReturn.objectives,
-						EU: dataToReturn.years,
-					},
-					cached: !baseData || enrich,
-					scrapedAt: !baseData ? new Date().toISOString() : undefined,
-					enrichedPercent: finalEnrichPercent,
-				};
+          // Find unfinished units
+          const unfinishedUnits = findUnfinishedUnits(dataToEnrich);
 
-				return new Response(JSON.stringify(response), {
-					status: 200,
-					headers: {
-						...router.corsHeaders,
-						"X-Cache": cachedRich ? "PARTIAL-ENRICHED" : "FRESH",
-						"Content-Type": "application/json",
-					},
-				});
-			} catch (error) {
-				// eslint-disable-next-line no-console
-				console.error("[Route] Error in cursus handler:", error);
+          if (unfinishedUnits.length === 0) {
+            console.log(`[Route] All units already enriched for ${code}`);
+            dataToReturn = dataToEnrich;
+          } else {
+            console.log(
+              `[Scrapper Restarting] Found ${unfinishedUnits.length} unfinished units for ${code}`,
+            );
 
-				const errorResponse: CursusApiResponse = {
-					success: false,
-					error: `Error retrieving cursus: ${error instanceof Error ? error.message : "Unknown error"}`,
-				};
+            // Build unit URLs for the unfinished units
+            const unitUrlsToScrape = buildUnitUrlsForUnits(
+              unfinishedUnits,
+              env.CNAM_BEDEO_URL as string,
+              env.CNAM_BEDEO_UNITE_VIEW_PATH as string,
+            );
 
-				return new Response(JSON.stringify(errorResponse), {
-					status: 500,
-					headers: {
-						...router.corsHeaders,
-						"Content-Type": "application/json",
-					},
-				});
-			}
-		},
-	);
+            if (unitUrlsToScrape.length > 0) {
+              // Scrape Level 2 details (with concurrency limits due to timeout constraints, cache & cursusCode for checkpointing)
+              try {
+                const enrichedUnits = await scraper.scrapeCursusLevel2(
+                  unitUrlsToScrape,
+                  { timeout, cache, cursusCode: code },
+                  env,
+                );
 
-	/**
-	 * DELETE /api/cursus/<code>/cache
-	 * Invalidate cursus cache (admin only)
-	 */
-	router.delete(
-		"/api/cursus/<code>/cache",
-		async (req: any, env: Env): Promise<Response> => {
-			try {
-				const { code } = req.params as { code: string };
+                // Merge enriched units into the data structure
+                dataToEnrich = mergeEnrichedUnits(dataToEnrich, enrichedUnits);
+                // Mark all freshly enriched units as rich: true
+                // This ensures the cache state reflects that these units have been processed
+                const enrichedCodes = new Set(
+                  enrichedUnits.map((u: any) => u.code),
+                );
 
-				// eslint-disable-next-line no-console
-				console.log(`[Route] DELETE /api/cursus/${code}/cache`);
+                for (const year of dataToEnrich.years || []) {
+                  for (const unit of year.units || []) {
+                    if (enrichedCodes.has(unit.code)) {
+                      unit.rich = true;
+                    }
+                  }
+                }
 
-				const cache = new KVCache(env.CACHE as KVNamespace);
-				const success = await cache.invalidateAll(code);
+                console.log(`[Route] Enrichment complete for ${code}`);
 
-				if (success) {
-					return new Response(
-						JSON.stringify({
-							success: true,
-							message: `Cache invalidated for ${code}`,
-						}),
-						{
-							status: 200,
-							headers: {
-								...router.corsHeaders,
-								"Content-Type": "application/json",
-							},
-						},
-					);
-				} else {
-					return new Response(
-						JSON.stringify({
-							success: false,
-							error: `Failed to invalidate cache for ${code}`,
-						}),
-						{
-							status: 500,
-							headers: {
-								...router.corsHeaders,
-								"Content-Type": "application/json",
-							},
-						},
-					);
-				}
-			} catch (error) {
-				// eslint-disable-next-line no-console
-				console.error("[Route] Error in cache invalidation handler:", error);
+                // Update cache with enriched data (stored under 'rich' suffix)
+                await cache.set(code, dataToEnrich, ttl, "rich");
+              } catch (enrichError) {
+                console.warn(
+                  `[Route] Enrichment failed for ${code}, returning partially enriched data:`,
+                  enrichError,
+                );
+                // Continue with partially enriched data
+              }
+            }
 
-				return new Response(
-					JSON.stringify({
-						success: false,
-						error: `Error invalidating cache: ${error instanceof Error ? error.message : "Unknown error"}`,
-					}),
-					{
-						status: 500,
-						headers: {
-							...router.corsHeaders,
-							"Content-Type": "application/json",
-						},
-					},
-				);
-			}
-		},
-	);
+            dataToReturn = dataToEnrich;
+          }
+        }
+
+        const finalEnrichPercent = enrich
+          ? calculateEnrichmentPercent(dataToReturn)
+          : 0;
+
+        const response: CursusApiResponse = {
+          success: true,
+          data: {
+            name: dataToReturn.name || code,
+            code: dataToReturn.code,
+            audience_access: dataToReturn.audience_access,
+            objectives: dataToReturn.objectives,
+            EU: dataToReturn.years,
+          },
+          cached: !baseData || enrich,
+          scrapedAt: !baseData ? new Date().toISOString() : undefined,
+          enrichedPercent: finalEnrichPercent,
+        };
+
+        return new Response(JSON.stringify(response), {
+          status: 200,
+          headers: {
+            ...router.corsHeaders,
+            "X-Cache": cachedRich ? "PARTIAL-ENRICHED" : "FRESH",
+            "Content-Type": "application/json",
+          },
+        });
+      } catch (error) {
+        console.error("[Route] Error in cursus handler:", error);
+
+        const errorResponse: CursusApiResponse = {
+          success: false,
+          error: `Error retrieving cursus: ${error instanceof Error ? error.message : "Unknown error"}`,
+        };
+
+        return new Response(JSON.stringify(errorResponse), {
+          status: 500,
+          headers: {
+            ...router.corsHeaders,
+            "Content-Type": "application/json",
+          },
+        });
+      }
+    },
+  );
+
+  /**
+   * DELETE /api/cursus/<code>/cache
+   * Invalidate cursus cache (admin only)
+   */
+  router.delete(
+    "/api/cursus/<code>/cache",
+    async (req: any, env: Env): Promise<Response> => {
+      try {
+        const { code } = req.params as { code: string };
+
+        console.log(`[Route] DELETE /api/cursus/${code}/cache`);
+
+        const cache = new KVCache(env.CACHE as KVNamespace);
+        const success = await cache.invalidateAll(code);
+
+        if (success) {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              message: `Cache invalidated for ${code}`,
+            }),
+            {
+              status: 200,
+              headers: {
+                ...router.corsHeaders,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+        } else {
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: `Failed to invalidate cache for ${code}`,
+            }),
+            {
+              status: 500,
+              headers: {
+                ...router.corsHeaders,
+                "Content-Type": "application/json",
+              },
+            },
+          );
+        }
+      } catch (error) {
+        console.error("[Route] Error in cache invalidation handler:", error);
+
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Error invalidating cache: ${error instanceof Error ? error.message : "Unknown error"}`,
+          }),
+          {
+            status: 500,
+            headers: {
+              ...router.corsHeaders,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+      }
+    },
+  );
 };
