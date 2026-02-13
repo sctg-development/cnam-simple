@@ -23,7 +23,7 @@
  */
 
 /**
- * Domain-Driven Design: Type-based curriculum data modeling
+ * Domain-Driven Design: Type-based cursus data modeling
  * Hierarchical structure reflects educational program organization
  */
 
@@ -58,7 +58,7 @@ export interface Year {
 }
 
 /**
- * Complete cursus structure: Aggregate pattern for curriculum representation
+ * Complete cursus structure: Aggregate pattern for cursus representation
  */
 export interface Cursus {
 	name: string;

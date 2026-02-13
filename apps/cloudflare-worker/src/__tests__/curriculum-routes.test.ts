@@ -26,7 +26,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { KVCache } from "../cache/kv-cache";
 import type { CursusLevel1, CursusApiResponse } from "../scraper/types";
 
-describe("Curriculum Routes - API Contract", () => {
+describe("Cursus Routes - API Contract", () => {
 	let mockKVNamespace: any;
 
 	beforeEach(() => {
@@ -44,7 +44,7 @@ describe("Curriculum Routes - API Contract", () => {
 			const successResponse: CursusApiResponse = {
 				success: true,
 				data: {
-					name: "Test Curriculum",
+					name: "Test Cursus",
 					code: "CYC9101A",
 					EU: [
 						{
@@ -73,7 +73,7 @@ describe("Curriculum Routes - API Contract", () => {
 		it("should return valid error response structure", () => {
 			const errorResponse: CursusApiResponse = {
 				success: false,
-				error: "Curriculum not found",
+				error: "Cursus not found",
 			};
 
 			expect(errorResponse.success).toBe(false);
@@ -205,11 +205,11 @@ describe("Curriculum Routes - API Contract", () => {
 		});
 	});
 
-	describe("Curriculum Data Structures", () => {
+	describe("Cursus Data Structures", () => {
 		it("should validate cursus page level 1 structure", () => {
 			const level1Data: CursusLevel1 = {
 				code: "CYC9101A",
-				name: "Curriculum Title",
+				name: "Cursus Title",
 				years: [
 					{
 						year: "Year 1",
@@ -264,13 +264,13 @@ describe("Curriculum Routes - API Contract", () => {
 		});
 
 		it("should support empty cursus", () => {
-			const emptyCurriculum: CursusLevel1 = {
+			const emptyCursus: CursusLevel1 = {
 				code: "UNKNOWN",
 				years: [],
 			};
 
-			expect(emptyCurriculum.code).toBe("UNKNOWN");
-			expect(emptyCurriculum.years).toEqual([]);
+			expect(emptyCursus.code).toBe("UNKNOWN");
+			expect(emptyCursus.years).toEqual([]);
 		});
 	});
 
@@ -317,7 +317,7 @@ describe("Curriculum Routes - API Contract", () => {
 	});
 });
 
-describe("Curriculum API Routes", () => {
+describe("Cursus API Routes", () => {
 	let mockRouter: any;
 	let mockEnv: any;
 	let mockKVNamespace: any;
@@ -358,7 +358,7 @@ describe("Curriculum API Routes", () => {
 			const successResponse: CursusApiResponse = {
 				success: true,
 				data: {
-					name: "Test Curriculum",
+					name: "Test Cursus",
 					code: "CYC9101A",
 					EU: [
 						{
@@ -387,7 +387,7 @@ describe("Curriculum API Routes", () => {
 		it("should return valid error response structure", () => {
 			const errorResponse: CursusApiResponse = {
 				success: false,
-				error: "Curriculum not found",
+				error: "Cursus not found",
 			};
 
 			expect(errorResponse.success).toBe(false);

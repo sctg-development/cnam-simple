@@ -40,7 +40,7 @@ const mockEnv = {
  * Validate cursus code format
  * Expected format: 3-8 characters, alphanumeric
  */
-function isValidCurriculumCode(code: string): boolean {
+function isValidCursusCode(code: string): boolean {
 	const pattern = /^[A-Z0-9]{3,8}$/i;
 	return pattern.test(code);
 }
@@ -48,7 +48,7 @@ function isValidCurriculumCode(code: string): boolean {
 /**
  * Build cursus URL
  */
-function buildCurriculumUrl(code: string): string {
+function buildCursusUrl(code: string): string {
 	const baseUrl = `${mockEnv.CNAM_BEDEO_URL}/${mockEnv.CNAM_BEDEO_CURSUS_PATH}`;
 	return `${baseUrl}${code}`;
 }
@@ -93,7 +93,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 	describe("URL Building", () => {
 		it("should build correct cursus URL", () => {
 			const code = "CYC9101A";
-			const url = buildCurriculumUrl(code);
+			const url = buildCursusUrl(code);
 
 			expect(url).toContain("bedeo.cnam.fr");
 			expect(url).toContain("public/cursus/view");
@@ -114,14 +114,14 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			const codes = ["CYC9101A", "ENG110", "MATH201"];
 
 			codes.forEach((code) => {
-				const url = buildCurriculumUrl(code);
+				const url = buildCursusUrl(code);
 				expect(url).toContain(code);
 				expect(url).toContain("bedeo.cnam.fr");
 			});
 		});
 	});
 
-	describe("Curriculum Code Validation", () => {
+	describe("Cursus Code Validation", () => {
 		it("should validate correct cursus codes", () => {
 			const validCodes = [
 				"CYC9101A",
@@ -133,7 +133,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			];
 
 			validCodes.forEach((code) => {
-				expect(isValidCurriculumCode(code)).toBe(
+				expect(isValidCursusCode(code)).toBe(
 					true,
 					`Code "${code}" should be valid`,
 				);
@@ -152,7 +152,7 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			];
 
 			invalidCodes.forEach((code) => {
-				expect(isValidCurriculumCode(code)).toBe(
+				expect(isValidCursusCode(code)).toBe(
 					false,
 					`Code "${code}" should be invalid`,
 				);
@@ -163,13 +163,13 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 			const codes = ["cyc9101a", "CYC9101A", "Cyc9101A"];
 
 			codes.forEach((code) => {
-				expect(isValidCurriculumCode(code)).toBe(true);
+				expect(isValidCursusCode(code)).toBe(true);
 			});
 		});
 
 		it("should validate the test cursus code", () => {
 			const code = mockEnv.CNAM_FORMATION_CODE as string;
-			expect(isValidCurriculumCode(code)).toBe(true);
+			expect(isValidCursusCode(code)).toBe(true);
 		});
 	});
 
@@ -183,9 +183,9 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 		});
 
 		it("should create valid cursus page structure", () => {
-			const curriculumData: CursusLevel1 = {
+			const cursusData: CursusLevel1 = {
 				code: "CYC9101A",
-				name: "Test Curriculum",
+				name: "Test Cursus",
 				years: [
 					{
 						year: "Year 1",
@@ -200,10 +200,10 @@ describe("CNAM Scraper - Level 1 (Unit Tests)", () => {
 				],
 			};
 
-			expect(curriculumData.code).toBe("CYC9101A");
-			expect(curriculumData.years).toHaveLength(1);
-			expect(curriculumData.years[0].units).toHaveLength(1);
-			expect(curriculumData.years[0].units[0].name).toBe("Unit 1");
+			expect(cursusData.code).toBe("CYC9101A");
+			expect(cursusData.years).toHaveLength(1);
+			expect(cursusData.years[0].units).toHaveLength(1);
+			expect(cursusData.years[0].units[0].name).toBe("Unit 1");
 		});
 	});
 });

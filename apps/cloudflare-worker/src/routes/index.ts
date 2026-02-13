@@ -23,7 +23,7 @@
  */
 
 import { Router } from "./router";
-import { setupCurriculumRoutes } from "./cursus";
+import { setupCursusRoutes } from "./cursus";
 
 // Route Registry Pattern: Centralized route registration through modular setup functions
 export const setupRoutes = (router: Router, env: Env) => {
@@ -44,5 +44,5 @@ export const setupRoutes = (router: Router, env: Env) => {
 	});
 
 	// Setup cursus routes: Modular route composition
-	setupCurriculumRoutes(router, env);
+	setupCursusRoutes(router, env);
 };

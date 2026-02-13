@@ -27,19 +27,19 @@ import type { CursusLevel1, Unit, Bibliography } from "./types";
 
 /**
  * DOM Parser: Extract-Transform-Load Pattern
- * Converts unstructured HTML DOM into strongly-typed curriculum data structures
+ * Converts unstructured HTML DOM into strongly-typed cursus data structures
  * Implements resilient parsing with graceful degradation on missing elements
  */
-export class CurriculumPageParser {
+export class CursusPageParser {
 	/**
-	 * Parse primary curriculum data: DOM traversal & data extraction
+	 * Parse primary cursus data: DOM traversal & data extraction
 	 * Graceful degradation: Continues parsing even if optional sections missing
 	 *
 	 * @param page - Playwright page instance (provides DOM query interface)
-	 * @param code - Curriculum identifier
+	 * @param code - Cursus identifier
 	 * @returns Parsed structure with years and units
 	 */
-	static async parseCurriculumPage(
+	static async parseCursusPage(
 		page: Page,
 		code: string,
 	): Promise<CursusLevel1> {
@@ -263,9 +263,9 @@ export class CurriculumPageParser {
 	 * Get the cursus title/name from the page
 	 *
 	 * @param page - Playwright page instance
-	 * @returns Curriculum name or null if not found
+	 * @returns Cursus name or null if not found
 	 */
-	static async getCurriculumTitle(page: Page): Promise<string | null> {
+	static async getCursusTitle(page: Page): Promise<string | null> {
 		try {
 			// Try common selectors for cursus title
 			const selectors = [

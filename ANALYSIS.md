@@ -1,4 +1,4 @@
-# CNAM Curriculum Scraper - Feasibility Analysis
+# CNAM Cursus Scraper - Feasibility Analysis
 
 **Date**: February 10, 2026  
 **Project**: CNAM Simple  
@@ -180,7 +180,7 @@ The target website structure requires:
 **Site**: https://bedeo.cnam.fr/public/cursus/view/{code}
 
 **Scraping Strategy**:
-1. **Level 1 - Curriculum Page**:
+1. **Level 1 - Cursus Page**:
    - Navigate to main cursus page
    - Parse div `#cursus_schema` for year containers
    - Extract year labels from `.schema-ensemble-infos-label` spans
@@ -241,7 +241,7 @@ apps/cloudflare-worker/src/
 
 #### Key Modules to Implement
 
-1. **Curriculum Route Handler** (`cursus.ts`)
+1. **Cursus Route Handler** (`cursus.ts`)
    ```typescript
    router.get("/api/cursus/<code>", async (req, env) => {
      // Implementation
@@ -255,7 +255,7 @@ apps/cloudflare-worker/src/
    - Error handling and cleanup
 
 3. **DOM Parsers** (`scraper/parsers.ts`)
-   - `parseCurriculumPage()`: Extract year structure
+   - `parseCursusPage()`: Extract year structure
    - `parseUnitDetailPage()`: Extract content details
    - `extractBibliography()`: Table parsing for references
 
@@ -287,7 +287,7 @@ apps/cloudflare-worker/src/
 ```json
 {
   "success": false,
-  "error": "Curriculum not found",
+  "error": "Cursus not found",
   "code": 404
 }
 ```
@@ -303,7 +303,7 @@ Request received (code=CYC9101A)
     ↓
 [Initialize Playwright]
     ↓
-[Fetch Curriculum Page]
+[Fetch Cursus Page]
     → Navigate to https://bedeo.cnam.fr/public/cursus/view/CYC9101A
     → Wait for #cursus_schema to load
     → Extract years and unit links
@@ -528,7 +528,7 @@ All features are enabled and configured.
 - [ ] Write type definitions
 
 ### Phase 2: Core Functionality (3-5 days)
-- [ ] Implement `parseCurriculumPage()` (main page parsing)
+- [ ] Implement `parseCursusPage()` (main page parsing)
 - [ ] Implement `parseUnitDetailPage()` (detail page parsing)
 - [ ] Add error handling and retry logic
 - [ ] Implement cursus API route
@@ -558,10 +558,10 @@ All features are enabled and configured.
 
 ## 11. Frontend Integration Considerations
 
-### 11.1 UI/UX for Curriculum Search
+### 11.1 UI/UX for Cursus Search
 
 **Recommended Features**:
-1. **Search Input**: Curriculum code input (e.g., "CYC9101A")
+1. **Search Input**: Cursus code input (e.g., "CYC9101A")
 2. **Loading States**: Show spinner during fetch
 3. **Error Handling**: Display user-friendly error messages
 4. **Cached Indicator**: Show if data is cached
@@ -576,7 +576,7 @@ All features are enabled and configured.
 ### 11.2 Data Presentation
 
 **Structure**:
-- Curriculum overview (name, code, objectives)
+- Cursus overview (name, code, objectives)
 - Accordion-style year sections
 - Unit cards within each year
 - Bibliography as references section
@@ -592,7 +592,7 @@ All features are enabled and configured.
 
 ### 12.1 Input Validation
 
-**Curriculum Code Format**:
+**Cursus Code Format**:
 ```typescript
 const codePattern = /^[A-Z0-9]{6,8}$/; // e.g., CYC9101A or CYC9101
 if (!codePattern.test(code)) {
@@ -725,7 +725,7 @@ The CNAM cursus scraper project is **highly feasible** within the current monore
 - **Playwright Documentation**: https://playwright.dev/docs/intro
 - **Cloudflare KV Documentation**: https://developers.cloudflare.com/kv/
 
-### B. Example Curriculum Code
+### B. Example Cursus Code
 - CYC9101A (used in requirements)
 - CYC9102A
 - CYC9103A

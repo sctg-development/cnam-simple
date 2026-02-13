@@ -24,13 +24,13 @@
 
 import { launch } from "@cloudflare/playwright";
 import type { Browser, Page } from "@cloudflare/playwright";
-import { CurriculumPageParser as CursusPageParser } from "./parsers";
+import { CursusPageParser as CursusPageParser } from "./parsers";
 import type { CursusLevel1, ScraperOptions } from "./types";
 import { KVCache } from "../cache/kv-cache";
 import { CloudflareSessionPool } from "./session-pool";
 
 /**
- * CNAM Curriculum Web Scraper: Template Method Pattern
+ * CNAM Cursus Web Scraper: Template Method Pattern
  * Encapsulates browser automation with page parsing and error handling
  * Integrates with KVCache for intelligent caching strategy
  */
@@ -55,16 +55,16 @@ export class CNAMScraper {
 	}
 
 	/**
-	 * Scrape level 1 curriculum structure: Strategy Pattern
+	 * Scrape level 1 cursus structure: Strategy Pattern
 	 * Extracts hierarchical year and unit structure from web page
 	 * Manages its own browser instance with session pooling
 	 *
-	 * @param code - Curriculum code (e.g., CYC9101A) - validated before processing
+	 * @param code - Cursus code (e.g., CYC9101A) - validated before processing
 	 * @param options - Scraper options for timeout and retry behavior
 	 * @param env - Environment with CFBROWSER binding for launching browser
-	 * @returns Parsed curriculum structure with type safety
+	 * @returns Parsed cursus structure with type safety
 	 */
-	async scrapeCurriculumLevel1(
+	async scrapeCursusLevel1(
 		code: string,
 		options: ScraperOptions = {},
 		env: Env,
@@ -79,8 +79,8 @@ export class CNAMScraper {
 
 		try {
 			// Input Validation Pattern: Reject invalid data early
-			if (!this.isValidCurriculumCode(code)) {
-				throw new Error(`Invalid curriculum code format: ${code}`);
+			if (!this.isValidCursusCode(code)) {
+				throw new Error(`Invalid cursus code format: ${code}`);
 			}
 
 			// Create page with pooled session
@@ -102,12 +102,12 @@ export class CNAMScraper {
 			);
 
 			// Build the cursus URL
-			const curriculumUrl = this.buildCurriculumUrl(code);
+			const cursusUrl = this.buildCursusUrl(code);
 			// eslint-disable-next-line no-console
-			console.log(`[Scraper] Navigating to: ${curriculumUrl}`);
+			console.log(`[Scraper] Navigating to: ${cursusUrl}`);
 
 			// Navigate to the cursus page
-			await page.goto(curriculumUrl, {
+			await page.goto(cursusUrl, {
 				waitUntil: "networkidle",
 				timeout,
 			});
@@ -123,13 +123,13 @@ export class CNAMScraper {
 			);
 
 			// Parse the cursus page
-			const curriculumData =
-				await CursusPageParser.parseCurriculumPage(page, code);
+			const cursusData =
+				await CursusPageParser.parseCursusPage(page, code);
 
 			// Try to get cursus title
-			const title = await CursusPageParser.getCurriculumTitle(page);
+			const title = await CursusPageParser.getCursusTitle(page);
 			if (title) {
-				curriculumData.name = title;
+				cursusData.name = title;
 			}
 
 			// eslint-disable-next-line no-console
@@ -137,7 +137,7 @@ export class CNAMScraper {
 				`[Scraper] Level 1 scraping completed for code: ${code}`,
 			);
 
-			return curriculumData;
+			return cursusData;
 		} catch (error) {
 			// eslint-disable-next-line no-console
 			console.error(
@@ -170,10 +170,10 @@ export class CNAMScraper {
 	 * Validate cursus code format
 	 * Expected format: 3-8 characters, alphanumeric
 	 *
-	 * @param code - Curriculum code to validate
+	 * @param code - Cursus code to validate
 	 * @returns True if valid
 	 */
-	private isValidCurriculumCode(code: string): boolean {
+	private isValidCursusCode(code: string): boolean {
 		const pattern = /^[A-Z0-9]{3,8}$/i;
 		return pattern.test(code);
 	}
@@ -181,10 +181,10 @@ export class CNAMScraper {
 	/**
 	 * Build the full URL for a cursus
 	 *
-	 * @param code - Curriculum code
+	 * @param code - Cursus code
 	 * @returns Full URL
 	 */
-	private buildCurriculumUrl(code: string): string {
+	private buildCursusUrl(code: string): string {
 		const baseUrl = `${this.bedeoCnamUrl}/${this.bedeoFormationPath}`;
 		return `${baseUrl}${code}`;
 	}
@@ -210,7 +210,7 @@ export class CNAMScraper {
 	 * @param env - Environment with CFBROWSER binding for launching browser
 	 * @returns Array of enriched unit data
 	 */
-	async scrapeCurriculumLevel2(
+	async scrapeCursusLevel2(
 		unitUrls: Array<{ code: string; url: string }>,
 		options: ScraperOptions & { cache?: KVCache; cursusCode?: string } = {},
 		env: Env,

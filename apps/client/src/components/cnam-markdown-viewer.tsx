@@ -19,7 +19,7 @@
 /**
  * Component: CnamMarkdownViewer
  * ----------------------------
- * Renders provided markdown (already generated from curriculum JSON) using
+ * Renders provided markdown (already generated from cursus JSON) using
  * `marked` and provides download links for the markdown and JSON blobs.
  *
  * Notes:
@@ -37,7 +37,7 @@ import type { Cursus } from "@/types";
 // Document Generation Pattern: Dynamic markdown rendering with i18n support
 /** Props for the viewer component */
 export interface CnamMarkdownViewerProps {
-  /** Curriculum JSON data as returned by the API */
+  /** Cursus JSON data as returned by the API */
   data: Cursus | null;
   /**
    * Optional callback invoked when the component generates markdown and
@@ -55,7 +55,7 @@ export interface CnamMarkdownViewerProps {
    access the i18n `t` function for translated section titles. */
 
 /**
- * Render curriculum markdown and download actions.
+ * Render cursus markdown and download actions.
  * The component converts JSON -> markdown, generates blob URLs for
  * markdown and JSON files and revokes them on unmount.
  */

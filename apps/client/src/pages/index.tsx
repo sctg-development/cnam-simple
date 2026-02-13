@@ -33,7 +33,7 @@ import type { CursusApiResponse, Cursus } from "@/types";
  * - Client-side orchestrator pattern: Manages API calls, response parsing, and component communication
  * - Separation of concerns: Delegates markdown/PDF generation to specialized child components
  * - Manages search input and request state
- * - Calls the backend and receives curriculum JSON
+ * - Calls the backend and receives cursus JSON
  * - Converts JSON into markdown and prepares download blobs
  */
 function SearchBar() {

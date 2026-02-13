@@ -23,7 +23,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { CurriculumPageParser } from "../scraper/parsers";
+import { CursusPageParser } from "../scraper/parsers";
 import type { Unit, Bibliography } from "../scraper/types";
 
 describe("Unit Detail Page Parser (Level 2)", () => {
@@ -49,7 +49,7 @@ describe("Unit Detail Page Parser (Level 2)", () => {
 				all: vi.fn().mockResolvedValue([]),
 			}));
 
-			const result = await CurriculumPageParser.parseUnitDetailPage(
+			const result = await CursusPageParser.parseUnitDetailPage(
 				mockPage,
 				"UTC501",
 			);
@@ -66,7 +66,7 @@ describe("Unit Detail Page Parser (Level 2)", () => {
 				all: vi.fn().mockResolvedValue([]),
 			}));
 
-			const result = await CurriculumPageParser.parseUnitDetailPage(
+			const result = await CursusPageParser.parseUnitDetailPage(
 				mockPage,
 				"UTC502",
 			);
@@ -82,7 +82,7 @@ describe("Unit Detail Page Parser (Level 2)", () => {
 				throw new Error("Mock locator error");
 			});
 
-			const result = await CurriculumPageParser.parseUnitDetailPage(
+			const result = await CursusPageParser.parseUnitDetailPage(
 				mockPage,
 				"UTC504",
 			);
@@ -101,7 +101,7 @@ describe("Unit Detail Page Parser (Level 2)", () => {
 				all: vi.fn().mockResolvedValue([]),
 			}));
 
-			const result = await CurriculumPageParser.parseUnitDetailPage(
+			const result = await CursusPageParser.parseUnitDetailPage(
 				mockPage,
 				"UTC505",
 			);

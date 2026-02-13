@@ -17,6 +17,38 @@ type Props = {
     fileName?: string;
 };
 
+const TEST_DOCUMENT = `<!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { margin: 20px; font-size: 12pt; }
+                p { margin-bottom: 10px; }
+            </style>
+        </head>
+        <body>
+            <p>This is paragraph 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            <p>This is paragraph 2. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+            <p>This is paragraph 3. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+            <p>This is paragraph 4. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum.</p>
+            <p>This is paragraph 5. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia.</p>
+            <p>This is paragraph 6. Deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus.</p>
+            <p>This is paragraph 7. Error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
+            <p>This is paragraph 8. Eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae.</p>
+            <p>This is paragraph 9. Vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit.</p>
+            <p>This is paragraph 10. Aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos.</p>
+            <p>This is paragraph 11. Qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem.</p>
+            <p>This is paragraph 12. Ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam.</p>
+            <p>This is paragraph 13. Eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.</p>
+            <p>This is paragraph 14. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit.</p>
+            <p>This is paragraph 15. Laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure.</p>
+            <p>This is paragraph 16. Reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur.</p>
+            <p>This is paragraph 17. Vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?</p>
+            <p>This is paragraph 18. At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis.</p>
+            <p>This is paragraph 19. Praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias.</p>
+            <p>This is paragraph 20. Excepturi sint occaecati cupiditate non provident, similique sunt in culpa.</p>
+        </body>
+        </html>`;
+
 export default function PdfTransformer({ data, fileName }: Props) {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
@@ -38,7 +70,7 @@ export default function PdfTransformer({ data, fileName }: Props) {
 
             // Data Validation & Sanitization: Whitelist-based HTML sanitization
             const safeHtml = DOMPurify.sanitize(html, {
-                ALLOWED_TAGS: ['html', 'head', 'body', 'title', 'h1', 'h2', 'h3', 'h4', 'p', 'div', 'span', 'strong', 'em', 'ul', 'li', 'section', 'article'],
+                ALLOWED_TAGS: ['html', 'head', 'body', 'title', 'h1', 'h2', 'h3', 'h4', 'p', 'div', 'span', 'strong', 'em', 'ul', 'li', 'section', 'article', 'style'],
                 ALLOWED_ATTR: ['id', 'class', 'style'],
                 WHOLE_DOCUMENT: true,
                 FORCE_BODY: false
@@ -52,19 +84,19 @@ export default function PdfTransformer({ data, fileName }: Props) {
             const generationOptions = {
                 pageWidth: 210,
                 pageHeight: 297,
-                imageOptimization: null, // Changed from imageCompression to imageOptimization
-                fontEmbedding: true
+                imageOptimization: null,
+                fontEmbedding: false,
             };
 
             const input = {
                 title: data.name || data.code || "Cursus PDF",
-                html: `${safeHtml}`,
+                html: TEST_DOCUMENT,//`${safeHtml}`,
                 images: {},
-                fonts: fonts,
+                fonts: {},//fonts,
                 options: generationOptions
             };
             
-            console.log("Input structure - Fonts count:", Object.keys(fonts).length, "HTML length:", safeHtml.length);
+            console.log("Input structure - Fonts count:", Object.keys(input.fonts).length, "HTML length:", safeHtml.length);
             
             // Convert HTML into a document and then into bytes (synchronous variants are used here)
             let docJson: string;
@@ -162,9 +194,10 @@ function generateHtml(data: Cursus, t: (k: string) => string) {
     parts.push(`<head>`);
     parts.push(`<meta charset="UTF-8">`);
     parts.push(`<title>${escapeHtml(data.name || data.code || "Cursus PDF")}</title>`);
+    parts.push(`<style>body { margin: 20px; font-size: 12pt; }\np { margin-bottom: 10px; }</style>`);
     parts.push(`</head>`);
     parts.push(`<body>`);
-    parts.push(`<div class="document-header"><h1>${escapeHtml(data.name || data.code)}</h1></div>`);
+    parts.push(`<div><h1>${escapeHtml(data.name || data.code)}</h1></div>`);
     if (data.code) {
         parts.push(`<p><strong>${escapeHtml(t("cursus.code"))}:</strong> ${escapeHtml(data.code)}</p>`);
     }

@@ -135,12 +135,12 @@ function calculateEnrichmentPercent(cursusData: CursusLevel1): number {
 
 /**
  * Setup cursus routes
- * Handles API endpoints for curriculum data with caching and scraping strategies
+ * Handles API endpoints for cursus data with caching and scraping strategies
  */
-export const setupCurriculumRoutes = (router: Router, env: Env): void => {
+export const setupCursusRoutes = (router: Router, env: Env): void => {
 	/**
 	 * GET /api/cursus/<code>
-	 * Retrieve curriculum data with optional enrichment
+	 * Retrieve cursus data with optional enrichment
 	 * Cache & Security Pattern: Validates credentials before allowing cache override
 	 *
 	 * Query parameters:
@@ -286,7 +286,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 					console.log(`[Route] Cache miss or forced refresh for ${code}`);
 
 					// Scrape fresh Level 1 data
-					baseData = await scraper.scrapeCurriculumLevel1(
+					baseData = await scraper.scrapeCursusLevel1(
 						code,
 						{ timeout },
 						env,
@@ -357,7 +357,7 @@ export const setupCurriculumRoutes = (router: Router, env: Env): void => {
 						if (unitUrlsToScrape.length > 0) {
 							// Scrape Level 2 details (with concurrency limits due to timeout constraints, cache & cursusCode for checkpointing)
 							try {
-								const enrichedUnits = await scraper.scrapeCurriculumLevel2(
+								const enrichedUnits = await scraper.scrapeCursusLevel2(
 									unitUrlsToScrape,
 									{ timeout, cache, cursusCode: code },
 									env,
