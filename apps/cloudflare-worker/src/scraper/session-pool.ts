@@ -22,155 +22,194 @@
  * SOFTWARE.
  */
 
-import type { Page } from "@cloudflare/playwright";
-import { acquire, connect } from "@cloudflare/playwright";
+import type { Browser, Page } from "@cloudflare/playwright";
 
 /**
- * Cloudflare Persistent Session Pool: Object Pool Pattern
- * Manages long-lived browser sessions using Cloudflare's acquire/connect pattern
+ * Cloudflare Session Pool: Object Pool Pattern
+ * Manages reusable browser sessions as recommended by Cloudflare
  * https://developers.cloudflare.com/browser-rendering/playwright/#session-reuse
  *
- * Dramatically reduces cost and improves performance by:
- * - Acquiring a session once at worker startup (via acquire())
- * - Reconnecting to it for each request (via connect())
- * - Keeping state (cookies, cache) server-side between requests
- *
- * No local page/session tracking needed - Cloudflare manages the session lifecycle
+ * Reduces cost and improves performance by reusing sessions across multiple pages
+ * Sessions persist cookies, cache, and other state on Cloudflare's servers
  */
 export class CloudflareSessionPool {
-	private env: Env;
-	private sessionId: string | null = null;
-	private initializationPromise: Promise<string> | null = null;
+	private browser: Browser;
+	private maxSessions: number;
+	private sessionTimeout: number; // ms
+	private sessions: Map<string, { createdAt: number; inUse: boolean }> = new Map();
 
-	constructor(env: Env) {
-		this.env = env;
+	constructor(
+		browser: Browser,
+		options: { maxSessions?: number; sessionTimeout?: number } = {},
+	) {
+		this.browser = browser;
+		this.maxSessions = options.maxSessions || 3;
+		this.sessionTimeout = options.sessionTimeout || 300000; // 5 minutes default
 	}
 
 	/**
-	 * Initialize the persistent session (acquire once at startup)
-	 * This should be called once when the Worker starts, not for each request
-	 * The session will be reused across all subsequent requests
+	 * Acquire a session for page creation
+	 * Returns session name to be used with browser.newPage({ sessionName })
+	 * Reuses existing sessions or creates new ones up to maxSessions limit
 	 *
-	 * @returns Session ID for logging/debugging
+	 * @returns Session name for use with newPage()
 	 */
-	async initialize(): Promise<string> {
-		// Avoid multiple concurrent initializations
-		if (this.initializationPromise) {
-			return this.initializationPromise;
-		}
-
-		if (this.sessionId) {
-			return this.sessionId;
-		}
-
-		this.initializationPromise = (async () => {
-			try {
-				// Acquire a new persistent session (one-time cost)
-				const { sessionId } = await acquire(this.env.CFBROWSER);
-				this.sessionId = sessionId;
-				// eslint-disable-next-line no-console
-				console.log(
-					`[SessionPool] Persistent session acquired: ${this.sessionId}`,
-				);
-				return this.sessionId;
-			} catch (error) {
-				// eslint-disable-next-line no-console
-				console.error("[SessionPool] Failed to acquire session:", error);
-				throw new Error(
-					`Failed to acquire persistent session: ${error instanceof Error ? error.message : "Unknown error"}`,
-				);
+	async acquireSession(): Promise<string> {
+		// Try to find an available session
+		for (const [sessionName, sessionInfo] of this.sessions.entries()) {
+			if (!sessionInfo.inUse) {
+				// Check if session hasn't timed out
+				if (Date.now() - sessionInfo.createdAt < this.sessionTimeout) {
+					sessionInfo.inUse = true;
+					// eslint-disable-next-line no-console
+					console.log(
+						`[SessionPool] Reusing session: ${sessionName}`,
+					);
+					return sessionName;
+				} else {
+					// Session too old, remove it
+					this.sessions.delete(sessionName);
+				}
 			}
-		})();
-
-		return this.initializationPromise;
-	}
-
-	/**
-	 * Create a new page by connecting to the persistent session
-	 * Each request reconnects to the same session (keeping cookies, cache, etc.)
-	 * The browser will be disconnected (not closed) when the page is closed
-	 *
-	 * @param options - Page creation options (locale, etc.)
-	 * @returns Page instance with attached browser reference for cleanup
-	 */
-	async createPage(
-		options: any = {},
-	): Promise<Page & { __browser?: any }> {
-		// Ensure session is initialized
-		await this.initialize();
-
-		if (!this.sessionId) {
-			throw new Error(
-				"Session not initialized - initialize() must be called first",
-			);
 		}
 
-		try {
-			// Connect to the persistent session (no cost for reconnection)
-			const browser = await connect(
-				this.env.CFBROWSER,
-				this.sessionId,
-			);
+		// If we can create new sessions, do so
+		if (this.sessions.size < this.maxSessions) {
+			const sessionName = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+			this.sessions.set(sessionName, {
+				createdAt: Date.now(),
+				inUse: true,
+			});
 			// eslint-disable-next-line no-console
 			console.log(
-				`[SessionPool] Connected to session ${this.sessionId}`,
+				`[SessionPool] Created new session: ${sessionName} (${this.sessions.size}/${this.maxSessions})`,
 			);
+			return sessionName;
+		}
 
-			// Create a new page in the connected session
-			const page = (await browser.newPage(options)) as Page & {
-				__browser?: any;
-			};
+		// Wait for a session to become available
+		// eslint-disable-next-line no-console
+		console.log(
+			`[SessionPool] No sessions available, waiting for release...`,
+		);
+		return new Promise((resolve) => {
+			const checkInterval = setInterval(() => {
+				const availableSession = Array.from(this.sessions.entries()).find(
+					([_, info]) =>
+						!info.inUse &&
+						Date.now() - info.createdAt < this.sessionTimeout,
+				);
 
-			// Attach browser reference for cleanup
-			page.__browser = browser;
+				if (availableSession) {
+					clearInterval(checkInterval);
+					availableSession[1].inUse = true;
+					// eslint-disable-next-line no-console
+					console.log(
+						`[SessionPool] Acquired session after waiting: ${availableSession[0]}`,
+					);
+					resolve(availableSession[0]);
+				}
+			}, 100);
 
-			return page;
-		} catch (error) {
+			// Timeout after 30 seconds
+			setTimeout(() => {
+				clearInterval(checkInterval);
+				// Create new session as fallback
+				const sessionName = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+				this.sessions.set(sessionName, {
+					createdAt: Date.now(),
+					inUse: true,
+				});
+				// eslint-disable-next-line no-console
+				console.warn(
+					`[SessionPool] Session acquisition timeout, creating new session: ${sessionName}`,
+				);
+				resolve(sessionName);
+			}, 30000);
+		});
+	}
+
+	/**
+	 * Release a session back to the pool for reuse
+	 * Should be called when page using this session is closed
+	 *
+	 * @param sessionName - Session name returned by acquireSession()
+	 */
+	releaseSession(sessionName: string): void {
+		const sessionInfo = this.sessions.get(sessionName);
+		if (sessionInfo) {
+			sessionInfo.inUse = false;
 			// eslint-disable-next-line no-console
-			console.error(
-				`[SessionPool] Failed to create page in session ${this.sessionId}:`,
-				error,
-			);
-			throw new Error(
-				`Failed to create page: ${error instanceof Error ? error.message : "Unknown error"}`,
-			);
+			console.log(`[SessionPool] Released session: ${sessionName}`);
 		}
 	}
 
 	/**
-	 * Close a page and disconnect its browser
-	 * This disconnects from the session (not closes it)
-	 * The session remains alive on Cloudflare's servers for reuse
+	 * Create a new page using a pooled session
+	 * Handles session acquisition and configuration in one call
 	 *
-	 * @param page - Page instance with __browser reference
+	 * @param options - Page creation options
+	 * @returns Page instance with session tracking
 	 */
-	async closePage(page: Page & { __browser?: any }): Promise<void> {
-		const browser = page.__browser;
+	async createPage(options: any = {}): Promise<Page & { sessionName?: string }> {
+		const sessionName = await this.acquireSession();
+		const page = (await this.browser.newPage({
+			...options,
+			sessionName,
+		})) as Page & { sessionName?: string };
+		page.sessionName = sessionName;
+		return page;
+	}
 
-		try {
-			// Close the page first
-			await page.close().catch((err: any) => {
-				// eslint-disable-next-line no-console
-				console.warn(`[SessionPool] Error closing page:`, err);
-			});
-
-			// Disconnect from the session (session persists on Cloudflare)
-			if (browser) {
-				await browser.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(
-						`[SessionPool] Error disconnecting browser:`,
-						err,
-					);
-				});
-				// eslint-disable-next-line no-console
-				console.log(
-					`[SessionPool] Disconnected from session ${this.sessionId}`,
-				);
-			}
-		} catch (error) {
-			// eslint-disable-next-line no-console
-			console.error(`[SessionPool] Error closing page:`, error);
+	/**
+	 * Close a page and release its session
+	 *
+	 * @param page - Page instance with sessionName property
+	 */
+	async closePage(page: Page & { sessionName?: string }): Promise<void> {
+		if (page.sessionName) {
+			this.releaseSession(page.sessionName);
 		}
+		await page.close().catch((err: any) => {
+			// eslint-disable-next-line no-console
+			console.warn(`[SessionPool] Error closing page:`, err);
+		});
+	}
+
+	/**
+	 * Get pool statistics for monitoring
+	 */
+	getStats(): {
+		totalSessions: number;
+		activeSessions: number;
+		availableSessions: number;
+		maxSessions: number;
+	} {
+		let activeSessions = 0;
+		let availableSessions = 0;
+
+		for (const info of this.sessions.values()) {
+			if (info.inUse) {
+				activeSessions++;
+			} else {
+				availableSessions++;
+			}
+		}
+
+		return {
+			totalSessions: this.sessions.size,
+			activeSessions,
+			availableSessions,
+			maxSessions: this.maxSessions,
+		};
+	}
+
+	/**
+	 * Clear all sessions (graceful shutdown)
+	 */
+	async clear(): Promise<void> {
+		// eslint-disable-next-line no-console
+		console.log(`[SessionPool] Clearing all sessions`);
+		this.sessions.clear();
 	}
 }
