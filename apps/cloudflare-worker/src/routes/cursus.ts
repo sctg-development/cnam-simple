@@ -24,6 +24,7 @@
 
 import { Router } from "./router";
 import { CNAMScraper } from "../scraper/cnam-scraper";
+import { CloudflareSessionPool } from "../scraper/session-pool";
 import { KVCache } from "../cache/kv-cache";
 import type { CursusLevel1, CursusApiResponse, Unit } from "../scraper/types";
 import { validateScraperPassword } from "../utils/password-validator";
@@ -201,7 +202,9 @@ export const setupCursusRoutes = (router: Router, env: Env): void => {
 
 				// Initialize services
 				const cache = new KVCache(env.CACHE as KVNamespace);
-			const scraper = new CNAMScraper(env);
+				const sessionPool = new CloudflareSessionPool(env);
+				await sessionPool.initialize(); // Acquire persistent session once
+				const scraper = new CNAMScraper(env, sessionPool);
 				// Load cache upfront if not forcing
 				const cachedRich = !force && !forcedByOverride ? await cache.get<any>(code, "rich") : null;
 				const cachedData = !force && !forcedByOverride ? await cache.get<CursusLevel1>(code) : null;
@@ -289,7 +292,6 @@ export const setupCursusRoutes = (router: Router, env: Env): void => {
 					baseData = await scraper.scrapeCursusLevel1(
 						code,
 						{ timeout },
-						env,
 					);
 
 					// Validate we got meaningful data
@@ -360,7 +362,6 @@ export const setupCursusRoutes = (router: Router, env: Env): void => {
 								const enrichedUnits = await scraper.scrapeCursusLevel2(
 									unitUrlsToScrape,
 									{ timeout, cache, cursusCode: code },
-									env,
 								);
 
 								// Merge enriched units into the data structure

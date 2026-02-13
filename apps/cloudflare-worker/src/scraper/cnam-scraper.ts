@@ -22,8 +22,7 @@
  * SOFTWARE.
  */
 
-import { launch } from "@cloudflare/playwright";
-import type { Browser, Page } from "@cloudflare/playwright";
+import type { Page } from "@cloudflare/playwright";
 import { CursusPageParser as CursusPageParser } from "./parsers";
 import type { CursusLevel1, ScraperOptions } from "./types";
 import { KVCache } from "../cache/kv-cache";
@@ -33,14 +32,16 @@ import { CloudflareSessionPool } from "./session-pool";
  * CNAM Cursus Web Scraper: Template Method Pattern
  * Encapsulates browser automation with page parsing and error handling
  * Integrates with KVCache for intelligent caching strategy
+ * Uses persistent sessions via CloudflareSessionPool for cost efficiency
  */
 export class CNAMScraper {
 	private bedeoCnamUrl: string;
 	private bedeoUniteViewPath: string;
 	private bedeoFormationPath: string;
 	private checkpointSize: number;
+	private sessionPool: CloudflareSessionPool;
 
-	constructor(env: Env) {
+	constructor(env: Env, sessionPool: CloudflareSessionPool) {
 		this.bedeoCnamUrl =
 			(env.CNAM_BEDEO_URL as string) || "https://bedeo.cnam.fr";
 		this.bedeoFormationPath =
@@ -52,29 +53,26 @@ export class CNAMScraper {
 
 		// Number of units processed between checkpoints
 		this.checkpointSize = parseInt((env.SCRAPPER_LEVEL_2_CHECKPOINT as string) || "25", 10);
+		this.sessionPool = sessionPool;
 	}
 
 	/**
 	 * Scrape level 1 cursus structure: Strategy Pattern
 	 * Extracts hierarchical year and unit structure from web page
-	 * Manages its own browser instance with session pooling
+	 * Uses injected persistent session pool for cost efficiency
 	 *
 	 * @param code - Cursus code (e.g., CYC9101A) - validated before processing
 	 * @param options - Scraper options for timeout and retry behavior
-	 * @param env - Environment with CFBROWSER binding for launching browser
 	 * @returns Parsed cursus structure with type safety
 	 */
 	async scrapeCursusLevel1(
 		code: string,
 		options: ScraperOptions = {},
-		env: Env,
 	): Promise<CursusLevel1> {
 		// eslint-disable-next-line no-console
 		console.log(`[Scraper] Starting Level 1 scrape for code: ${code}`);
 
 		const timeout = options.timeout || 60000; // Default 60 seconds
-		const browserInstance = await launch(env.CFBROWSER);
-		const sessionPool = new CloudflareSessionPool(browserInstance, { maxSessions: 1 });
 		let page: Page | null = null;
 
 		try {
@@ -83,8 +81,8 @@ export class CNAMScraper {
 				throw new Error(`Invalid cursus code format: ${code}`);
 			}
 
-			// Create page with pooled session
-			page = await sessionPool.createPage({ locale: "fr-FR" });
+			// Create page using persistent session pool
+			page = await this.sessionPool.createPage({ locale: "fr-FR" });
 
 			// Set a reasonable timeout
 			page.setDefaultTimeout(timeout);
@@ -151,17 +149,9 @@ export class CNAMScraper {
 				years: [],
 			};
 		} finally {
-			// Cleanup: close page and release session back to pool
+			// Cleanup: close page and disconnect from session
 			if (page) {
-				await sessionPool.closePage(page as any);
-			}
-			await sessionPool.clear();
-			// Close browser instance
-			if (browserInstance) {
-				await browserInstance.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(`[Scraper] Error closing browser:`, err);
-				});
+				await this.sessionPool.closePage(page);
 			}
 		}
 	}
@@ -203,17 +193,15 @@ export class CNAMScraper {
 	/**
 	 * Scrape level 2 (unit detail pages)
 	 * Extracts full unit information including content and bibliography
-	 * Manages its own browser instance with session pooling
+	 * Uses persistent session pool for cost efficiency
 	 *
 	 * @param unitUrls - Array of unit URLs to scrape
 	 * @param options - Scraper options including cache and cursusCode
-	 * @param env - Environment with CFBROWSER binding for launching browser
 	 * @returns Array of enriched unit data
 	 */
 	async scrapeCursusLevel2(
 		unitUrls: Array<{ code: string; url: string }>,
 		options: ScraperOptions & { cache?: KVCache; cursusCode?: string } = {},
-		env: Env,
 	): Promise<any[]> {
 		const cache: KVCache | undefined = (options as any).cache;
 		const cursusCode: string | undefined = (options as any).cursusCode;
@@ -223,15 +211,8 @@ export class CNAMScraper {
 		);
 
 		const timeout = options.timeout || 30000;
-		const concurrencyLimit = 1; // Maximum 2 concurrent requests to avoid overwhelming server
+		const concurrencyLimit = 1; // Maximum 1 concurrent request to avoid overwhelming server
 		const results: any[] = [];
-
-		// Launch browser instance for this scraping session
-		const browserInstance = await launch(env.CFBROWSER);
-		// Create session pool for reusable sessions
-		const sessionPool = new CloudflareSessionPool(browserInstance, {
-			maxSessions: Math.max(2, concurrencyLimit),
-		});
 
 		// Helper to sleep
 		const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -242,106 +223,101 @@ export class CNAMScraper {
 		let processedCount = 0;
 
 		try {
-			try {
-				// Process units with concurrency limit
-				for (let i = 0; i < unitUrls.length; i += concurrencyLimit) {
-					const batch = unitUrls.slice(i, i + concurrencyLimit);
+			// Process units with concurrency limit
+			for (let i = 0; i < unitUrls.length; i += concurrencyLimit) {
+				const batch = unitUrls.slice(i, i + concurrencyLimit);
 
-					// Process batch in parallel
-					const batchResults = await Promise.allSettled(
-						batch.map((unit) =>
-							this.scrapeSingleUnit(unit, timeout, sessionPool),
-						),
-					);
+				// Process batch in parallel
+				const batchResults = await Promise.allSettled(
+					batch.map((unit) =>
+						this.scrapeSingleUnit(unit, timeout),
+					),
+				);
 
-					// Collect results and update processed count
-					for (let bi = 0; bi < batchResults.length; bi++) {
-						const result = batchResults[bi];
-						const originalUnit = batch[bi];
-						if (result.status === "fulfilled") {
-							const unitData = result.value;
-							results.push(unitData);
-							if (unitData && unitData.code) {
-								enrichedMap[unitData.code] = unitData;
-								processedSinceLastCheckpoint.push(unitData.code);
-							}
-						} else {
-							// eslint-disable-next-line no-console
-							console.error(`[Scraper] Failed to scrape unit:`, result.reason);
+				// Collect results and update processed count
+				for (let bi = 0; bi < batchResults.length; bi++) {
+					const result = batchResults[bi];
+					const originalUnit = batch[bi];
+					if (result.status === "fulfilled") {
+						const unitData = result.value;
+						results.push(unitData);
+						if (unitData && unitData.code) {
+							enrichedMap[unitData.code] = unitData;
+							processedSinceLastCheckpoint.push(unitData.code);
 						}
-
-						processedCount++;
-
-						// Checkpoint when reaching configured size
-						if (cache && cursusCode && processedSinceLastCheckpoint.length >= this.checkpointSize) {
-							console.log(`[Scraper Checkpoint] Checkpointing after processing ${processedCount} units...`);
-							try {
-								const lockToken = await cache.tryAcquireLock(cursusCode, 60);
-								if (!lockToken) {
-									// eslint-disable-next-line no-console
-									console.warn(`[Scraper Checkpoint] Could not acquire lock for checkpointing ${cursusCode}, will retry on next checkpoint`);
-								} else {
-									// Read base and rich caches
-									const base = (await cache.get<CursusLevel1>(cursusCode)) || { code: cursusCode, years: [] };
-									const rich = (await cache.get<any>(cursusCode, "rich")) || { code: cursusCode, years: JSON.parse(JSON.stringify(base.years || [])) };
-
-									// Mark units in base as rich = true
-									for (const year of base.years || []) {
-										for (const unit of year.units) {
-											if (unit.code && enrichedMap[unit.code]) {
-												unit.rich = true;
-											}
-										}
-									}
-
-									// Merge enriched units into rich structure (replace or append)
-									for (const code of processedSinceLastCheckpoint) {
-										const enriched = enrichedMap[code];
-										let inserted = false;
-										for (const year of rich.years || []) {
-											for (let u = 0; u < (year.units || []).length; u++) {
-												if (year.units[u].code === code) {
-													year.units[u] = enriched;
-													inserted = true;
-													break;
-												}
-											}
-											if (inserted) break;
-										}
-										if (!inserted) {
-											if (!rich.years) rich.years = [];
-											rich.years[0] = rich.years[0] || { year: "", units: [] };
-											rich.years[0].units.push(enriched);
-										}
-									}
-
-									// Write back base and rich caches
-									const ttl = Number(process.env.SCRAPER_CACHE_TTL) || 2592000;
-									await cache.set(cursusCode, base, ttl);
-									// Respect one-write-per-second restriction on the same key
-									await sleep(1100);
-									await cache.set(cursusCode, rich, ttl, "rich");
-									await cache.setMetadata(cursusCode, { lastCheckpoint: processedCount, lastWriteAt: new Date().toISOString() }, 86400, "rich");
-									processedSinceLastCheckpoint = [];
-									// Release lock
-									await cache.releaseLock(cursusCode, lockToken);
-									console.log(`[Scraper Checkpoint] Checkpoint completed for ${cursusCode} at ${processedCount} units processed.`);
-								}
-							} catch (err) {
-								// eslint-disable-next-line no-console
-								console.error(`[Scraper] Error during checkpoint for ${cursusCode}:`, err);
-							}
-						}
+					} else {
+						// eslint-disable-next-line no-console
+						console.error(`[Scraper] Failed to scrape unit:`, result.reason);
 					}
 
-					// Add small delay between batches to be respectful
-					if (i + concurrencyLimit < unitUrls.length) {
-						await sleep(1000);
+					processedCount++;
+
+					// Checkpoint when reaching configured size
+					if (cache && cursusCode && processedSinceLastCheckpoint.length >= this.checkpointSize) {
+						console.log(`[Scraper Checkpoint] Checkpointing after processing ${processedCount} units...`);
+						try {
+							const lockToken = await cache.tryAcquireLock(cursusCode, 60);
+							if (!lockToken) {
+								// eslint-disable-next-line no-console
+								console.warn(`[Scraper Checkpoint] Could not acquire lock for checkpointing ${cursusCode}, will retry on next checkpoint`);
+							} else {
+								// Read base and rich caches
+								const base = (await cache.get<CursusLevel1>(cursusCode)) || { code: cursusCode, years: [] };
+								const rich = (await cache.get<any>(cursusCode, "rich")) || { code: cursusCode, years: JSON.parse(JSON.stringify(base.years || [])) };
+
+								// Mark units in base as rich = true
+								for (const year of base.years || []) {
+									for (const unit of year.units) {
+										if (unit.code && enrichedMap[unit.code]) {
+											unit.rich = true;
+										}
+									}
+								}
+
+								// Merge enriched units into rich structure (replace or append)
+								for (const code of processedSinceLastCheckpoint) {
+									const enriched = enrichedMap[code];
+									let inserted = false;
+									for (const year of rich.years || []) {
+										for (let u = 0; u < (year.units || []).length; u++) {
+											if (year.units[u].code === code) {
+												year.units[u] = enriched;
+												inserted = true;
+												break;
+											}
+										}
+										if (inserted) break;
+									}
+									if (!inserted) {
+										if (!rich.years) rich.years = [];
+										rich.years[0] = rich.years[0] || { year: "", units: [] };
+										rich.years[0].units.push(enriched);
+									}
+								}
+
+								// Write back base and rich caches
+								const ttl = Number(process.env.SCRAPER_CACHE_TTL) || 2592000;
+								await cache.set(cursusCode, base, ttl);
+								// Respect one-write-per-second restriction on the same key
+								await sleep(1100);
+								await cache.set(cursusCode, rich, ttl, "rich");
+								await cache.setMetadata(cursusCode, { lastCheckpoint: processedCount, lastWriteAt: new Date().toISOString() }, 86400, "rich");
+								processedSinceLastCheckpoint = [];
+								// Release lock
+								await cache.releaseLock(cursusCode, lockToken);
+								console.log(`[Scraper Checkpoint] Checkpoint completed for ${cursusCode} at ${processedCount} units processed.`);
+							}
+						} catch (err) {
+							// eslint-disable-next-line no-console
+							console.error(`[Scraper] Error during checkpoint for ${cursusCode}:`, err);
+						}
 					}
 				}
-			} finally {
-				// Clear session pool
-				await sessionPool.clear();
+
+				// Add small delay between batches to be respectful
+				if (i + concurrencyLimit < unitUrls.length) {
+					await sleep(1000);
+				}
 			}
 
 			// eslint-disable-next-line no-console
@@ -354,38 +330,28 @@ export class CNAMScraper {
 				`[Scraper] Error during Level 2 scraping:`,
 				error,
 			);
-		} finally {
-			// Close browser instance
-			if (browserInstance) {
-				await browserInstance.close().catch((err: any) => {
-					// eslint-disable-next-line no-console
-					console.warn(`[Scraper] Error closing browser:`, err);
-				});
-			}
 		}
 
 		return results;
 	}
 
 	/**
-	 * Scrape a single unit detail page using session pooling
-	 * Acquires a session from the pool, uses it, and releases it back for reuse
+	 * Scrape a single unit detail page using persistent session
+	 * Acquires a page from the persistent session pool, uses it, and releases it
 	 *
 	 * @param unit - Unit with code and URL
 	 * @param timeout - Request timeout in milliseconds
-	 * @param sessionPool - Cloudflare session pool for reusable sessions
 	 * @returns Enriched unit object
 	 */
 	private async scrapeSingleUnit(
 		unit: { code: string; url: string },
 		timeout: number,
-		sessionPool: CloudflareSessionPool,
 	): Promise<any> {
-		let page: Page & { sessionName?: string } | null = null;
+		let page: Page | null = null;
 
 		try {
-			// Create page with pooled session
-			page = await sessionPool.createPage({ locale: "fr-FR" });
+			// Create page using persistent session pool
+			page = await this.sessionPool.createPage({ locale: "fr-FR" });
 			if (!page) {
 				throw new Error("Failed to create page for unit: " + unit.code);
 			}
@@ -445,9 +411,9 @@ export class CNAMScraper {
 			// Return unit with just the code on error
 			return { code: unit.code, name: unit.code };
 		} finally {
-			// Close page and release session back to pool for reuse
+			// Close page and disconnect from session (session persists)
 			if (page) {
-				await sessionPool.closePage(page);
+				await this.sessionPool.closePage(page);
 			}
 		}
 	}
