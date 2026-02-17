@@ -74,6 +74,7 @@
   "cursus.bibliography": "Bibliografía",
   "cnam": "Cnam",
   "download_html": "Descargar HTML",
+  "download_docx": "Descargar DOCX",
   "markdown-util": "Utilidad Markdown",
   "markdown.drop_or_click": "Suelte un archivo Markdown (.md) aquí, pegue texto Markdown o haga clic para seleccionar un archivo",
   "markdown.file_loaded": "Archivo cargado: {{name}}",
@@ -86,5 +87,7 @@
   "markdown.include_png_tooltip": "Convertir los SVG renderizados a PNG 2× (base64) antes de la descarga — puede aumentar el tamaño del archivo",
   "markdown.png_conversion_in_progress": "Convirtiendo SVG a PNG...",
   "markdown.png_conversion_error_cors": "Algunas imágenes no se pudieron convertir debido a CORS.",
+  "markdown.docx_conversion_in_progress": "Generando DOCX...",
+  "markdown.docx_error": "Error al generar DOCX",
   "simple": "Simple"
 }

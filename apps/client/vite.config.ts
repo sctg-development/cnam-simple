@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react";
 import { githubPagesSpa } from "@sctg/vite-plugin-github-pages-spa";
 import tsconfigPaths from "vite-tsconfig-paths";
 import tailwindcss from "@tailwindcss/vite";
+import { nodePolyfills } from "vite-plugin-node-polyfills";
 
 import _package from "./package.json" with { type: "json" };
 
@@ -80,7 +81,7 @@ export default defineConfig({
   define: {
     "import.meta.env.CLOUDFLARE_BACKEND": JSON.stringify(process.env.CLOUDFLARE_BACKEND),
   },
-  plugins: [mdAsString(), react(), tsconfigPaths(), tailwindcss(), githubPagesSpa()],
+  plugins: [nodePolyfills(), mdAsString(), react(), tsconfigPaths(), tailwindcss(), githubPagesSpa()],
   build: {
     // Enable source maps for better debugging experience
     // This should be disabled in production for better performance and security

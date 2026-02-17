@@ -69,6 +69,7 @@
   "download_json": "Download JSON",
   "download_pdf": "Download PDF",
   "download_html": "Download HTML",
+  "download_docx": "Download DOCX",
   "cursus.code": "Code",
   "cursus.audience": "Audience",
   "cursus.objectives": "Objectives",
@@ -86,5 +87,6 @@
   "markdown.include_png_tooltip": "Convert rendered SVGs to 2× PNG (base64) before download — may increase file size",
   "markdown.png_conversion_in_progress": "Converting SVGs to PNG...",
   "markdown.png_conversion_error_cors": "Some images could not be converted due to CORS.",
-  "beautiful": "beautiful"
+  "beautiful": "beautiful",
+  "markdown.docx_error": "Error while generating DOCX"
 }

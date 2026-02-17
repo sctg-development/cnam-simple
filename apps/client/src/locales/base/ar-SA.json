@@ -74,6 +74,7 @@
   "cursus.bibliography": "المراجع",
   "cnam": "كنام",
   "download_html": "تحميل HTML",
+  "download_docx": "تحميل DOCX",
   "markdown-util": "فائدة تخفيض السعر",
   "markdown.drop_or_click": "اسحب ملف Markdown (.md) هنا، الصق محتوى Markdown، أو انقر لتحديد ملف",
   "markdown.file_loaded": "تم تحميل الملف: {{name}}",
@@ -86,5 +87,7 @@
   "markdown.include_png_tooltip": "تحويل عناصر SVG المعروضة إلى صور PNG بدقة 2× (base64) قبل التنزيل — قد يزيد من حجم الملف",
   "markdown.png_conversion_in_progress": "جارٍ تحويل SVG إلى PNG...",
   "markdown.png_conversion_error_cors": "بعض الصور لم نتمكن من تحويلها بسبب قيود CORS.",
+  "markdown.docx_conversion_in_progress": "جارٍ إنشاء ملف Word (.docx)...",
+  "markdown.docx_error": "خطأ أثناء إنشاء DOCX",
   "simple": "بسيط"
 }

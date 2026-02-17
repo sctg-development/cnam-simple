@@ -33,6 +33,7 @@ import markedMermaid from "@maddyguthridge/marked-mermaid";
 import { Button } from "@heroui/button";
 // Inline highlight.js CSS for HTML export (Vite raw import)
 import hljsGithubCss from "highlight.js/styles/github.css?raw";
+import HtmlToDocx from "../html-to-docx/";
 
 import DefaultLayout from "@/layouts/default";
 import { title } from "@/components/primitives";
@@ -47,6 +48,7 @@ export default function DocsPage() {
   }, []);
 
   const [loading, setLoading] = useState(false);
+  const [docxLoading, setDocxLoading] = useState(false);
 
   // Markdown content comes from drag & drop or file input
   const [markdown, setMarkdown] = useState<string>("");
@@ -425,6 +427,69 @@ ${bodyHtml}
     }
   }
 
+  // Generate a DOCX from the rendered HTML using @turbodocx/html-to-docx
+  async function handleDownloadDocx() {
+    if (!renderedHtml) return;
+    setDocxLoading(true);
+    let wrapper: HTMLElement | null = null;
+    try {
+      const container = document.getElementById("markdown-content");
+      if (!container) throw new Error("Markdown content not found");
+
+      // clone DOM so we can mutate it safely
+      const clone = container.cloneNode(true) as HTMLElement;
+
+      // If user requested PNG embedding, convert SVG -> PNG in the clone first
+      if (includePng) {
+        setConverting(true);
+        await convertSvgsInClone(clone);
+        setConverting(false);
+      } else {
+        // ensure mermaid renders diagrams inside the clone (attach off-screen briefly)
+        wrapper = document.createElement("div");
+        const containerRect = container.getBoundingClientRect ? container.getBoundingClientRect() : { width: 800 };
+        wrapper.style.position = "absolute";
+        wrapper.style.left = "-99999px";
+        wrapper.style.top = "0";
+        wrapper.style.width = `${Math.max(100, Math.round(containerRect.width))}px`;
+        wrapper.style.visibility = "hidden";
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+        try { mermaid.run(); } catch (e) { /* ignore */ }
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      }
+
+      const htmlWithImages = clone.innerHTML;
+
+      const docx = await HtmlToDocx(htmlWithImages, null, {
+        imageProcessing: {
+          verboseLogging: true,
+          svgHandling: "native",
+          suppressSharpWarning: false,
+        },
+      });
+
+      // normalize `docx` to a Blob-compatible binary for the browser
+      const blob = new Blob([docx as any], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileName ? fileName.replace(/\.md$/i, "") : "cnam-markdown"}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      alert(`${t("markdown.docx_error")} — ${String(err)}`);
+    } finally {
+      setDocxLoading(false);
+      try { if (wrapper) wrapper.remove(); } catch (e) { /* ignore */ }
+    }
+  }
+
   // Convert markdown -> HTML (hoisted function so it can be used earlier)
   function getHtmlFromMarkdown(markdown: string) {
     const marked = new Marked();
@@ -537,6 +602,16 @@ ${bodyHtml}
                 aria-disabled={loading || converting || !renderedHtml}
               >
                 {t("markdown.clear")}
+              </Button>
+
+              <Button
+                className="btn btn-primary"
+                variant="bordered"
+                onPress={handleDownloadDocx}
+                disabled={docxLoading || loading || converting || !renderedHtml}
+                aria-disabled={docxLoading || loading || converting || !renderedHtml}
+              >
+                {docxLoading ? t("download_docx") + "..." : t("download_docx")}
               </Button>
 
               <Button
