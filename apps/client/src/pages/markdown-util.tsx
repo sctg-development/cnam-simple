@@ -644,7 +644,7 @@ ${bodyHtml}
           suppressSharpWarning: false,
           svgSanitization: false, // allow SVGs through without sanitization (note: this can be a security risk if the HTML content is not trusted)
         },
-      });
+      },null);
 
       // normalize `docx` to a Blob-compatible binary for the browser
       const blob = new Blob([docx as any], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
