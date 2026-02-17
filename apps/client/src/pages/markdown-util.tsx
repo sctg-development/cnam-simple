@@ -172,7 +172,7 @@ export default function DocsPage() {
   <title>Exported markdown</title>
   <style>${hljsGithubCss}</style>
 </head>
-<body>
+<body style="font-family: sans-serif;">
 ${bodyHtml}
 </body>
 </html>`;
