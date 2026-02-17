@@ -82,5 +82,9 @@
   "markdown.unsupported_file": "Fichier non supporté — veuillez fournir un fichier .md",
   "markdown.cannot_read_file": "Impossible de lire le fichier",
   "markdown.clear": "Effacer",
+  "markdown.include_png": "Inclure les images PNG (base64)",
+  "markdown.include_png_tooltip": "Convertir les SVG du rendu en images PNG en résolution 2× (base64) avant le téléchargement — peut augmenter la taille du fichier",
+  "markdown.png_conversion_in_progress": "Conversion des SVG en PNG...",
+  "markdown.png_conversion_error_cors": "Certaines images n'ont pas pu être converties (CORS).",
   "simple": "Simple"
 }

@@ -82,5 +82,9 @@
   "markdown.unsupported_file": "הקובץ אינו נתמך — יש לספק קובץ .md",
   "markdown.cannot_read_file": "לא ניתן לקרוא את הקובץ",
   "markdown.clear": "נקה",
+  "markdown.include_png": "הכלל תמונות PNG (base64)",
+  "markdown.include_png_tooltip": "המר SVG מוצגים ל‑PNG ברזולוציית 2× (base64) לפני ההורדה — עשוי להגדיל את גודל הקובץ",
+  "markdown.png_conversion_in_progress": "ממירים SVG ל‑PNG...",
+  "markdown.png_conversion_error_cors": "לא ניתן להמיר חלק מהתמונות בגלל CORS.",
   "simple": "פָּשׁוּט"
 }

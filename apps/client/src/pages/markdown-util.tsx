@@ -52,6 +52,9 @@ export default function DocsPage() {
   const [markdown, setMarkdown] = useState<string>("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [includePng, setIncludePng] = useState(false);
+  const [converting, setConverting] = useState(false);
+  const [conversionProgress, setConversionProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Re-run mermaid when the markdown changes
@@ -147,6 +150,214 @@ export default function DocsPage() {
     }
   };
 
+  // Convert SVG elements inside a cloned root to PNG (base64) and replace them in the clone.
+  async function convertSvgsInClone(cloneRoot: HTMLElement) {
+    const originalContainer = document.getElementById("markdown-content");
+    if (!originalContainer) return { success: 0, failed: 0, failedDetails: [] as any[] };
+
+    // Insert the clone off-screen but keep a layout width so mermaid can compute sizes.
+    const wrapper = document.createElement("div");
+    const containerRect = (originalContainer.getBoundingClientRect && originalContainer.getBoundingClientRect()) || { width: 800 };
+    wrapper.style.position = "absolute";
+    wrapper.style.left = "-99999px"; // off-screen but still laid out
+    wrapper.style.top = "0";
+    wrapper.style.width = `${Math.max(100, Math.round(containerRect.width))}px`;
+    wrapper.style.height = "auto";
+    wrapper.style.overflow = "visible";
+    wrapper.style.pointerEvents = "none";
+    wrapper.style.visibility = "hidden";
+    wrapper.appendChild(cloneRoot);
+    document.body.appendChild(wrapper);
+
+    // let mermaid render anything in the clone and wait for layout
+    try { mermaid.run(); } catch (e) { /* ignore */ }
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+    const originalSvgs = Array.from(originalContainer.querySelectorAll("svg"));
+    const clonedSvgs = Array.from(cloneRoot.querySelectorAll("svg"));
+    const count = clonedSvgs.length;
+    let success = 0;
+    let failed = 0;
+    const failedDetails: Array<{ index: number; reason?: string; urls?: string[]; serialized?: string }> = [];
+
+    const copyComputed = (source: Element, target: Element) => {
+      try {
+        const cs = window.getComputedStyle(source);
+        let styleText = "";
+        for (let i = 0; i < cs.length; i++) {
+          const prop = cs[i];
+          const val = cs.getPropertyValue(prop);
+          const prio = cs.getPropertyPriority(prop);
+          if (val) styleText += `${prop}:${val}${prio ? " !important" : ""};`;
+        }
+        const existing = target.getAttribute("style") || "";
+        target.setAttribute("style", existing + styleText);
+      } catch (err) {
+        // ignore style-copy failures
+      }
+    };
+
+    // inline external <image> references inside an SVG serialized string (if CORS allows)
+    async function inlineExternalImages(serialized: string) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(serialized, "image/svg+xml");
+      const images = Array.from(doc.querySelectorAll("image"));
+      let inlined = 0;
+      const failedUrls: string[] = [];
+
+      for (const imgEl of images) {
+        const href = imgEl.getAttribute("href") || imgEl.getAttribute("xlink:href");
+        if (!href) continue;
+        if (href.startsWith("data:") || href.startsWith("blob:")) continue;
+
+        const url = (() => {
+          try { return new URL(href, document.baseURI).href; } catch (e) { return href; }
+        })();
+
+        try {
+          const resp = await fetch(url, { mode: "cors" });
+          if (!resp.ok) throw new Error(`fetch ${resp.status}`);
+          const blob = await resp.blob();
+          const dataUrl = await new Promise<string>((res, rej) => {
+            const fr = new FileReader();
+            fr.onload = () => res(String(fr.result));
+            fr.onerror = () => rej(new Error("FileReader failed"));
+            fr.readAsDataURL(blob);
+          });
+          imgEl.setAttribute("href", dataUrl);
+          imgEl.setAttribute("xlink:href", dataUrl);
+          inlined++;
+        } catch (err) {
+          failedUrls.push(url);
+        }
+      }
+
+      return { serialized: new XMLSerializer().serializeToString(doc.documentElement), inlined, failedUrls };
+    }
+
+    // attempt to render serialized SVG -> PNG and replace target element on success
+    async function attemptRenderFromSerialized(serialized: string, targetEl: Element, cssWidth: number, cssHeight: number) {
+      const tryLoadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+        const tmp = new Image();
+        try { tmp.crossOrigin = "anonymous"; } catch (e) { /* ignore */ }
+        tmp.width = cssWidth;
+        tmp.height = cssHeight;
+        tmp.onload = () => resolve(tmp);
+        tmp.onerror = () => reject(new Error("SVG image load failed"));
+        tmp.src = src;
+      });
+
+      const svgDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(serialized);
+      let loadedImg: HTMLImageElement | null = null;
+      let usedBlobUrl: string | null = null;
+
+      try {
+        loadedImg = await tryLoadImage(svgDataUrl);
+      } catch (err) {
+        const blob = new Blob([serialized], { type: "image/svg+xml;charset=utf-8" });
+        const blobUrl = URL.createObjectURL(blob);
+        usedBlobUrl = blobUrl;
+        loadedImg = await tryLoadImage(blobUrl);
+      }
+
+      if (!loadedImg) throw new Error("Failed to load serialized SVG as image");
+
+      const scale = 2;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(cssWidth * scale));
+      canvas.height = Math.max(1, Math.round(cssHeight * scale));
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Canvas 2D not supported");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+      ctx.drawImage(loadedImg, 0, 0, cssWidth, cssHeight);
+
+      if (usedBlobUrl) {
+        try { URL.revokeObjectURL(usedBlobUrl); } catch (e) { /* ignore */ }
+      }
+
+      const dataUrl = canvas.toDataURL("image/png");
+      const imgEl = document.createElement("img");
+      imgEl.src = dataUrl;
+      imgEl.setAttribute("width", String(cssWidth));
+      imgEl.setAttribute("height", String(cssHeight));
+      targetEl.parentNode?.replaceChild(imgEl, targetEl);
+    }
+
+    for (let i = 0; i < count; i++) {
+      const cloneSvg = clonedSvgs[i] as Element;
+      const orig = originalSvgs[i] ?? null;
+      try {
+        // copy computed styles from original when available (helps keep visual parity)
+        if (orig) {
+          copyComputed(orig, cloneSvg);
+          const sChildren = orig.querySelectorAll("*");
+          const tChildren = cloneSvg.querySelectorAll("*");
+          const len = Math.min(sChildren.length, tChildren.length);
+          for (let j = 0; j < len; j++) copyComputed(sChildren[j] as Element, tChildren[j] as Element);
+        }
+
+        const clonedRect = (cloneSvg as Element).getBoundingClientRect();
+        const origRect = orig ? (orig as Element).getBoundingClientRect() : null;
+        const rect = (clonedRect && clonedRect.width > 0 && clonedRect.height > 0) ? clonedRect : (origRect ?? { width: 800, height: 600 });
+        const cssWidth = Math.max(1, Math.round(rect.width)) || 800;
+        const cssHeight = Math.max(1, Math.round(rect.height)) || 600;
+
+        // first attempt: serialize and render directly
+        const serialized = new XMLSerializer().serializeToString(cloneSvg);
+        try {
+          await attemptRenderFromSerialized(serialized, cloneSvg, cssWidth, cssHeight);
+          success++;
+        } catch (err) {
+          // if rendering fails, try to inline external images (if any) and retry
+          const hasExternalImage = /<image[^>]+(?:href|xlink:href)=["'](https?:|\/\/|\.)/i.test(serialized);
+
+          if (hasExternalImage) {
+            const { serialized: inlinedSerialized, inlined: inlinedCount, failedUrls } = await inlineExternalImages(serialized);
+            if (inlinedCount > 0) {
+              // replace the SVG node in the clone with the inlined version so measurements persist
+              try {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(inlinedSerialized, "image/svg+xml");
+                const newSvg = doc.documentElement as Element;
+                cloneSvg.parentNode?.replaceChild(newSvg, cloneSvg);
+                // retry with the inlined svg
+                await attemptRenderFromSerialized(inlinedSerialized, newSvg, cssWidth, cssHeight);
+                success++;
+              } catch (err2) {
+                failed++;
+                failedDetails.push({ index: i, reason: String(err2), urls: failedUrls, serialized });
+              }
+            } else {
+              failed++;
+              failedDetails.push({ index: i, reason: "no-inlined-resources", serialized });
+            }
+          } else {
+            // final fallback: record failure
+            failed++;
+            failedDetails.push({ index: i, reason: String(err), serialized });
+          }
+        }
+      } catch (err) {
+        // unexpected error per-SVG, keep going
+        // eslint-disable-next-line no-console
+        console.warn("SVG conversion unexpected error", err);
+        failed++;
+        failedDetails.push({ index: i, reason: String(err) });
+      }
+
+      setConversionProgress(Math.round(((i + 1) / Math.max(1, count)) * 100));
+      await new Promise((r) => setTimeout(r, 0));
+    }
+
+    // remove the temporary wrapper from the DOM
+    try { wrapper.remove(); } catch (e) { /* ignore */ }
+
+    setConversionProgress(null);
+    return { success, failed, failedDetails };
+  }
+
   // Download the currently rendered `#markdown-content` into a minimal HTML file
   async function handleDownload() {
     if (!renderedHtml) return;
@@ -163,7 +374,23 @@ export default function DocsPage() {
 
       if (!container) throw new Error("Markdown content not found");
 
-      const bodyHtml = container.innerHTML;
+      // clone DOM so we can mutate it safely without touching the live page
+      const clone = container.cloneNode(true) as HTMLElement;
+
+      if (includePng) {
+        setConverting(true);
+        const result = await convertSvgsInClone(clone);
+        setConverting(false);
+        if (result.failed > 0) {
+          // log details for debugging and show a concise localized alert with counts
+          // (details are available in the console)
+          // eslint-disable-next-line no-console
+          console.warn("SVG->PNG conversion failed details:", result.failedDetails);
+          alert(`${t("markdown.png_conversion_error_cors")} (${result.failed}/${result.success + result.failed})`);
+        }
+      }
+
+      const bodyHtml = clone.innerHTML;
 
       const doc = `<!doctype html>
 <html lang="fr">
@@ -193,6 +420,8 @@ ${bodyHtml}
       alert(String(err));
     } finally {
       setLoading(false);
+      setConverting(false);
+      setConversionProgress(null);
     }
   }
 
@@ -244,8 +473,8 @@ ${bodyHtml}
           <h1 className={title()}>
             <Trans t={t}>markdown-util</Trans>
           </h1>
-          <div className="mt-4 flex items-start gap-4">
-            <div className="w-7xl text-left">
+          <div className="mt-4 flex items-start gap-4 w-xl md:w-3xl lg:w-7xl">
+            <div className="w-xl md:w-3xl lg:w-7xl text-left">
               <div
                 aria-label={t("markdown.drop_or_click")}
                 className={`mb-4 rounded border-2 border-dashed p-6 cursor-pointer ${isDragging ? "border-primary bg-slate-50" : "border-gray-200"}`}
@@ -282,23 +511,40 @@ ${bodyHtml}
               />
             </div>
 
-            <div className="shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="flex-shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+              <label className="inline-flex items-center gap-2 text-sm" title={t("markdown.include_png_tooltip")}>
+                <input
+                  type="checkbox"
+                  checked={includePng}
+                  onChange={(e) => setIncludePng(e.currentTarget.checked)}
+                  className="checkbox"
+                  disabled={converting}
+                />
+                <span>{t("markdown.include_png")}</span>
+              </label>
+
+              {converting && (
+                <div className="text-sm text-muted ml-2">
+                  {t("markdown.png_conversion_in_progress")}{conversionProgress ? ` (${conversionProgress}%)` : ''}
+                </div>
+              )}
+
               <Button
-                aria-disabled={loading || !renderedHtml}
                 className="btn btn-primary"
-                disabled={loading || !renderedHtml}
                 variant="bordered"
                 onPress={handleClear}
+                disabled={loading || converting || !renderedHtml}
+                aria-disabled={loading || converting || !renderedHtml}
               >
                 {t("markdown.clear")}
               </Button>
 
               <Button
-                aria-disabled={loading || !renderedHtml}
                 className="btn btn-primary"
-                disabled={loading || !renderedHtml}
                 variant="bordered"
                 onPress={handleDownload}
+                disabled={loading || converting || !renderedHtml}
+                aria-disabled={loading || converting || !renderedHtml}
               >
                 {loading ? t("download_markdown") + "..." : t("download_html")}
               </Button>

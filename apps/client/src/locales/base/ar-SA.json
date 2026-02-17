@@ -82,5 +82,9 @@
   "markdown.unsupported_file": "ملف غير مدعوم — يرجى تقديم ملف .md",
   "markdown.cannot_read_file": "تعذر قراءة الملف",
   "markdown.clear": "مسح",
+  "markdown.include_png": "تضمين صور PNG (base64)",
+  "markdown.include_png_tooltip": "تحويل عناصر SVG المعروضة إلى صور PNG بدقة 2× (base64) قبل التنزيل — قد يزيد من حجم الملف",
+  "markdown.png_conversion_in_progress": "جارٍ تحويل SVG إلى PNG...",
+  "markdown.png_conversion_error_cors": "بعض الصور لم نتمكن من تحويلها بسبب قيود CORS.",
   "simple": "بسيط"
 }
