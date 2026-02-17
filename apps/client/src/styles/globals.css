@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "../../node_modules/highlight.js/styles/github.css";
 @layer theme, base, components, utilities;
 
 /* Be careful with the paths turbo mono repos install heroui in the root */

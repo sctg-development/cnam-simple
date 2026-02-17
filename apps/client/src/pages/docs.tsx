@@ -34,7 +34,10 @@ export default function DocsPage() {
             <p className="mt-2">{t("docs.overview.p")}</p>
 
             {/* ARIA Alert Pattern: Accessible disclaimer for screen readers */}
-            <div role="alert" className="mt-4 p-4 bg-yellow-50 border-l-4 border-amber-400 rounded">
+            <div
+              className="mt-4 p-4 bg-yellow-50 border-l-4 border-amber-400 rounded"
+              role="alert"
+            >
               <p className="font-semibold">{t("docs.warning.title")}</p>
               <p className="mt-1 text-sm">{t("docs.warning.p")}</p>
             </div>
@@ -47,7 +50,9 @@ export default function DocsPage() {
               <li>{t("docs.goals.item4")}</li>
             </ul>
 
-            <h2 className="font-semibold mt-4">{t("docs.architecture.title")}</h2>
+            <h2 className="font-semibold mt-4">
+              {t("docs.architecture.title")}
+            </h2>
             <p className="mt-2">{t("docs.architecture.p")}</p>
 
             <div className="grid md:grid-cols-2 gap-4 mt-4">

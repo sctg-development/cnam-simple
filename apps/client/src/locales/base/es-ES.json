@@ -51,7 +51,6 @@
   "docs.api.p": "Endpoint principal: GET /api/cursus/<code>. Soporta `enrich=true` y la invalidación de caché segura.",
   "docs.license.title": "Licencia",
   "docs.license.p": "MIT (ver README para detalles).",
-
   "docs.warning.title": "Aviso",
   "docs.warning.p": "Esta herramienta no está afiliada al CNAM y los resultados se proporcionan tal cual; no se garantiza su exactitud.",
   "language": "Idioma",
@@ -72,5 +71,16 @@
   "cursus.audience": "Audiencia",
   "cursus.objectives": "Objetivos",
   "cursus.content": "Contenido",
-  "cursus.bibliography": "Bibliografía"
+  "cursus.bibliography": "Bibliografía",
+  "cnam": "Cnam",
+  "download_html": "Descargar HTML",
+  "markdown-util": "Utilidad Markdown",
+  "markdown.drop_or_click": "Suelte un archivo Markdown (.md) aquí, pegue texto Markdown o haga clic para seleccionar un archivo",
+  "markdown.file_loaded": "Archivo cargado: {{name}}",
+  "markdown.no_content": "Sin contenido — suelte un archivo Markdown para mostrarlo.",
+  "markdown.pasted_name": "Contenido pegado",
+  "markdown.unsupported_file": "Archivo no compatible — por favor proporcione un archivo .md",
+  "markdown.cannot_read_file": "No se puede leer el archivo",
+  "markdown.clear": "Borrar",
+  "simple": "Simple"
 }

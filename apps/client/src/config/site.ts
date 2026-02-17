@@ -22,9 +22,7 @@ import i18next from "../i18n";
 export const siteConfig = () => ({
   needCookieConsent: true, // Set to false if you don't need cookie consent
   name: i18next.t("vite-heroui"),
-  description: i18next.t(
-    "cnam-index-title",
-  ),
+  description: i18next.t("cnam-index-title"),
   navItems: [
     {
       label: i18next.t("home"),
@@ -38,10 +36,10 @@ export const siteConfig = () => ({
     //   label: i18next.t("pricing"),
     //   href: "/pricing",
     // },
-    // {
-    //   label: i18next.t("blog"),
-    //   href: "/blog",
-    // },
+    {
+      label: i18next.t("markdown-util"),
+      href: "/markdown-util",
+    },
     // {
     //   label: i18next.t("about"),
     //   href: "/about",
@@ -87,6 +85,7 @@ export const siteConfig = () => ({
     // docs: "https://heroui.com",
     // discord: "https://discord.gg/9b6yyZKmH4",
     sponsor: "https://github.com/sponsors/sctg-development",
-    template: "https://github.com/sctg-development/vite-react-heroui-auth0-template"
+    template:
+      "https://github.com/sctg-development/vite-react-heroui-auth0-template",
   },
 });

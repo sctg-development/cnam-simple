@@ -18,8 +18,6 @@
 // Component Dependency & Composition: Modular UI component assembly
 import { Button } from "@heroui/button";
 import { Link } from "@heroui/link";
-import { LinkUniversal } from "./link-universal";
-import SearchControl from "@/components/search-control";
 import {
   Navbar as HeroUINavbar,
   NavbarBrand,
@@ -34,14 +32,13 @@ import { clsx } from "@heroui/shared-utils";
 import { Trans, useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
+import { LinkUniversal } from "./link-universal";
 import { I18nIcon, LanguageSwitch } from "./language-switch";
 
+import SearchControl from "@/components/search-control";
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import {
-  GithubIcon,
-  HeartFilledIcon,
-} from "@/components/icons";
+import { GithubIcon, HeartFilledIcon } from "@/components/icons";
 import { Logo } from "@/components/icons";
 import { availableLanguages } from "@/i18n";
 
@@ -56,6 +53,7 @@ export const Navbar = () => {
       onSearch={(c) => {
         try {
           const q = encodeURIComponent(c);
+
           // Use react-router navigation to avoid full page reloads / loops
           navigate(`/?q=${q}`);
         } catch (e) {
@@ -102,7 +100,12 @@ export const Navbar = () => {
         justify="end"
       >
         <NavbarItem className="hidden sm:flex gap-2">
-          <LinkUniversal isExternal href={siteConfig().links.github} title={t("github")} isInternet>
+          <LinkUniversal
+            isExternal
+            isInternet
+            href={siteConfig().links.github}
+            title={t("github")}
+          >
             <GithubIcon className="text-default-500" />
           </LinkUniversal>
           <ThemeSwitch />

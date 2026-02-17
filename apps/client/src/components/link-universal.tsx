@@ -16,12 +16,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { ReactNode } from "react";
+import type { LinkProps } from "@heroui/link";
+
 import { forwardRef } from "react";
 import { Link } from "@heroui/link";
 import { link as linkStyles } from "@heroui/theme";
 import { clsx } from "@heroui/shared-utils";
-import type { ReactNode } from "react";
-import type { LinkProps } from "@heroui/link";
 
 type LinkUniversalProps = Omit<LinkProps, "as"> & {
   /**
@@ -34,7 +35,7 @@ type LinkUniversalProps = Omit<LinkProps, "as"> & {
    * Children content of the link
    */
   children?: ReactNode;
-}
+};
 
 /**
  * LinkUniversal: Polymorphic Link Component
@@ -49,22 +50,39 @@ type LinkUniversalProps = Omit<LinkProps, "as"> & {
  * <LinkUniversal href="https://example.com" isInternet color="primary">External</LinkUniversal>
  */
 export const LinkUniversal = forwardRef<HTMLAnchorElement, LinkUniversalProps>(
-  ({ isInternet = false, children, className, href, color, size, underline, isDisabled, disableAnimation, isExternal, showAnchorIcon, anchorIcon, ...props }, ref) => {
+  (
+    {
+      isInternet = false,
+      children,
+      className,
+      href,
+      color,
+      size,
+      underline,
+      isDisabled,
+      disableAnimation,
+      isExternal,
+      showAnchorIcon,
+      anchorIcon,
+      ...props
+    },
+    ref,
+  ) => {
     // Conditional Rendering Strategy: Routes to appropriate implementation based on link type
     if (!isInternet) {
       return (
         <Link
           ref={ref}
-          href={href}
-          color={color}
-          size={size}
-          underline={underline}
-          isDisabled={isDisabled}
-          disableAnimation={disableAnimation}
-          isExternal={isExternal}
-          showAnchorIcon={showAnchorIcon}
           anchorIcon={anchorIcon}
           className={className}
+          color={color}
+          disableAnimation={disableAnimation}
+          href={href}
+          isDisabled={isDisabled}
+          isExternal={isExternal}
+          showAnchorIcon={showAnchorIcon}
+          size={size}
+          underline={underline}
           {...props}
         >
           {children}
@@ -81,24 +99,24 @@ export const LinkUniversal = forwardRef<HTMLAnchorElement, LinkUniversalProps>(
         isDisabled: isDisabled as any,
         disableAnimation: disableAnimation as any,
       }),
-      className
+      className,
     );
 
     return (
       <a
         ref={ref}
-        href={href}
-        className={styledClassName}
-        target={isExternal ? "_blank" : undefined}
-        rel={isExternal ? "noopener noreferrer" : undefined}
         aria-disabled={isDisabled}
+        className={styledClassName}
+        href={href}
+        rel={isExternal ? "noopener noreferrer" : undefined}
+        target={isExternal ? "_blank" : undefined}
         {...props}
       >
         {children}
         {showAnchorIcon && anchorIcon}
       </a>
     );
-  }
+  },
 );
 
 LinkUniversal.displayName = "LinkUniversal";

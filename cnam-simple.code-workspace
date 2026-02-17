@@ -1,0 +1,56 @@
+{
+  "folders": [
+    {
+      "name": "Cloudflare worker",
+      "path": "./apps/cloudflare-worker"
+    },
+    {
+      "name": "Client app",
+      "path": "./apps/client",
+    },
+    {
+      "name": "GitHub Actions",
+      "path": "./.github"
+    },
+    {
+      "name": "Sensitive datas",
+      "path": "./_sensitive_datas"
+    },
+    {
+      "name": "Root",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "i18n-ally.keystyle": "flat",
+    "i18n-ally.sourceLanguage": "en-US",
+    "git.openRepositoryInParentFolders": "always",
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    "terminal.integrated.profiles.linux": {
+      "bash": {
+        "path": "bash",
+        "args": [
+          "-c",
+          "if [ -f ${workspaceFolder}/.env ]; then set -a && source ${workspaceFolder}/.env && set +a && echo '.env loaded successfully from ${workspaceFolder}/.env'; else echo '.env file not found'; fi && exec bash -i"
+        ]
+      }
+    },
+    "terminal.integrated.profiles.osx": {
+      "zsh": {
+        "path": "zsh",
+        "args": [
+          "-c",
+          "if [ -f ${workspaceFolder}/.env ]; then set -a && source ${workspaceFolder}/.env && set +a && echo '.env loaded successfully from ${workspaceFolder}/.env'; else echo '.env file not found'; fi && exec zsh -i"
+        ]
+      }
+    },
+    "terminal.integrated.env.linux": {
+      "PROJECT_ROOT": "${workspaceFolder}/../"
+    },
+    "terminal.integrated.env.osx": {
+      "PROJECT_ROOT": "${workspaceFolder}/../"
+    },
+    "dependi.npm.lockFileEnabled": false
+  }
+}

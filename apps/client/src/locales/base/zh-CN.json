@@ -51,7 +51,6 @@
   "docs.api.p": "主要端点：GET /api/cursus/<code>。支持 `enrich=true` 及安全的缓存失效。",
   "docs.license.title": "许可",
   "docs.license.p": "MIT（详情见 README）。",
-
   "docs.warning.title": "免责声明",
   "docs.warning.p": "本工具与 CNAM 无任何关联，结果按原样提供；其准确性不予保证。",
   "language": "语言",
@@ -72,5 +71,16 @@
   "cursus.audience": "受众",
   "cursus.objectives": "目标",
   "cursus.content": "内容",
-  "cursus.bibliography": "参考书目"
+  "cursus.bibliography": "参考书目",
+  "cnam": "Cnam",
+  "download_html": "下载 HTML",
+  "markdown-util": "降价实用程序",
+  "markdown.drop_or_click": "将 Markdown 文件（.md）拖放到此处、粘贴 Markdown 文本，或点击选择文件",
+  "markdown.file_loaded": "已加载文件：{{name}}",
+  "markdown.no_content": "无内容 — 请拖放 Markdown 文件以显示。",
+  "markdown.unsupported_file": "不支持的文件 — 请提供 .md 文件",
+  "markdown.cannot_read_file": "无法读取文件",
+  "markdown.clear": "清除",
+  "markdown.pasted_name": "已粘贴内容",
+  "simple": "简单的"
 }

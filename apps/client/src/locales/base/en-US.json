@@ -26,7 +26,6 @@
   "cnam": "Cnam",
   "cnam-index-title": "Easily generate the complete description of a CNAM program.",
   "cnam-index-subtitle": "All teaching units will be detailed.",
-
   "docs.title": "Project documentation",
   "docs.overview.title": "Overview",
   "docs.overview.p": "CNAM+ Simple extracts and caches cursus data from bedeo.cnam.fr and exposes a small API and a lightweight frontend to search and export cursus descriptions.",
@@ -49,10 +48,8 @@
   "docs.api.p": "Main endpoint: GET /api/cursus/<code>. Supports `enrich=true` and secure cache invalidation.",
   "docs.license.title": "License",
   "docs.license.p": "MIT (see README for details).",
-
   "docs.warning.title": "Disclaimer",
   "docs.warning.p": "This tool is not affiliated with the CNAM and results are provided as-is; accuracy is not guaranteed.",
-
   "documentation": "Documentation",
   "get-started-by-editing": "Get started by editing",
   "make": "Make",
@@ -60,7 +57,6 @@
   "language": "Language",
   "cookie-consent": "We use cookies on our website to give you the most relevant experience by remembering your preferences and repeat visits. By clicking <strong className=\"font-semibold\">\"Accept All\"</strong>, you consent to the use of ALL the cookies. Please read our",
   "cookie-policy": "Cookie Policy.",
-
   "accept-all": "Accept All",
   "reject": "Reject",
   "cookie-consent-title": "Cookies policy",
@@ -72,9 +68,19 @@
   "download_markdown": "Download Markdown",
   "download_json": "Download JSON",
   "download_pdf": "Download PDF",
+  "download_html": "Download HTML",
   "cursus.code": "Code",
   "cursus.audience": "Audience",
   "cursus.objectives": "Objectives",
   "cursus.content": "Content",
-  "cursus.bibliography": "Bibliography"
+  "cursus.bibliography": "Bibliography",
+  "markdown-util": "Markdown Utility",
+  "markdown.drop_or_click": "Drop a Markdown file (.md) here, paste Markdown text, or click to select a file",
+  "markdown.file_loaded": "File loaded: {{name}}",
+  "markdown.no_content": "No content — drop a Markdown file to display it.",
+  "markdown.pasted_name": "Pasted content",
+  "markdown.unsupported_file": "Unsupported file — please provide a .md file",
+  "markdown.cannot_read_file": "Unable to read file",
+  "markdown.clear": "Clear",
+  "beautiful": "beautiful"
 }

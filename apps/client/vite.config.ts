@@ -64,11 +64,23 @@ export function extractPerVendorDependencies(
  * Vite configuration
  * @see https://vitejs.dev/config/
  */
+function mdAsString(): import("vite").Plugin {
+  return {
+    name: "vite:md-as-string",
+    enforce: "pre",
+    transform(src, id) {
+      const cleanId = id.split("?")[0].split("#")[0];
+      if (!cleanId.endsWith(".md")) return null;
+      return `export default ${JSON.stringify(src)};`;
+    },
+  };
+}
+
 export default defineConfig({
   define: {
     "import.meta.env.CLOUDFLARE_BACKEND": JSON.stringify(process.env.CLOUDFLARE_BACKEND),
   },
-  plugins: [react(), tsconfigPaths(), tailwindcss(), githubPagesSpa()],
+  plugins: [mdAsString(), react(), tsconfigPaths(), tailwindcss(), githubPagesSpa()],
   build: {
     // Enable source maps for better debugging experience
     // This should be disabled in production for better performance and security

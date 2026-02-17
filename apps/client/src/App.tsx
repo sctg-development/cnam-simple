@@ -8,7 +8,7 @@ import { PageNotFound } from "./pages/404";
 import IndexPage from "@/pages/index";
 import DocsPage from "@/pages/docs";
 import PricingPage from "@/pages/pricing";
-import BlogPage from "@/pages/blog";
+import MarkdownUtil from "@/pages/markdown-util";
 import AboutPage from "@/pages/about";
 
 // Declarative Routing: Route-based component composition
@@ -20,7 +20,7 @@ export function App() {
         <Route element={<IndexPage />} path="/" />
         <Route element={<DocsPage />} path="/docs" />
         <Route element={<PricingPage />} path="/pricing" />
-        <Route element={<BlogPage />} path="/blog" />
+        <Route element={<MarkdownUtil />} path="/markdown-util" />
         <Route element={<AboutPage />} path="/about" />
         <Route element={<PageNotFound />} path="*" />
       </Routes>

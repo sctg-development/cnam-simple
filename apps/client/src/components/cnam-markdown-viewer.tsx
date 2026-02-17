@@ -29,10 +29,11 @@
  *   DOMPurify) before rendering.
  */
 
+import type { Cursus } from "@/types";
+
 import React from "react";
 import { marked } from "marked";
 import { useTranslation } from "react-i18next";
-import type { Cursus } from "@/types";
 
 // Document Generation Pattern: Dynamic markdown rendering with i18n support
 /** Props for the viewer component */
@@ -44,11 +45,13 @@ export interface CnamMarkdownViewerProps {
    * creates blob URLs for downloads. The callback is called whenever the
    * generated markdown or blobs change, and with nulls on cleanup.
    */
-  onGenerated?: (payload: {
-    markdown: string;
-    mdUrl: string | null;
-    jsonUrl: string | null;
-  } | null) => void;
+  onGenerated?: (
+    payload: {
+      markdown: string;
+      mdUrl: string | null;
+      jsonUrl: string | null;
+    } | null,
+  ) => void;
 }
 
 /* Markdown generation is performed inside the component so we can
@@ -59,7 +62,10 @@ export interface CnamMarkdownViewerProps {
  * The component converts JSON -> markdown, generates blob URLs for
  * markdown and JSON files and revokes them on unmount.
  */
-export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownViewerProps) {
+export default function CnamMarkdownViewer({
+  data,
+  onGenerated,
+}: CnamMarkdownViewerProps) {
   const { t } = useTranslation();
 
   // Memoization Pattern: Expensive markdown generation cached and recalculated only on data/locale change
@@ -70,8 +76,10 @@ export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownVi
     // Header
     lines.push(`# ${data.name || data.code}`);
     lines.push(`**${t("cursus.code")}**: ${data.code}`);
-    if (data.audience_access) lines.push(`**${t("cursus.audience")}**: ${data.audience_access}`);
-    if (data.objectives) lines.push(`**${t("cursus.objectives")}**:\n${data.objectives}`);
+    if (data.audience_access)
+      lines.push(`**${t("cursus.audience")}**: ${data.audience_access}`);
+    if (data.objectives)
+      lines.push(`**${t("cursus.objectives")}**:\n${data.objectives}`);
     lines.push("\n---\n");
 
     // Years & units
@@ -79,13 +87,18 @@ export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownVi
       lines.push(`## ${year.year}`);
       for (const unit of year.units || []) {
         lines.push(`### ${unit.name}${unit.code ? ` (${unit.code})` : ""}`);
-        if (unit.audience_access) lines.push(`**${t("cursus.audience")}**: ${unit.audience_access}`);
-        if (unit.objectives) lines.push(`**${t("cursus.objectives")}**:\n${unit.objectives}`);
-        if (unit.content) lines.push(`**${t("cursus.content")}**:\n${unit.content}`);
+        if (unit.audience_access)
+          lines.push(`**${t("cursus.audience")}**: ${unit.audience_access}`);
+        if (unit.objectives)
+          lines.push(`**${t("cursus.objectives")}**:\n${unit.objectives}`);
+        if (unit.content)
+          lines.push(`**${t("cursus.content")}**:\n${unit.content}`);
         if (unit.bibliography && unit.bibliography.length > 0) {
           lines.push(`**${t("cursus.bibliography")}**:`);
           for (const bib of unit.bibliography) {
-            lines.push(`- ${bib.title}${bib.author ? ` — _${bib.author}_` : ""}`);
+            lines.push(
+              `- ${bib.title}${bib.author ? ` — _${bib.author}_` : ""}`,
+            );
           }
         }
         lines.push("");
@@ -107,13 +120,17 @@ export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownVi
 
     if (markdown) {
       const mdBlob = new Blob([markdown], { type: "text/markdown" });
+
       mdBlobUrlRef.current = URL.createObjectURL(mdBlob);
     } else {
       mdBlobUrlRef.current = null;
     }
 
     if (data) {
-      const jsonBlob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const jsonBlob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+
       jsonBlobUrlRef.current = URL.createObjectURL(jsonBlob);
     } else {
       jsonBlobUrlRef.current = null;
@@ -138,7 +155,10 @@ export default function CnamMarkdownViewer({ data, onGenerated }: CnamMarkdownVi
 
   // Convert markdown to HTML using marked. No sanitization is performed here
   // to preserve previous behaviour; consider adding DOMPurify before render.
-  const html = React.useMemo(() => marked(markdown || ""), [markdown]) as string;
+  const html = React.useMemo(
+    () => marked(markdown || ""),
+    [markdown],
+  ) as string;
 
   return (
     <div className="mt-4">

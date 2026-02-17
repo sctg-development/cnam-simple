@@ -16,17 +16,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+import type { CursusApiResponse, Cursus } from "@/types";
+
 import { button as buttonStyles } from "@heroui/theme";
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Trans, useTranslation } from "react-i18next";
+
 import CnamMarkdownViewer from "@/components/cnam-markdown-viewer.tsx";
 import PdfTransformer from "@/components/pdf-transformer";
 import SearchControl from "@/components/search-control";
-
 import { title, subtitle } from "@/components/primitives";
 import DefaultLayout from "@/layouts/default";
-import type { CursusApiResponse, Cursus } from "@/types";
 
 /**
  * SearchBar Component: API Integration & Data Orchestration
@@ -55,69 +56,74 @@ function SearchBar() {
   const location = useLocation();
 
   // Callback Memoization Pattern: Prevents unnecessary re-renders of dependent children
-  const handleSearch = useCallback(async (codeToSearch?: string) => {
-    setError(null);
-    setEnrichmentStatus(null);
-    setData(null);
+  const handleSearch = useCallback(
+    async (codeToSearch?: string) => {
+      setError(null);
+      setEnrichmentStatus(null);
+      setData(null);
 
-    const trimmed = (codeToSearch ?? code).trim();
+      const trimmed = (codeToSearch ?? code).trim();
 
-    if (!trimmed) return setError(t("search_error"));
+      if (!trimmed) return setError(t("search_error"));
 
-    // Async Error Handling: Try-catch wrapper for API calls
-    setLoading(true);
-    try {
-      // Environment-aware Configuration: Backend URL from build environment
-      const base = (import.meta.env as any).CLOUDFLARE_BACKEND || "";
-      // eslint-disable-next-line no-console
-      console.log("Fetching data for code:", trimmed, "from backend:", base);
-      const res = await fetch(
-        `${base}/api/cursus/${encodeURIComponent(trimmed)}?enrich=true`,
-      );
-      const json = await res.json() as CursusApiResponse;
-
-      if (!json || !json.success || !json.data) {
-        setError(t("no_results"));
-        setLoading(false);
-
-        return;
-      }
-
-      // Check if enrichment was interrupted (less than 100% enriched)
-      if (json.enrichedPercent !== undefined && json.enrichedPercent < 100) {
-        setEnrichmentStatus(
-          `⚠️ ${t("scraping_interrupted", { 
-            defaultValue: `Scraping interrupted at {{percent}}%` 
-          }).replace("{{percent}}", String(json.enrichedPercent))}`
-        );
-      }
-
-      // Keep the raw JSON and let the viewer generate markdown + blobs
-      setData(json.data);
-
-      // Update browser URL if it does not already reflect the current query
+      // Async Error Handling: Try-catch wrapper for API calls
+      setLoading(true);
       try {
-        const currentQ = new URLSearchParams(location.search).get("q");
-        if (currentQ !== trimmed) {
-          // If we're already on the home page, push a new entry; otherwise
-          // navigate to the home page with the query param.
-          if (location.pathname === "/") {
-            navigate(`/?q=${encodeURIComponent(trimmed)}`);
-          } else {
-            navigate(`/?q=${encodeURIComponent(trimmed)}`);
-          }
+        // Environment-aware Configuration: Backend URL from build environment
+        const base = (import.meta.env as any).CLOUDFLARE_BACKEND || "";
+
+        // eslint-disable-next-line no-console
+        console.log("Fetching data for code:", trimmed, "from backend:", base);
+        const res = await fetch(
+          `${base}/api/cursus/${encodeURIComponent(trimmed)}?enrich=true`,
+        );
+        const json = (await res.json()) as CursusApiResponse;
+
+        if (!json || !json.success || !json.data) {
+          setError(t("no_results"));
+          setLoading(false);
+
+          return;
         }
-      } catch (e) {
-        // ignore
+
+        // Check if enrichment was interrupted (less than 100% enriched)
+        if (json.enrichedPercent !== undefined && json.enrichedPercent < 100) {
+          setEnrichmentStatus(
+            `⚠️ ${t("scraping_interrupted", {
+              defaultValue: `Scraping interrupted at {{percent}}%`,
+            }).replace("{{percent}}", String(json.enrichedPercent))}`,
+          );
+        }
+
+        // Keep the raw JSON and let the viewer generate markdown + blobs
+        setData(json.data);
+
+        // Update browser URL if it does not already reflect the current query
+        try {
+          const currentQ = new URLSearchParams(location.search).get("q");
+
+          if (currentQ !== trimmed) {
+            // If we're already on the home page, push a new entry; otherwise
+            // navigate to the home page with the query param.
+            if (location.pathname === "/") {
+              navigate(`/?q=${encodeURIComponent(trimmed)}`);
+            } else {
+              navigate(`/?q=${encodeURIComponent(trimmed)}`);
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      } catch (err: any) {
+        setError(t("search_error"));
+        // eslint-disable-next-line no-console
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
-    } catch (err: any) {
-      setError(t("search_error"));
-      // eslint-disable-next-line no-console
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [code, location.search, location.pathname, navigate, t]);
+    },
+    [code, location.search, location.pathname, navigate, t],
+  );
 
   // Auto-run search when `q` query param is present (useful when triggered from Navbar)
   useEffect(() => {
@@ -125,6 +131,7 @@ function SearchBar() {
     try {
       const params = new URLSearchParams(location.search);
       const q = params.get("q");
+
       if (q) {
         setCode(q);
         // call handleSearch with param (it will avoid re-navigating if already set)
@@ -140,8 +147,8 @@ function SearchBar() {
       <div className="flex gap-2 w-full items-center">
         <SearchControl
           initialValue={code}
-          isLoading={loading}
           inputWidthClass="w-96"
+          isLoading={loading}
           onSearch={(c) => {
             setCode(c);
             handleSearch(c);
@@ -151,8 +158,10 @@ function SearchBar() {
 
       <div className="mt-4">
         {error && <div className="text-red-500">{error}</div>}
-        
-        {enrichmentStatus && <div className="text-amber-600 font-semibold">{enrichmentStatus}</div>}
+
+        {enrichmentStatus && (
+          <div className="text-amber-600 font-semibold">{enrichmentStatus}</div>
+        )}
 
         {data && (
           <>
@@ -185,6 +194,7 @@ function SearchBar() {
                 if (!payload) {
                   setMdUrl(null);
                   setJsonUrl(null);
+
                   return;
                 }
 
@@ -192,8 +202,6 @@ function SearchBar() {
                 setJsonUrl(payload.jsonUrl);
               }}
             />
-
-
           </>
         )}
       </div>
@@ -222,7 +230,6 @@ export default function IndexPage() {
         </div>
 
         <div className="flex flex-col gap-3 w-full items-center md:items-start">
-
           {/* Search UI */}
           <SearchBar />
         </div>

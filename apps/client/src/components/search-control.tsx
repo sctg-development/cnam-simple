@@ -9,6 +9,7 @@ import React from "react";
 import { Input } from "@heroui/input";
 import { Button } from "@heroui/button";
 import { useTranslation } from "react-i18next";
+
 import { SearchIcon } from "@/components/icons";
 
 export interface SearchControlProps {
@@ -21,12 +22,18 @@ export interface SearchControlProps {
 }
 
 // Prop-driven Configuration Pattern: Flexible component parameterization
-export default function SearchControl({ initialValue = "", onSearch, isLoading = false, inputWidthClass = "w-64" }: SearchControlProps) {
+export default function SearchControl({
+  initialValue = "",
+  onSearch,
+  isLoading = false,
+  inputWidthClass = "w-64",
+}: SearchControlProps) {
   const { t } = useTranslation();
   const [value, setValue] = React.useState(initialValue);
 
   const invokeSearch = (v: string) => {
     const trimmed = v.trim();
+
     if (!trimmed) return;
     if (typeof onSearch === "function") onSearch(trimmed);
   };
@@ -43,7 +50,9 @@ export default function SearchControl({ initialValue = "", onSearch, isLoading =
         }}
         labelPlacement="outside"
         placeholder={`${t("search_placeholder")}`}
-        startContent={<SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />}
+        startContent={
+          <SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
+        }
         type="search"
         value={value}
         onChange={(e) => setValue(e.target.value)}
@@ -52,9 +61,7 @@ export default function SearchControl({ initialValue = "", onSearch, isLoading =
         }}
       />
 
-      <Button
-        onPress={() => invokeSearch(value)}
-      >
+      <Button onPress={() => invokeSearch(value)}>
         {isLoading ? t("search_loading") : t("search_button")}
       </Button>
     </div>

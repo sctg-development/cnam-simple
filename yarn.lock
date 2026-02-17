@@ -1670,6 +1670,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@maddyguthridge/marked-mermaid@npm:^0.1.2":
+  version: 0.1.2
+  resolution: "@maddyguthridge/marked-mermaid@npm:0.1.2"
+  peerDependencies:
+    marked: ">=16 <18"
+    mermaid: ">=11 <12"
+  checksum: 10/f8dfe1826eb6f499e78607f4743a2152f68a595a6a6d93d045309195fef20c37d33f2a7fe0d5e62c4d293d474c2ab57da4010303c0e6373dbc1143f6c9219df6
+  languageName: node
+  linkType: hard
+
 "@napi-rs/wasm-runtime@npm:^1.1.0":
   version: 1.1.1
   resolution: "@napi-rs/wasm-runtime@npm:1.1.1"
@@ -3787,6 +3797,7 @@ __metadata:
     "@heroui/system": "npm:^2.4.27"
     "@heroui/theme": "npm:^2.4.26"
     "@heroui/tooltip": "npm:^2.2.28"
+    "@maddyguthridge/marked-mermaid": "npm:^0.1.2"
     "@react-aria/visually-hidden": "npm:3.8.30"
     "@react-types/shared": "npm:^3.33.0"
     "@sctg/vite-plugin-github-pages-spa": "npm:^0.1.1"
@@ -3812,10 +3823,12 @@ __metadata:
     eslint-plugin-unused-imports: "npm:^4.4.1"
     framer-motion: "npm:^12.34.0"
     globals: "npm:^17.3.0"
+    highlight.js: "npm:^11.11.1"
     i18next: "npm:^25.8.7"
     i18next-http-backend: "npm:^3.0.2"
     jiti: "npm:^2.6.1"
     marked: "npm:^17.0.2"
+    marked-highlight: "npm:^2.2.3"
     postcss: "npm:^8.5.6"
     prettier: "npm:^3.8.1"
     react: "npm:^19.2.4"
@@ -5250,6 +5263,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"highlight.js@npm:^11.11.1":
+  version: 11.11.1
+  resolution: "highlight.js@npm:11.11.1"
+  checksum: 10/205272f12f2c8ab1760452a75c58b043b11129cf3a5d2a9c0c90d43993580d0f5c385a73a4b8aba197eef20c0ec37d64000e6b35c4ed5991324f4c2dc78f4e43
+  languageName: node
+  linkType: hard
+
 "html-parse-stringify@npm:^3.0.1":
   version: 3.0.1
   resolution: "html-parse-stringify@npm:3.0.1"
@@ -6078,6 +6098,15 @@ __metadata:
     promise-retry: "npm:^2.0.1"
     ssri: "npm:^13.0.0"
   checksum: 10/78da4fc1df83cb596e2bae25aa0653b8a9c6cbdd6674a104894e03be3acfcd08c70b78f06ef6407fbd6b173f6a60672480d78641e693d05eb71c09c13ee35278
+  languageName: node
+  linkType: hard
+
+"marked-highlight@npm:^2.2.3":
+  version: 2.2.3
+  resolution: "marked-highlight@npm:2.2.3"
+  peerDependencies:
+    marked: ">=4 <18"
+  checksum: 10/ae66c9141700ae168d000155baa9a3fc304eba36edd960e04d0c6bdcfd0408fada6ad4f2645e08a60662d68f72cef9500bd93ad80f5dce19e6b5cbaf14c9350b
   languageName: node
   linkType: hard
 

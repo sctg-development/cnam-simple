@@ -51,10 +51,8 @@
   "docs.api.p": "Endpoint principal : GET /api/cursus/<code>. Supporte `enrich=true` et l'invalidation de cache sécurisée.",
   "docs.license.title": "Licence",
   "docs.license.p": "MIT (voir README pour plus de détails).",
-
   "docs.warning.title": "Avertissement",
   "docs.warning.p": "Cet outil n'a aucun lien avec le CNAM et les résultats sont fournis en l'état ; leur exactitude n'est pas garantie.",
-
   "language": "Langue",
   "cookie-consent": "Nous utilisons des cookies sur notre site Web pour vous offrir l'expérience la plus pertinente en se souvenant de vos préférences et de vos visites. Plus d'info en cliquant sur",
   "cookie-policy": "Politique de cookies.",
@@ -69,9 +67,20 @@
   "download_markdown": "Télécharger Markdown",
   "download_json": "Télécharger JSON",
   "download_pdf": "Técharger PDF",
+  "download_html": "Télécharger HTML",
   "cursus.code": "Code",
   "cursus.audience": "Public",
   "cursus.objectives": "Objectifs",
   "cursus.content": "Contenu",
-  "cursus.bibliography": "Bibliographie"
+  "cursus.bibliography": "Bibliographie",
+  "cnam": "Cnam",
+  "markdown-util": "Utilitaire Markdown",
+  "markdown.drop_or_click": "Déposez un fichier Markdown (.md) ici, collez du Markdown, ou cliquez pour sélectionner un fichier",
+  "markdown.file_loaded": "Fichier chargé : {{name}}",
+  "markdown.no_content": "Aucun contenu — déposez un fichier Markdown pour l’afficher.",
+  "markdown.pasted_name": "Contenu collé",
+  "markdown.unsupported_file": "Fichier non supporté — veuillez fournir un fichier .md",
+  "markdown.cannot_read_file": "Impossible de lire le fichier",
+  "markdown.clear": "Effacer",
+  "simple": "Simple"
 }

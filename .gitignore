@@ -9,3 +9,4 @@ apps/cloudflare-worker/.dev.vars
 d.json
 .env.enc
 .envtest
+.DS_Store

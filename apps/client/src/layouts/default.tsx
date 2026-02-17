@@ -18,9 +18,10 @@
 import type React from "react";
 
 // Layout Composition: Wrapper component providing structural consistency
+import { Trans, useTranslation } from "react-i18next";
+
 import { LinkUniversal } from "../components/link-universal";
 import { siteConfig } from "../config/site";
-import { Trans, useTranslation } from "react-i18next";
 
 import { Navbar } from "@/components/navbar";
 export default function DefaultLayout({
