@@ -331,6 +331,30 @@ function createConverter(VNodeClass, VTextClass) {
         converter.convert(node, getVNodeKey)
       );
 
+      // Instrumentation: Detect malformed table rows
+      if (tag.name === 'tr') {
+        const hasVText = children.some(child => child.type === 'VirtualText');
+        if (hasVText) {
+          console.warn('[html-parser] Malformed <tr>: Contains VText children (without <td>/<th> wrapper)', {
+            tagName: tag.name,
+            childrenTypes: children.map(c => ({ type: c.type, content: c.type === 'VirtualText' ? c.text?.substring(0, 50) : c.tag })),
+            parentTagName: tag.parent?.name,
+          });
+        }
+      }
+
+      // Instrumentation: Detect SVG/Mermaid content in unusual places
+      if (tag.name === 'tr' || tag.name === 'td' || tag.name === 'th') {
+        const hasSvg = children.some(child => child.type === 'VirtualNode' && child.tagName === 'svg');
+        if (hasSvg) {
+          console.warn('[html-parser] SVG found directly in table cell (should be in <img> or wrapped)', {
+            tagName: tag.name,
+            hasNestedSvg: true,
+            parent: tag.parent?.name,
+          });
+        }
+      }
+
       return new VNodeClass(tag.name, attributes, children, key);
     },
   };

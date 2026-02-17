@@ -108,6 +108,7 @@ declare namespace HTMLtoDOCX {
             maxCacheEntries?: number;
             svgHandling?: "convert" | "native" | "auto";
             suppressSharpWarning?: boolean;
+            svgSanitization?: boolean;
         };
     }
 }

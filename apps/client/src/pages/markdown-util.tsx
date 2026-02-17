@@ -171,10 +171,62 @@ export default function DocsPage() {
     wrapper.appendChild(cloneRoot);
     document.body.appendChild(wrapper);
 
-    // let mermaid render anything in the clone and wait for layout
+    // let mermaid render anything in the clone and wait for completion
     try { mermaid.run(); } catch (e) { /* ignore */ }
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+    // Wait for ALL mermaid diagrams to be rendered (data-processed="true")
+    const mermaidDivs = cloneRoot.querySelectorAll("div.mermaid");
+    if (mermaidDivs.length > 0) {
+      let maxWaitAttempts = 100; // 5 seconds max (50ms × 100)
+      let allProcessed = false;
+
+      while (maxWaitAttempts > 0 && !allProcessed) {
+        await new Promise<void>((resolve) => setTimeout(() => resolve(), 50));
+
+        const processedDivs = cloneRoot.querySelectorAll(
+          'div.mermaid[data-processed="true"]',
+        );
+
+        console.log(
+          `[convertSvgsInClone] Mermaid rendering progress: ${processedDivs.length}/${mermaidDivs.length} diagrams rendered`,
+        );
+
+        allProcessed = mermaidDivs.length === processedDivs.length;
+
+        if (!allProcessed) {
+          maxWaitAttempts--;
+        }
+      }
+
+      if (!allProcessed) {
+        const processedDivs = cloneRoot.querySelectorAll(
+          'div.mermaid[data-processed="true"]',
+        );
+        console.warn(
+          "[convertSvgsInClone] ⚠️ Timeout waiting for Mermaid diagrams:",
+          {
+            total: mermaidDivs.length,
+            processed: processedDivs.length,
+            remaining: mermaidDivs.length - processedDivs.length,
+          },
+        );
+
+        // Log which diagrams didn't render
+        const unprocessedDivs = cloneRoot.querySelectorAll(
+          'div.mermaid:not([data-processed="true"])',
+        );
+        unprocessedDivs.forEach((div, idx) => {
+          const content = (div.textContent || "").substring(0, 100);
+          console.warn(
+            `[convertSvgsInClone] Unprocessed diagram ${idx}: ${content}`,
+          );
+        });
+      }
+    } else {
+      console.log(
+        "[convertSvgsInClone] No Mermaid diagrams found in clone",
+      );
+    }
 
     const originalSvgs = Array.from(originalContainer.querySelectorAll("svg"));
     const clonedSvgs = Array.from(cloneRoot.querySelectorAll("svg"));
@@ -360,17 +412,109 @@ export default function DocsPage() {
     return { success, failed, failedDetails };
   }
 
+  /**
+   * Prepare a DOM clone for export by rendering Mermaid diagrams.
+   * Handles both direct rendering (wrapper) and SVG->PNG conversion cases.
+   * @param clone The cloned DOM element to prepare
+   * @param includePng Whether to convert SVGs to PNG
+   * @param containerRect The bounding rect for sizing the off-screen wrapper
+   * @returns The wrapper element (if created) that must be cleaned up after use
+   */
+  async function prepareCloneWithMermaidRendering(
+    clone: HTMLElement,
+    includePng: boolean,
+    containerRect: DOMRect | { width: number },
+  ): Promise<HTMLElement | null> {
+    // If converting to PNG, convertSvgsInClone handles the wrapper internally
+    if (includePng) {
+      setConverting(true);
+      await convertSvgsInClone(clone);
+      setConverting(false);
+      return null;
+    }
+
+    // Otherwise, create an off-screen wrapper for Mermaid rendering
+    const wrapper = document.createElement("div");
+    wrapper.style.position = "absolute";
+    wrapper.style.left = "-99999px";
+    wrapper.style.top = "0";
+    wrapper.style.width = `${Math.max(100, Math.round(containerRect.width))}px`;
+    wrapper.style.visibility = "hidden";
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    // Check if there are any mermaid diagrams to render
+    const mermaidDivs = clone.querySelectorAll("div.mermaid");
+
+    if (mermaidDivs.length > 0) {
+      // Only wait for mermaid if there are actually diagrams to render
+      try {
+        mermaid.run();
+      } catch (e) {
+        /* ignore */
+      }
+
+      // Wait for ALL mermaid diagrams to be rendered (data-processed="true")
+      let maxWaitAttempts = 100; // 5 seconds max (50ms × 100)
+      let allProcessed = false;
+
+      while (maxWaitAttempts > 0 && !allProcessed) {
+        await new Promise<void>((resolve) => setTimeout(() => resolve(), 50));
+
+        const processedDivs = clone.querySelectorAll(
+          'div.mermaid[data-processed="true"]',
+        );
+
+        console.log(
+          `[prepareCloneWithMermaidRendering] Mermaid rendering progress: ${processedDivs.length}/${mermaidDivs.length} diagrams rendered`,
+        );
+
+        allProcessed = mermaidDivs.length === processedDivs.length;
+
+        if (!allProcessed) {
+          maxWaitAttempts--;
+        }
+      }
+
+      if (!allProcessed) {
+        const processedDivs = clone.querySelectorAll(
+          'div.mermaid[data-processed="true"]',
+        );
+        console.warn(
+          "[prepareCloneWithMermaidRendering] ⚠️ Timeout waiting for Mermaid diagrams:",
+          {
+            total: mermaidDivs.length,
+            processed: processedDivs.length,
+            remaining: mermaidDivs.length - processedDivs.length,
+          },
+        );
+
+        // Log which diagrams didn't render
+        const unprocessedDivs = clone.querySelectorAll(
+          'div.mermaid:not([data-processed="true"])',
+        );
+        unprocessedDivs.forEach((div, idx) => {
+          const content = (div.textContent || "").substring(0, 100);
+          console.warn(
+            `[prepareCloneWithMermaidRendering] Unprocessed diagram ${idx}: ${content}`,
+          );
+        });
+      }
+    } else {
+      console.log(
+        "[prepareCloneWithMermaidRendering] No Mermaid diagrams found, skipping render wait",
+      );
+    }
+
+    return wrapper;
+  }
+
   // Download the currently rendered `#markdown-content` into a minimal HTML file
   async function handleDownload() {
     if (!renderedHtml) return;
     setLoading(true);
+    let wrapper: HTMLElement | null = null;
     try {
-      // Ensure mermaid diagrams are rendered in DOM before capture
-      try {
-        mermaid.run();
-      } catch (e) {
-        /* ignore mermaid errors on export */
-      }
 
       const container = document.getElementById("markdown-content");
 
@@ -379,16 +523,25 @@ export default function DocsPage() {
       // clone DOM so we can mutate it safely without touching the live page
       const clone = container.cloneNode(true) as HTMLElement;
 
+      // Prepare the clone: handle Mermaid rendering and optional SVG->PNG conversion
+      const containerRect = container.getBoundingClientRect
+        ? container.getBoundingClientRect()
+        : { width: 800 };
+      wrapper = await prepareCloneWithMermaidRendering(
+        clone,
+        includePng,
+        containerRect,
+      );
+
       if (includePng) {
-        setConverting(true);
-        const result = await convertSvgsInClone(clone);
-        setConverting(false);
-        if (result.failed > 0) {
-          // log details for debugging and show a concise localized alert with counts
-          // (details are available in the console)
+        // Check if there were conversion failures
+        const failedDivs = clone.querySelectorAll('div.mermaid[data-failed="true"]');
+        if (failedDivs.length > 0) {
           // eslint-disable-next-line no-console
-          console.warn("SVG->PNG conversion failed details:", result.failedDetails);
-          alert(`${t("markdown.png_conversion_error_cors")} (${result.failed}/${result.success + result.failed})`);
+          console.warn("SVG->PNG conversion had failures");
+          alert(
+            `${t("markdown.png_conversion_error_cors")} (${failedDivs.length} diagrams failed)`,
+          );
         }
       }
 
@@ -421,6 +574,7 @@ ${bodyHtml}
       console.error(err);
       alert(String(err));
     } finally {
+      try { if (wrapper) wrapper.remove(); } catch (e) { /* ignore */ }
       setLoading(false);
       setConverting(false);
       setConversionProgress(null);
@@ -439,34 +593,56 @@ ${bodyHtml}
       // clone DOM so we can mutate it safely
       const clone = container.cloneNode(true) as HTMLElement;
 
-      // If user requested PNG embedding, convert SVG -> PNG in the clone first
-      if (includePng) {
-        setConverting(true);
-        await convertSvgsInClone(clone);
-        setConverting(false);
-      } else {
-        // ensure mermaid renders diagrams inside the clone (attach off-screen briefly)
-        wrapper = document.createElement("div");
-        const containerRect = container.getBoundingClientRect ? container.getBoundingClientRect() : { width: 800 };
-        wrapper.style.position = "absolute";
-        wrapper.style.left = "-99999px";
-        wrapper.style.top = "0";
-        wrapper.style.width = `${Math.max(100, Math.round(containerRect.width))}px`;
-        wrapper.style.visibility = "hidden";
-        wrapper.appendChild(clone);
-        document.body.appendChild(wrapper);
-        try { mermaid.run(); } catch (e) { /* ignore */ }
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-      }
+      // Prepare the clone: handle Mermaid rendering and optional SVG->PNG conversion
+      const containerRect = container.getBoundingClientRect
+        ? container.getBoundingClientRect()
+        : { width: 800 };
+      wrapper = await prepareCloneWithMermaidRendering(
+        clone,
+        includePng,
+        containerRect,
+      );
 
-      const htmlWithImages = clone.innerHTML;
+      const htmlWithImages = `<!doctype html>
+        <html lang="fr">
+        <head>
+          <meta charset="utf-8" />
+          <title>Exported markdown</title>
+          <style>${hljsGithubCss}</style>
+        </head>
+        <body style="font-family: sans-serif;">
+        ${clone.innerHTML}
+        </body>
+        </html>`;
 
-      const docx = await HtmlToDocx(htmlWithImages, null, {
+      // Fix table structure: Remove text nodes from table rows that break html-to-docx parsing
+      // This happens when clone.innerHTML includes whitespace/newlines between <tr> and <td>
+      const cleanedHtml = htmlWithImages.replace(
+        /<tr[^>]*>[\s\n]+(?=<t[dh])/g,
+        (match) => {
+          // Replace <tr...> followed by whitespace with <tr> (no whitespace)
+          return match.replace(/[\s\n]+$/, '');
+        }
+      ).replace(
+        /(<\/t[dh]>)[\s\n]+(?=<t[dh]|<\/tr>)/g,
+        '$1' // Remove whitespace between cells or before </tr>
+      ).replace(
+        /(<\/tbody>)[\s\n]+(?=<\/table>)/g,
+        '$1' // Remove whitespace before </table>
+      ).replace(
+        /(<tbody>|<thead>|<tfoot>)[\s\n]+(?=<tr)/g,
+        '$1' // Remove whitespace after tbody/thead/tfoot opening tags
+      );
+
+      // Instrumentation: print the full HTML
+      console.log('[handleDownloadDocx] Full cleaned HTML content:\n', cleanedHtml);
+
+      const docx = await HtmlToDocx(cleanedHtml, null, {
         imageProcessing: {
           verboseLogging: true,
           svgHandling: "native",
           suppressSharpWarning: false,
+          svgSanitization: false, // allow SVGs through without sanitization (note: this can be a security risk if the HTML content is not trusted)
         },
       });
 

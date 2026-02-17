@@ -104,31 +104,48 @@ export const buildSVGElement = async (
 ) => {
   try {
     // Get sanitization settings from options or document instance
-    const svgSanitization = options.svgSanitization
-      ? options.svgSanitization
-      : docxDocumentInstance.imageProcessing?.svgSanitization
-      ? docxDocumentInstance.imageProcessing.svgSanitization
-      : true; // Default: enabled for security
+    // Resolve svgSanitization flag with explicit undefined checks so `false` is respected
+    let svgSanitization = true;
+    let svgSanitizationSource = 'default';
+    if (options && Object.prototype.hasOwnProperty.call(options, 'svgSanitization')) {
+      svgSanitization = Boolean(options.svgSanitization);
+      svgSanitizationSource = 'options';
+    } else if (
+      docxDocumentInstance &&
+      docxDocumentInstance.imageProcessing &&
+      Object.prototype.hasOwnProperty.call(docxDocumentInstance.imageProcessing, 'svgSanitization')
+    ) {
+      svgSanitization = Boolean(docxDocumentInstance.imageProcessing.svgSanitization);
+      svgSanitizationSource = 'docxDocumentInstance.imageProcessing';
+    }
 
     const verboseLogging =
-      options.verboseLogging || docxDocumentInstance.imageProcessing?.verboseLogging || false;
+      options && typeof options.verboseLogging !== 'undefined'
+        ? options.verboseLogging
+        : !!(docxDocumentInstance && docxDocumentInstance.imageProcessing && docxDocumentInstance.imageProcessing.verboseLogging);
 
-    // Sanitize the VNode before serialization (if enabled)
-    let sanitizedVNode = vNode;
-    if (svgSanitization) {
-      sanitizedVNode = sanitizeSVGVNode(vNode, { verboseLogging, enabled: true });
+    if (verboseLogging) {
+      // eslint-disable-next-line no-console
+      console.log(`[SVG] svgSanitization resolved to ${svgSanitization} (source=${svgSanitizationSource})`);
+    }
 
-      if (!sanitizedVNode) {
+    // Sanitize (or skip sanitization) using the resolved svgSanitization flag
+    let sanitizedVNode = sanitizeSVGVNode(vNode, { verboseLogging, enabled: svgSanitization });
+
+    if (!sanitizedVNode) {
+      if (svgSanitization) {
         // eslint-disable-next-line no-console
         console.error('[ERROR] buildSVGElement: SVG element was blocked by sanitizer');
-        return null;
       }
+      return null;
+    }
 
-      if (verboseLogging) {
-        // eslint-disable-next-line no-console
-        console.log('[SVG] Sanitization completed successfully');
-      }
-    } else if (verboseLogging) {
+    if (svgSanitization && verboseLogging) {
+      // eslint-disable-next-line no-console
+      console.log('[SVG] Sanitization completed successfully');
+    }
+
+    if (!svgSanitization && verboseLogging) {
       // eslint-disable-next-line no-console
       console.warn('[SVG] WARNING: SVG sanitization is disabled - only use with trusted content!');
     }

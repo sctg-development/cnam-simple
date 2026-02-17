@@ -3125,9 +3125,43 @@ const buildTableRow = async (
 
   const tableWidth = modifiedAttributes.width;
   if (vNodeHasChildren(vNode)) {
-    const tableColumns = vNode.children.filter((childVNode) =>
-      ['td', 'th'].includes(childVNode.tagName)
-    );
+    // Add instrumentation for debugging SVG/table rendering
+    console.log('[buildTableRow] Process children, vNode.children:', {
+      count: vNode.children.length,
+      tags: vNode.children.map((child, idx) => ({
+        idx,
+        tagName: child?.tagName || 'NO_TAG',
+        type: child?.type,
+        hasProperties: !!child?.properties,
+        isVNode: !!child?.type,
+        isVText: child?.type === 'VirtualText',
+        textContent: child?.type === 'VirtualText' ? (child?.text || '').substring(0, 50) : 'n/a',
+      })),
+    });
+    
+    const rejectedChildren = [];
+    const tableColumns = vNode.children.filter((childVNode) => {
+      const included = childVNode && childVNode.tagName && ['td', 'th'].includes(childVNode.tagName);
+      if (!included) {
+        rejectedChildren.push({
+          tagName: childVNode?.tagName || 'NO_TAG_NAME',
+          type: childVNode?.type || 'NO_TYPE',
+          isVText: childVNode?.type === 'VirtualText',
+          textContent: childVNode?.type === 'VirtualText' ? (childVNode?.text || '').substring(0, 100) : 'n/a',
+        });
+      }
+      return included;
+    });
+
+    if (rejectedChildren.length > 0) {
+      console.error('[buildTableRow] ⚠️ TABLE STRUCTURE ERROR - Non-TD/TH children found in <tr>:', {
+        rowIndex: rowIndexEquivalent,
+        rejectedChildrenCount: rejectedChildren.length,
+        rejectedChildren,
+        validCellsCount: tableColumns.length,
+      });
+    }
+    
     const maximumColumnWidth = docxDocumentInstance.availableDocumentSpace / tableColumns.length;
 
     // eslint-disable-next-line no-restricted-syntax
@@ -3212,7 +3246,30 @@ const buildTableGrid = (vNode, attributes) => {
 const buildTableGridFromTableRow = (vNode, attributes) => {
   const tableGridFragment = fragment({ namespaceAlias: { w: namespaces.w } }).ele('@w', 'tblGrid');
   if (vNodeHasChildren(vNode)) {
+    console.log('[buildTableGridFromTableRow] Processing row with children:', {
+      rowTagName: vNode.tag,
+      childrenCount: vNode.children.length,
+      childrenTypes: vNode.children.map(c => ({
+        tag: c.tag,
+        type: c.type,
+        hasProperties: !!c.properties,
+        isVText: c.type === 'VirtualText',
+      })),
+    });
+
     const numberOfGridColumns = vNode.children.reduce((accumulator, childVNode) => {
+      // Add instrumentation to debug SVG/table rendering issues
+      if (!childVNode.properties) {
+        console.warn('[buildTableGridFromTableRow] childVNode missing properties:', {
+          childVNodeTag: childVNode.tag,
+          childVNodeType: typeof childVNode,
+          childVNodeKeys: childVNode ? Object.keys(childVNode) : 'null',
+          isVText: childVNode.type === 'VirtualText',
+          vTextContent: childVNode.type === 'VirtualText' ? childVNode.text?.substring(0, 100) : 'n/a',
+        });
+        return accumulator + 1; // Default to 1 column if properties undefined
+      }
+      
       const colSpan =
         childVNode.properties.colSpan ||
         (childVNode.properties.style && childVNode.properties.style['column-span']);
@@ -3339,6 +3396,14 @@ const buildTableProperties = (attributes) => {
 };
 
 const buildTable = async (vNode, attributes, docxDocumentInstance) => {
+  // Instrumentation for debugging SVG/table rendering issues
+  console.log('[buildTable] Received vNode:', {
+    tag: vNode.tag,
+    hasProperties: !!vNode.properties,
+    childrenCount: vNodeHasChildren(vNode) ? vNode.children.length : 0,
+    childrenTags: vNodeHasChildren(vNode) ? vNode.children.map(c => ({ tag: c.tag, hasProperties: !!c.properties })) : [],
+  });
+  
   const tableFragment = fragment({ namespaceAlias: { w: namespaces.w } }).ele('@w', 'tbl');
   const modifiedAttributes = { ...attributes };
   if (isVNode(vNode) && vNode.properties) {
