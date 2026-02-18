@@ -19,10 +19,10 @@ export type PackageJson = {
   version: string;
   type: string;
   scripts: {
-    dev: string;
-    build: string;
+    "dev:env": string;
+    "build:env": string;
     lint: string;
-    preview: string;
+    "preview:env": string;
     [key: string]: string;
   };
   dependencies: {
