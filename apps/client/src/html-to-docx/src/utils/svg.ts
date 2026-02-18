@@ -1,20 +1,39 @@
 import { buildImage } from './image';
 import { sanitizeSVGVNode, validateSVGString } from './svg-sanitizer';
 
+/* -------------------------------------------------------------------------- */
+/* Local Type Definitions (inferred)                                          */
+/* -------------------------------------------------------------------------- */
+type AttrMap = Record<string, unknown>;
+
+interface SVGVNode {
+  tagName?: string;
+  properties?: {
+    attributes?: AttrMap;
+    style?: Record<string, unknown>;
+    [key: string]: any;
+  };
+  children?: Array<string | SVGVNode | { text?: string }>;
+  text?: string;
+  [k: string]: any;
+}
+
+
 /**
  * Serializes a VNode to an SVG XML string
  * @param {Object} vNode - The VNode representing an SVG element
  * @param {boolean} isRoot - Whether this is the root SVG element
  * @returns {string} The serialized SVG XML string
  */
-const serializeVNodeToSVG = (vNode, isRoot = false) => {
+const serializeVNodeToSVG = (vNode: SVGVNode | null | undefined, isRoot = false): string => {
   if (!vNode || !vNode.tagName) {
     return '';
   }
 
-  const { tagName, properties, children = [] } = vNode;
-  const attributes = properties?.attributes || {};
-  const style = properties?.style || {};
+  const { properties, children = [] } = vNode as SVGVNode;
+  const tagName: string = (vNode as SVGVNode).tagName as string;
+  const attributes: AttrMap = (properties && properties.attributes) || {};
+  const style: Record<string, unknown> = (properties && properties.style) || {};
 
   // Build opening tag with attributes
   let svg = `<${tagName}`;
@@ -66,16 +85,16 @@ const serializeVNodeToSVG = (vNode, isRoot = false) => {
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
         svg += escapedText;
-      } else if (child.text) {
+      } else if ((child as any).text) {
         // VText node - escape special XML characters
-        const escapedText = child.text
+        const escapedText = String((child as any).text)
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;');
         svg += escapedText;
-      } else if (child.tagName) {
+      } else if ((child as any).tagName) {
         // Recursive VNode (not root)
-        svg += serializeVNodeToSVG(child, false);
+        svg += serializeVNodeToSVG(child as SVGVNode, false);
       }
     });
 
@@ -97,11 +116,11 @@ const serializeVNodeToSVG = (vNode, isRoot = false) => {
  */
 // eslint-disable-next-line import/prefer-default-export
 export const buildSVGElement = async (
-  docxDocumentInstance,
-  vNode,
-  maximumWidth = null,
-  options = {}
-) => {
+  docxDocumentInstance: any,
+  vNode: SVGVNode,
+  maximumWidth: number | null = null,
+  options: { svgSanitization?: boolean; verboseLogging?: boolean; [k: string]: any } = {}
+): Promise<any | null> => {
   try {
     // Get sanitization settings from options or document instance
     // Resolve svgSanitization flag with explicit undefined checks so `false` is respected
@@ -119,9 +138,9 @@ export const buildSVGElement = async (
       svgSanitizationSource = 'docxDocumentInstance.imageProcessing';
     }
 
-    const verboseLogging =
-      options && typeof options.verboseLogging !== 'undefined'
-        ? options.verboseLogging
+    const verboseLogging: boolean =
+      typeof options.verboseLogging !== 'undefined'
+        ? Boolean(options.verboseLogging)
         : !!(docxDocumentInstance && docxDocumentInstance.imageProcessing && docxDocumentInstance.imageProcessing.verboseLogging);
 
     if (verboseLogging) {
@@ -130,7 +149,7 @@ export const buildSVGElement = async (
     }
 
     // Sanitize (or skip sanitization) using the resolved svgSanitization flag
-    let sanitizedVNode = sanitizeSVGVNode(vNode, { verboseLogging, enabled: svgSanitization });
+    const sanitizedVNode: SVGVNode | null = sanitizeSVGVNode(vNode as any, { verboseLogging, enabled: svgSanitization });
 
     if (!sanitizedVNode) {
       if (svgSanitization) {
@@ -151,9 +170,9 @@ export const buildSVGElement = async (
     }
 
     // Serialize the SVG VNode to an SVG string (isRoot=true for proper namespace handling)
-    const svgString = serializeVNodeToSVG(sanitizedVNode, true);
+    const svgString: string = serializeVNodeToSVG(sanitizedVNode, true);
 
-    if (!svgString?.trim()?.length) {
+    if (typeof svgString !== 'string' || svgString.trim().length === 0) {
       // eslint-disable-next-line no-console
       console.error('[ERROR] buildSVGElement: Failed to serialize SVG element');
       return null;
@@ -182,18 +201,20 @@ export const buildSVGElement = async (
 
     // Extract dimensions from SVG attributes
     // Width and height might be numbers, strings with units, or missing
-    let width;
-    let height;
+    let width: number | undefined;
+    let height: number | undefined;
 
     if (vNode.properties?.attributes?.width) {
       const widthStr = String(vNode.properties.attributes.width);
       // Remove units (px, pt, etc.) and parse as number
-      width = parseInt(widthStr.replace(/[^\d.]/g, ''), 10);
+      const parsedWidth = parseInt(widthStr.replace(/[^\d.]/g, ''), 10);
+      if (!Number.isNaN(parsedWidth)) width = parsedWidth;
     }
 
     if (vNode.properties?.attributes?.height) {
       const heightStr = String(vNode.properties.attributes.height);
-      height = parseInt(heightStr.replace(/[^\d.]/g, ''), 10);
+      const parsedHeight = parseInt(heightStr.replace(/[^\d.]/g, ''), 10);
+      if (!Number.isNaN(parsedHeight)) height = parsedHeight;
     }
 
     // If dimensions are from style attribute, use those
@@ -232,19 +253,20 @@ export const buildSVGElement = async (
     }
 
     // Create a temporary vNode that looks like an img element with the SVG data URI
-    const imgVNode = {
+    const imgVNode: any = {
       tagName: 'img',
       properties: {
         src: dataUri,
         alt: vNode.properties?.attributes?.title || 'SVG image',
-        ...(width && !Number.isNaN(width) && { width }),
-        ...(height && !Number.isNaN(height) && { height }),
+        ...(width && { width }),
+        ...(height && { height }),
       },
     };
 
     // Use the existing buildImage function to process the SVG as an image
     // eslint-disable-next-line no-use-before-define
-    return await buildImage(docxDocumentInstance, imgVNode, maximumWidth, options);
+    // Use `any` cast for maximumWidth here to match legacy untyped `buildImage` signature
+    return await buildImage(docxDocumentInstance, imgVNode, maximumWidth as any, options);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.error('[ERROR] buildSVGElement: Error processing inline SVG:', error);

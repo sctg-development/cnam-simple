@@ -12,6 +12,31 @@
 import * as htmlparser2 from 'htmlparser2';
 import { decode } from 'html-entities';
 import { VNode, VText } from '../vdom/index.js';
+import type { Element as DomElement } from 'domhandler';
+
+/* -------------------------------------------------------------------------- */
+/* Type definitions inferred for the parser                                       */
+/* -------------------------------------------------------------------------- */
+interface PropInfo {
+  attributeName: string;
+  propertyName?: string;
+  mustUseAttribute?: boolean;
+  mustUseProperty?: boolean;
+  hasBooleanValue?: boolean;
+  hasNumericValue?: boolean;
+  hasPositiveNumericValue?: boolean;
+  hasOverloadedBooleanValue?: boolean;
+  isCustomAttribute?: boolean;
+}
+
+type VNodeProperties = {
+  attributes: Record<string, string>;
+  [key: string]: any;
+};
+
+type PropertySetter = {
+  set: (properties: VNodeProperties, propInfo: PropInfo, value: any) => void;
+};
 
 // ============================================================================
 // Property Info System
@@ -21,17 +46,17 @@ import { VNode, VText } from '../vdom/index.js';
 
 // Property masks for attribute/property classification
 /* eslint-disable no-bitwise */
-const MUST_USE_ATTRIBUTE = 0x1;
-const MUST_USE_PROPERTY = 0x2;
-const HAS_BOOLEAN_VALUE = 0x4;
-const HAS_NUMERIC_VALUE = 0x8;
-const HAS_POSITIVE_NUMERIC_VALUE = 0x10 | 0x8;
-const HAS_OVERLOADED_BOOLEAN_VALUE = 0x20;
+const MUST_USE_ATTRIBUTE: number = 0x1;
+const MUST_USE_PROPERTY: number = 0x2;
+const HAS_BOOLEAN_VALUE: number = 0x4;
+const HAS_NUMERIC_VALUE: number = 0x8;
+const HAS_POSITIVE_NUMERIC_VALUE: number = 0x10 | 0x8;
+const HAS_OVERLOADED_BOOLEAN_VALUE: number = 0x20;
 /* eslint-enable no-bitwise */
 
 // HTML DOM properties configuration
 /* eslint-disable no-bitwise */
-const Properties = {
+const Properties: Record<string, number | null> = {
   accept: null,
   acceptCharset: null,
   accessKey: null,
@@ -156,20 +181,21 @@ const Properties = {
 };
 /* eslint-enable no-bitwise */
 
-const PropertyToAttributeMapping = {
+const PropertyToAttributeMapping: Record<string, string> = {
   className: 'class',
   htmlFor: 'for',
   httpEquiv: 'http-equiv',
   acceptCharset: 'accept-charset',
 };
 
-function checkMask(value, bitmask) {
+function checkMask(value: number | null, bitmask: number): boolean {
+  if (value == null) return false;
   // eslint-disable-next-line no-bitwise
   return (value & bitmask) === bitmask;
 }
 
 // Build property info lookup table
-const propInfoByAttributeName = {};
+const propInfoByAttributeName: Record<string, PropInfo> = {}; 
 Object.keys(Properties).forEach((propName) => {
   const propConfig = Properties[propName];
   const attributeName = PropertyToAttributeMapping[propName] || propName.toLowerCase();
@@ -188,7 +214,7 @@ Object.keys(Properties).forEach((propName) => {
   propInfoByAttributeName[attributeName] = propertyInfo;
 });
 
-function getPropertyInfo(attributeName) {
+function getPropertyInfo(attributeName: string): PropInfo {
   const lowerCased = attributeName.toLowerCase();
 
   if (Object.prototype.hasOwnProperty.call(propInfoByAttributeName, lowerCased)) {
@@ -200,7 +226,7 @@ function getPropertyInfo(attributeName) {
     attributeName,
     mustUseAttribute: true,
     isCustomAttribute: true,
-  };
+  } as PropInfo;
 }
 
 // ============================================================================
@@ -210,9 +236,9 @@ function getPropertyInfo(attributeName) {
 /**
  * Parse CSS style string into object
  */
-function parseStyles(input) {
+function parseStyles(input: string): Record<string, string> {
   const attributes = input.split(';');
-  const styles = attributes.reduce((object, attribute) => {
+  const styles = attributes.reduce((object: Record<string, string>, attribute) => {
     const entry = attribute.split(/:(.*)/);
     if (entry[0] && entry[1]) {
       object[entry[0].trim()] = entry[1].trim();
@@ -222,14 +248,14 @@ function parseStyles(input) {
   return styles;
 }
 
-const propertyValueConversions = {
+const propertyValueConversions: Record<string, (value: string) => any> = {
   style: parseStyles,
   placeholder: decode,
   title: decode,
   alt: decode,
 };
 
-function propertyIsTrue(propInfo, value) {
+function propertyIsTrue(propInfo: PropInfo, value: string): boolean {
   if (propInfo.hasBooleanValue) {
     return value === '' || value.toLowerCase() === propInfo.attributeName;
   }
@@ -239,7 +265,7 @@ function propertyIsTrue(propInfo, value) {
   return false;
 }
 
-function getPropertyValue(propInfo, value) {
+function getPropertyValue(propInfo: PropInfo, value: string): any {
   const isTrue = propertyIsTrue(propInfo, value);
   if (propInfo.hasBooleanValue) {
     return !!isTrue;
@@ -253,42 +279,44 @@ function getPropertyValue(propInfo, value) {
   return value;
 }
 
-function setVNodeProperty(properties, propInfo, value) {
+function setVNodeProperty(properties: VNodeProperties, propInfo: PropInfo, value: any): void {
   const propName = propInfo.propertyName;
-  let valueConverter;
+  let valueConverter: ((v: string) => any) | undefined;
 
   if (propName && Object.prototype.hasOwnProperty.call(propertyValueConversions, propName)) {
-    valueConverter = propertyValueConversions[propInfo.propertyName];
+    valueConverter = propertyValueConversions[propInfo.propertyName as string];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     value = valueConverter(value);
   }
 
-  properties[propInfo.propertyName] = getPropertyValue(propInfo, value);
-}
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+  properties[propInfo.propertyName as string] = getPropertyValue(propInfo, value);
+} 
 
-function getAttributeValue(propInfo, value) {
+function getAttributeValue(propInfo: PropInfo, value: string): string {
   if (propInfo.hasBooleanValue) {
     return '';
   }
   return value;
 }
 
-function setVNodeAttribute(properties, propInfo, value) {
+function setVNodeAttribute(properties: VNodeProperties, propInfo: PropInfo, value: any): void {
   properties.attributes[propInfo.attributeName] = getAttributeValue(propInfo, value);
 }
 
-function getPropertySetter(propInfo) {
+function getPropertySetter(propInfo: PropInfo): PropertySetter {
   if (propInfo.mustUseAttribute) {
     return { set: setVNodeAttribute };
   }
   return { set: setVNodeProperty };
-}
+} 
 
 /**
  * Convert tag attributes to VNode properties
  */
-function convertTagAttributes(tag) {
-  const attributes = tag.attribs;
-  const vNodeProperties = {
+function convertTagAttributes(tag: DomElement): VNodeProperties {
+  const attributes = tag.attribs as Record<string, string>;
+  const vNodeProperties: VNodeProperties = {
     attributes: {},
   };
 
@@ -300,15 +328,18 @@ function convertTagAttributes(tag) {
   });
 
   return vNodeProperties;
-}
+} 
 
 // ============================================================================
 // HTML Parser to VDOM Converter
 // ============================================================================
 
-function createConverter(VNodeClass, VTextClass) {
-  const converter = {
-    convert(node, getVNodeKey) {
+function createConverter(VNodeClass: typeof VNode, VTextClass: typeof VText) {
+  const converter: {
+    convert: (node: any, getVNodeKey?: ((attrs: VNodeProperties) => any)) => any;
+    convertTag: (tag: any, getVNodeKey?: ((attrs: VNodeProperties) => any)) => any;
+  } = {
+    convert(node: any, getVNodeKey?: (attrs: VNodeProperties) => any) {
       if (node.type === 'tag' || node.type === 'script' || node.type === 'style') {
         return converter.convertTag(node, getVNodeKey);
       }
@@ -319,25 +350,25 @@ function createConverter(VNodeClass, VTextClass) {
       return new VTextClass('');
     },
 
-    convertTag(tag, getVNodeKey) {
+    convertTag(tag: any, getVNodeKey?: (attrs: VNodeProperties) => any) {
       const attributes = convertTagAttributes(tag);
-      let key;
+      let key: any;
 
       if (getVNodeKey) {
         key = getVNodeKey(attributes);
       }
 
-      const children = Array.prototype.map.call(tag.children || [], (node) =>
+      const children = Array.prototype.map.call(tag.children || [], (node: any) =>
         converter.convert(node, getVNodeKey)
       );
 
       // Instrumentation: Detect malformed table rows
       if (tag.name === 'tr') {
-        const hasVText = children.some(child => child.type === 'VirtualText');
+        const hasVText = children.some((child: any) => child.type === 'VirtualText');
         if (hasVText) {
           console.warn('[html-parser] Malformed <tr>: Contains VText children (without <td>/<th> wrapper)', {
             tagName: tag.name,
-            childrenTypes: children.map(c => ({ type: c.type, content: c.type === 'VirtualText' ? c.text?.substring(0, 50) : c.tag })),
+            childrenTypes: children.map((c: any) => ({ type: c.type, content: c.type === 'VirtualText' ? c.text?.substring(0, 50) : c.tag })),
             parentTagName: tag.parent?.name,
           });
         }
@@ -345,7 +376,7 @@ function createConverter(VNodeClass, VTextClass) {
 
       // Instrumentation: Detect SVG/Mermaid content in unusual places
       if (tag.name === 'tr' || tag.name === 'td' || tag.name === 'th') {
-        const hasSvg = children.some(child => child.type === 'VirtualNode' && child.tagName === 'svg');
+        const hasSvg = children.some((child: any) => child.type === 'VirtualNode' && child.tagName === 'svg');
         if (hasSvg) {
           console.warn('[html-parser] SVG found directly in table cell (should be in <img> or wrapped)', {
             tagName: tag.name,
@@ -355,11 +386,11 @@ function createConverter(VNodeClass, VTextClass) {
         }
       }
 
-      return new VNodeClass(tag.name, attributes, children, key);
+      return new VNodeClass(tag.name, attributes, children, key, undefined);
     },
   };
   return converter;
-}
+} 
 
 /**
  * Parse HTML string into DOM nodes
@@ -368,23 +399,23 @@ function createConverter(VNodeClass, VTextClass) {
  * We set decodeEntities: false to match v3.9.0 behavior,
  * then manually decode using html-entities.
  */
-function parseHTML(html) {
+function parseHTML(html: string): any[] {
   const handler = new htmlparser2.DomHandler();
   const parser = new htmlparser2.Parser(handler, {
     lowerCaseAttributeNames: false,
     decodeEntities: false, // Required for htmlparser2 v10.0.0 compatibility
   });
   parser.parseComplete(html);
-  return handler.dom;
-}
+  return handler.dom as any[];
+} 
 
 /**
  * Main converter function
  */
-function convertHTML(options, html) {
+function convertHTML(options: any, html?: string): any {
   // Support both (options, html) and (html) signatures
-  let opts = options;
-  let htmlString = html;
+  let opts: any = options;
+  let htmlString: string = html as string;
 
   if (typeof options === 'string') {
     htmlString = options;
@@ -394,22 +425,22 @@ function convertHTML(options, html) {
   const converter = createConverter(VNode, VText);
   const tags = parseHTML(htmlString);
 
-  let convertedHTML;
+  let convertedHTML: any;
   if (tags.length === 0) {
     // Empty HTML
     convertedHTML = new VText('');
   } else if (tags.length > 1) {
-    convertedHTML = tags.map((tag) => converter.convert(tag, opts.getVNodeKey));
+    convertedHTML = tags.map((tag: any) => converter.convert(tag, opts.getVNodeKey));
   } else {
     convertedHTML = converter.convert(tags[0], opts.getVNodeKey);
   }
 
   return convertedHTML;
-}
+} 
 
 /**
  * Factory function for HTML to VNode conversion
  */
-export default function createHTMLtoVDOM() {
+export default function createHTMLtoVDOM(): (options: any, html?: string) => any {
   return convertHTML;
 }
