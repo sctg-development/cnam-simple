@@ -42,12 +42,9 @@ jobs:
   create-env:
     uses: ./.github/workflows/create-env-artifact.yaml
     secrets: inherit
-  build-printpdf:
-    uses: ./.github/workflows/build-printpdf.yaml
-    secrets: inherit
 
   build:
-    needs: [create-env,build-printpdf]
+    needs: [create-env]
     runs-on: ubuntu-latest
 
     steps:
