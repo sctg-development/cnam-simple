@@ -1,12 +1,14 @@
 class ListStyleBuilder {
   // defaults is an object passed in from constants.js / numbering with the following properties:
   // defaultOrderedListStyleType: 'decimal' (unless otherwise specified)
-  constructor(defaults) {
+  defaults: any;
+
+  constructor(defaults: any) {
     this.defaults = defaults || { defaultOrderedListStyleType: 'decimal' };
   }
 
   // eslint-disable-next-line class-methods-use-this
-  getListStyleType(listType) {
+  getListStyleType(listType: any) {
     switch (listType) {
       case 'upper-roman':
         return 'upperRoman';
@@ -26,7 +28,7 @@ class ListStyleBuilder {
     }
   }
 
-  getListPrefixSuffix(style, lvl) {
+  getListPrefixSuffix(style: any, lvl: any) {
     let listType = this.defaults.defaultOrderedListStyleType;
 
     if (style && style['list-style-type']) {
@@ -51,7 +53,7 @@ class ListStyleBuilder {
     }
   }
 
-  getUnorderedListPrefixSuffix(style) {
+  getUnorderedListPrefixSuffix(style: any) {
     let listType = '';
 
     if (style && style['list-style-type']) {

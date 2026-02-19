@@ -25,11 +25,11 @@ const convertHTML = createHTMLToVDOM();
 // Ref: https://en.wikipedia.org/wiki/Office_Open_XML_file_formats
 // http://officeopenxml.com/anatomyofOOXML.php
 async function addFilesToContainer(
-  zip,
-  htmlString,
-  documentOptions,
-  headerHTMLString,
-  footerHTMLString
+  zip: any,
+  htmlString: any,
+  documentOptions: any,
+  headerHTMLString: any,
+  footerHTMLString: any
 ) {
   if (documentOptions.header && !headerHTMLString) {
     // eslint-disable-next-line no-param-reassign

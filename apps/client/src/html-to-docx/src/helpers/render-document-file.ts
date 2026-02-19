@@ -13,12 +13,12 @@ import { buildImage } from '../utils/image';
 import { vNodeHasChildren } from '../utils/vnode';
 import { buildSVGElement } from '../utils/svg';
 
-const LRUCache = lruCache.default || lruCache.LRUCache || lruCache; // Support both ESM and CommonJS imports
+const LRUCache = (lruCache.default as any || (lruCache as any).LRUCache || lruCache) as any; // Support both ESM and CommonJS imports
 
 const convertHTML = createHTMLToVDOM();
 
 // Helper function to add lineRule attribute for image consistency
-const addLineRuleToImageFragment = (imageFragment) => {
+const addLineRuleToImageFragment = (imageFragment: any): void => {
   imageFragment
     .first()
     .first()
@@ -27,7 +27,7 @@ const addLineRuleToImageFragment = (imageFragment) => {
 
 // Function to clear the image cache (useful for testing or memory management)
 // Now requires docxDocumentInstance parameter for per-document isolation
-export const clearImageCache = (docxDocumentInstance) => {
+export const clearImageCache = (docxDocumentInstance: any): number => {
   if (!docxDocumentInstance || !docxDocumentInstance._imageCache) {
     return 0;
   }
@@ -44,7 +44,7 @@ export const clearImageCache = (docxDocumentInstance) => {
 
 // Function to get cache statistics
 // Now requires docxDocumentInstance parameter for per-document isolation
-export const getImageCacheStats = (docxDocumentInstance) => {
+export const getImageCacheStats = (docxDocumentInstance: any): any => {
   if (!docxDocumentInstance || !docxDocumentInstance._imageCache) {
     return {
       size: 0,
@@ -60,7 +60,7 @@ export const getImageCacheStats = (docxDocumentInstance) => {
   let successCount = 0;
   let failureCount = 0;
 
-  cacheValues.forEach((value) => {
+  cacheValues.forEach((value: any) => {
     if (value === 'FAILED' || value === null) {
       failureCount += 1;
     } else {
@@ -77,9 +77,7 @@ export const getImageCacheStats = (docxDocumentInstance) => {
   };
 };
 
-export const buildList = async (vNode, docxDocumentInstance, xmlFragment) => {
-  const listElements = [];
-
+export const buildList = async (vNode: any, docxDocumentInstance: any, xmlFragment: any): Promise<void> => {
   let vNodeObjects = [
     {
       node: vNode,
@@ -89,7 +87,7 @@ export const buildList = async (vNode, docxDocumentInstance, xmlFragment) => {
     },
   ];
   while (vNodeObjects.length) {
-    const tempVNodeObject = vNodeObjects.shift();
+    const tempVNodeObject = vNodeObjects.shift()!;
 
     const parentVNodeProperties = tempVNodeObject.node.properties;
 
@@ -113,7 +111,7 @@ export const buildList = async (vNode, docxDocumentInstance, xmlFragment) => {
       tempVNodeObject.node.children.length &&
       ['ul', 'ol', 'li'].includes(tempVNodeObject.node.tagName)
     ) {
-      const tempVNodeObjects = tempVNodeObject.node.children.reduce((accumulator, childVNode) => {
+      const tempVNodeObjects = tempVNodeObject.node.children.reduce((accumulator: any[], childVNode: any) => {
         if (['ul', 'ol'].includes(childVNode.tagName)) {
           accumulator.push({
             node: childVNode,
@@ -154,7 +152,9 @@ export const buildList = async (vNode, docxDocumentInstance, xmlFragment) => {
                 ? childVNode.tagName.toLowerCase() === 'li'
                   ? [...childVNode.children]
                   : [childVNode]
-                : []
+                : [],
+              undefined,
+              undefined
             );
 
             childVNode.properties = { ...cloneDeep(properties), ...childVNode.properties };
@@ -180,15 +180,13 @@ export const buildList = async (vNode, docxDocumentInstance, xmlFragment) => {
         }
 
         return accumulator;
-      }, []);
+      }, [] as any[]);
       vNodeObjects = tempVNodeObjects.concat(vNodeObjects);
     }
   }
-
-  return listElements;
 };
 
-async function findXMLEquivalent(docxDocumentInstance, vNode, xmlFragment, imageOptions = null) {
+async function findXMLEquivalent(docxDocumentInstance: any, vNode: any, xmlFragment: any, imageOptions: any = null): Promise<void> {
   // Use default options if not provided
   if (!imageOptions) {
     imageOptions = docxDocumentInstance.imageProcessing || defaultDocumentOptions.imageProcessing;
@@ -265,7 +263,7 @@ async function findXMLEquivalent(docxDocumentInstance, vNode, xmlFragment, image
             xmlFragment.import(tableFragment);
             // Adding empty paragraph for space after table only if the option is enabled
             if (docxDocumentInstance.addSpacingAfterTable) {
-              const emptyParagraphFragment = await xmlBuilder.buildParagraph(null, {});
+              const emptyParagraphFragment = await xmlBuilder.buildParagraph(null, {}, docxDocumentInstance);
               xmlFragment.import(emptyParagraphFragment);
             }
           } else if (childVNode.tagName === 'img') {
@@ -303,7 +301,7 @@ async function findXMLEquivalent(docxDocumentInstance, vNode, xmlFragment, image
       xmlFragment.import(tableFragment);
       // Adding empty paragraph for space after table only if the option is enabled
       if (docxDocumentInstance.addSpacingAfterTable) {
-        const emptyParagraphFragment = await xmlBuilder.buildParagraph(null, {});
+        const emptyParagraphFragment = await xmlBuilder.buildParagraph(null, {}, docxDocumentInstance);
         xmlFragment.import(emptyParagraphFragment);
       }
       return;
@@ -336,7 +334,7 @@ async function findXMLEquivalent(docxDocumentInstance, vNode, xmlFragment, image
       }
       return;
     case 'br':
-      const linebreakFragment = await xmlBuilder.buildParagraph(null, {});
+      const linebreakFragment = await xmlBuilder.buildParagraph(null, {}, docxDocumentInstance);
       xmlFragment.import(linebreakFragment);
       return;
     case 'head':
@@ -354,11 +352,11 @@ async function findXMLEquivalent(docxDocumentInstance, vNode, xmlFragment, image
 
 // eslint-disable-next-line consistent-return
 export async function convertVTreeToXML(
-  docxDocumentInstance,
-  vTree,
-  xmlFragment,
-  imageOptions = null
-) {
+  docxDocumentInstance: any,
+  vTree: any,
+  xmlFragment: any,
+  imageOptions: any = null
+): Promise<string> {
   // Use default options if not provided
   if (!imageOptions) {
     imageOptions = docxDocumentInstance.imageProcessing || defaultDocumentOptions.imageProcessing;
@@ -389,7 +387,7 @@ export async function convertVTreeToXML(
  *                              These properties are applied to all child elements but can be overridden by explicit styles
  * @returns {Promise<Object>} XML fragment representing the rendered document content
  */
-async function renderDocumentFile(docxDocumentInstance, properties = {}) {
+async function renderDocumentFile(docxDocumentInstance: any, properties: any = {}) {
   // Get image processing options from document instance with centralized defaults
   const imageOptions =
     docxDocumentInstance.imageProcessing || defaultDocumentOptions.imageProcessing;
@@ -405,7 +403,7 @@ async function renderDocumentFile(docxDocumentInstance, properties = {}) {
     docxDocumentInstance._imageCache = new LRUCache({
       max: maxCacheEntries, // Max number of unique images
       maxSize: maxCacheSize, // Max total size in bytes
-      sizeCalculation: (value) => {
+      sizeCalculation: (value: any) => {
         if (!value || value === 'FAILED') return 1; // Minimum size for failed entries
         // Calculate approximate byte size of base64 string
         // Base64 encoding is ~4/3 of original size, so decoded size is ~3/4

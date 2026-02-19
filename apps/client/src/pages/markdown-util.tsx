@@ -752,7 +752,7 @@ ${bodyHtml}
               />
             </div>
 
-            <div className="flex-shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
               <label className="inline-flex items-center gap-2 text-sm" title={t("markdown.include_png_tooltip")}>
                 <input
                   type="checkbox"

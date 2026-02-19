@@ -2,7 +2,7 @@ import { defaultFont, defaultFontSize, defaultLang, defaultHeadingOptions } from
 import namespaces from '../namespaces';
 import { escapeXml } from '../utils/xml-escape';
 
-const generateHeadingStyleXML = (headingId, heading) => {
+const generateHeadingStyleXML = (headingId: any, heading: any) => {
   const headingNumber = parseInt(headingId.replace('Heading', ''), 10);
 
   const fontXml =
@@ -72,10 +72,7 @@ const generateStylesXML = (
   headingConfig = defaultHeadingOptions
 ) => {
   const config = Object.fromEntries(
-    Object.entries(defaultHeadingOptions).map(([key, defaultValue]) => [
-      key,
-      headingConfig?.[key] ? { ...defaultValue, ...headingConfig[key] } : defaultValue,
-    ])
+    Object.entries(defaultHeadingOptions).map(([key, defaultValue]: [string, any]) => [key, (headingConfig as any)?.[key] ? { ...defaultValue, ...(headingConfig as any)[key] } : defaultValue,])
   );
 
   return `

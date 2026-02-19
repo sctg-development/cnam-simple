@@ -277,7 +277,7 @@ const DANGEROUS_PROTOCOLS = /^\s*(javascript|data|vbscript|file|about):/i;
  * @param {string} value - The attribute value to check
  * @returns {boolean} True if dangerous, false if safe
  */
-const hasDangerousProtocol = (value) => {
+const hasDangerousProtocol = (value: any) => {
   if (!value || typeof value !== 'string') {
     return false;
   }
@@ -306,8 +306,8 @@ const hasDangerousProtocol = (value) => {
  * @param {boolean} options.enabled - Enable/disable sanitization (default: true)
  * @returns {Object|null} Sanitized VNode or null if blocked
  */
-export const sanitizeSVGVNode = (vNode, options = {}) => {
-  const { verboseLogging = false, enabled = true } = options;
+export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
+  const { verboseLogging = false, enabled = true } = options as any;
 
   // If sanitization is disabled, return vNode as-is
   if (!enabled) {
@@ -347,7 +347,7 @@ export const sanitizeSVGVNode = (vNode, options = {}) => {
   // Sanitize attributes
   if (vNode.properties) {
     const attributes = vNode.properties.attributes || {};
-    const sanitizedAttributes = {};
+    const sanitizedAttributes: any = {};
     let removedCount = 0;
 
     Object.entries(attributes).forEach(([key, value]) => {
@@ -403,7 +403,7 @@ export const sanitizeSVGVNode = (vNode, options = {}) => {
   // Recursively sanitize children
   if (vNode.children && vNode.children.length > 0) {
     const sanitizedChildren = vNode.children
-      .map((child) => {
+      .map((child: any) => {
         // Text nodes are safe - they get escaped during XML serialization
         if (typeof child === 'string' || child.text) {
           return child;
@@ -432,7 +432,7 @@ export const sanitizeSVGVNode = (vNode, options = {}) => {
  * @param {string} svgString - Raw SVG string to validate
  * @returns {Object} Validation result with warnings
  */
-export const validateSVGString = (svgString) => {
+export const validateSVGString = (svgString: any) => {
   const warnings = [];
 
   if (!svgString || typeof svgString !== 'string') {

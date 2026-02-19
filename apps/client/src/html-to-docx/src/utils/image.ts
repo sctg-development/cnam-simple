@@ -15,7 +15,7 @@ import {
 // It's marked as external in rollup.config.js so it won't be bundled
 // Try-catch prevents module load failure when sharp is not installed
 // convertSVGtoPNG will throw a helpful error if sharp is needed but missing
-let sharp;
+let sharp: any;
 try {
   // eslint-disable-next-line global-require, import/no-extraneous-dependencies
   sharp = require('sharp');
@@ -31,7 +31,7 @@ try {
  * @param {string} base64String - The base64 encoded string of the image.
  * @returns {string|null} The guessed MIME type or false if unable to guess.
  */
-export const guessMimeTypeFromBase64 = (base64String) => {
+export const guessMimeTypeFromBase64 = (base64String: any) => {
   // Decode the first few bytes of the base64 string to a binary string
   const binaryStr = atob(base64String.substring(0, 50)); // Decode a portion to check magic numbers
 
@@ -81,7 +81,7 @@ export const guessMimeTypeFromBase64 = (base64String) => {
  * @param {string} base64 - A base64 string representation of the file
  * @returns {string|false} The MIME type if found, otherwise tries to guess based on base64 content. Returns false if unable to determine.
  */
-export const getMimeType = (source, base64) => {
+export const getMimeType = (source: any, base64: any) => {
   // Try to lookup the MIME type based on the input directly (assuming it might be a file extension)
   let mimeType = mimeTypes.lookup(source);
 
@@ -99,7 +99,7 @@ export const getMimeType = (source, base64) => {
  * @param {string} dataUrl - The data URL to parse (e.g., "data:image/png;base64,iVBORw0...")
  * @returns {Object|null} Object with {mimeType: string, base64: string} or null if invalid
  */
-export function parseDataUrl(dataUrl) {
+export function parseDataUrl(dataUrl: any) {
   const match = dataUrl.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
   if (!match || match.length !== 3) {
     return null;
@@ -116,7 +116,7 @@ export function parseDataUrl(dataUrl) {
  * @param {string} mimeTypeOrExtension - MIME type (e.g., "image/svg+xml") or file extension (e.g., ".svg")
  * @returns {boolean} True if the input indicates an SVG image
  */
-export function isSVG(mimeTypeOrExtension) {
+export function isSVG(mimeTypeOrExtension: any) {
   if (!mimeTypeOrExtension) return false;
   const normalized = mimeTypeOrExtension.toLowerCase().trim();
   return (
@@ -136,8 +136,8 @@ export function isSVG(mimeTypeOrExtension) {
  * @param {string} unit - The unit (px, cm, mm, in, pt, pc, em, rem, %)
  * @returns {number} Value in pixels
  */
-function convertSVGUnitToPixels(value, unit) {
-  const factor = SVG_UNIT_TO_PIXEL_CONVERSIONS[unit] || 1;
+function convertSVGUnitToPixels(value: any, unit: any) {
+  const factor = (SVG_UNIT_TO_PIXEL_CONVERSIONS as any)[unit] || 1;
   return Math.round(value * factor);
 }
 
@@ -148,7 +148,7 @@ function convertSVGUnitToPixels(value, unit) {
  * @param {string} svgString - The SVG XML string
  * @returns {Object} Object with {width, height} in pixels, or undefined if not found
  */
-export function parseSVGDimensions(svgString) {
+export function parseSVGDimensions(svgString: any) {
   // Try to extract width and height attributes
   // Regex supports: integers, decimals, and units (px, cm, mm, in, pt, pc, em, rem, %)
   const widthMatch = svgString.match(/width\s*=\s*["']?([0-9.]+)([a-z%]*)/i);
@@ -201,14 +201,14 @@ export function parseSVGDimensions(svgString) {
   };
 }
 
-export async function convertSVGtoPNG(svgInput, options = {}) {
+export async function convertSVGtoPNG(svgInput: any, options: any = {}) {
   try {
     // Check if sharp is available
     if (!sharp) {
       throw new Error('Sharp is not installed. Install it with: npm install sharp');
     }
 
-    const { width, height, density = 72 } = options;
+    const { width, height, density = 72 } = (options as any) || {};
 
     let svgBuffer;
     if (typeof svgInput === 'string') {
@@ -238,7 +238,7 @@ export async function convertSVGtoPNG(svgInput, options = {}) {
     const pngBuffer = await sharpInstance.png().toBuffer();
     return pngBuffer;
   } catch (error) {
-    throw new Error(`Failed to convert SVG to PNG: ${error.message}`);
+    throw new Error(`Failed to convert SVG to PNG: ${(error as any).message}`);
   }
 }
 
@@ -251,7 +251,7 @@ export async function convertSVGtoPNG(svgInput, options = {}) {
  * @returns {Promise<string>} Base64 string of the image
  * @throws {Error} On timeout, network errors, HTTP errors, or validation failures
  */
-export async function downloadImageToBase64(url, timeout = 5000, maxSize = 10 * 1024 * 1024) {
+export async function downloadImageToBase64(url: any, timeout = 5000, maxSize = 10 * 1024 * 1024) {
   try {
     const response = await axios.get(url, {
       responseType: 'arraybuffer',
@@ -276,12 +276,12 @@ export async function downloadImageToBase64(url, timeout = 5000, maxSize = 10 * 
 
     return base64;
   } catch (error) {
-    if (error.code === 'ECONNABORTED') {
+    if ((error as any)?.code === 'ECONNABORTED') {
       throw new Error(`Request timeout after ${timeout}ms`);
-    } else if (error.response) {
-      throw new Error(`HTTP ${error.response.status}: ${error.response.statusText}`);
-    } else if (error.request) {
-      throw new Error(`Network error: ${error.message}`);
+    } else if ((error as any)?.response) {
+      throw new Error(`HTTP ${(error as any).response.status}: ${(error as any).response.statusText}`);
+    } else if ((error as any)?.request) {
+      throw new Error(`Network error: ${(error as any).message}`);
     }
     throw error;
   }
@@ -293,7 +293,7 @@ export async function downloadImageToBase64(url, timeout = 5000, maxSize = 10 * 
  * @param {string} message - Message to log
  * @param {...any} args - Additional arguments to log
  */
-const logVerbose = (verboseLogging, message, ...args) => {
+const logVerbose = (verboseLogging: any, message: any, ...args: any) => {
   if (verboseLogging) {
     // eslint-disable-next-line no-console
     console.log(message, ...args);
@@ -309,13 +309,13 @@ const logVerbose = (verboseLogging, message, ...args) => {
  * @param {Object} options - Download options (maxRetries, verboseLogging, etc.)
  * @returns {Promise<string|null>} Base64 data URI or null on failure
  */
-export const downloadAndCacheImage = async (docxDocumentInstance, imageSource, options = {}) => {
+export const downloadAndCacheImage = async (docxDocumentInstance: any, imageSource: any, options: any = null) => {
   const maxRetries =
-    options.maxRetries ||
+    (options as any)?.maxRetries ||
     docxDocumentInstance.imageProcessing?.maxRetries ||
     defaultDocumentOptions.imageProcessing.maxRetries;
   const verboseLogging =
-    options.verboseLogging ||
+    (options as any)?.verboseLogging ||
     docxDocumentInstance.imageProcessing?.verboseLogging ||
     defaultDocumentOptions.imageProcessing.verboseLogging;
 
@@ -351,14 +351,14 @@ export const downloadAndCacheImage = async (docxDocumentInstance, imageSource, o
       const baseTimeout = Math.max(
         defaultDocumentOptions.imageProcessing.minTimeout,
         Math.min(
-          options.downloadTimeout || defaultDocumentOptions.imageProcessing.downloadTimeout,
+          options?.downloadTimeout || defaultDocumentOptions.imageProcessing.downloadTimeout,
           defaultDocumentOptions.imageProcessing.maxTimeout
         )
       );
       const timeoutMs = baseTimeout * attempt;
       const maxSizeBytes = Math.max(
         defaultDocumentOptions.imageProcessing.minImageSize,
-        options.maxImageSize || defaultDocumentOptions.imageProcessing.maxImageSize
+        options?.maxImageSize || defaultDocumentOptions.imageProcessing.maxImageSize
       );
 
       // eslint-disable-next-line no-await-in-loop
@@ -374,7 +374,7 @@ export const downloadAndCacheImage = async (docxDocumentInstance, imageSource, o
       lastError = error;
       logVerbose(
         verboseLogging,
-        `[RETRY] Attempt ${attempt}/${maxRetries} failed for ${imageSource}: ${error.message}`
+        `[RETRY] Attempt ${attempt}/${maxRetries} failed for ${imageSource}: ${(error as any).message}`
       );
 
       // Add delay before retry (exponential backoff: 500ms, 1000ms, etc.)
@@ -411,7 +411,7 @@ export const downloadAndCacheImage = async (docxDocumentInstance, imageSource, o
   // eslint-disable-next-line no-console
   console.error(
     `[ERROR] downloadAndCacheImage: Failed to convert URL to base64 after ${maxRetries} attempts: ${
-      lastError?.message || 'Unknown error'
+      (lastError as any)?.message || 'Unknown error'
     } - will skip duplicates in this document`
   );
   return null;
@@ -419,8 +419,8 @@ export const downloadAndCacheImage = async (docxDocumentInstance, imageSource, o
 
 // eslint-disable-next-line consistent-return, no-shadow
 export const buildImage = async (
-  docxDocumentInstance,
-  vNode,
+  docxDocumentInstance: any,
+  vNode: any,
   maximumWidth = null,
   options = {}
 ) => {
@@ -432,7 +432,7 @@ export const buildImage = async (
 
     // Handle external URLs with caching and retry
     if (isValidUrl(imageSource)) {
-      base64Uri = await downloadAndCacheImage(docxDocumentInstance, imageSource, options);
+      base64Uri = await downloadAndCacheImage(docxDocumentInstance, imageSource, options || undefined);
       if (!base64Uri) {
         return null;
       }
@@ -524,7 +524,7 @@ export const buildImage = async (
           // eslint-disable-next-line no-console
           console.error(
             `[ERROR] buildImage: sizeOf failed for ${vNode.properties.src}:`,
-            sizeError.message
+            (sizeError as any).message
           );
           return null;
         }

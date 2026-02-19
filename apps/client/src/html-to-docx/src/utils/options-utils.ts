@@ -10,7 +10,7 @@ import {
   pointToHIP,
 } from './unit-conversion';
 
-const fixupFontSize = (fontSize) => {
+const fixupFontSize = (fontSize: any) => {
   let normalizedFontSize;
   if (pointRegex.test(fontSize)) {
     const matchedParts = fontSize.match(pointRegex);
@@ -26,8 +26,8 @@ const fixupFontSize = (fontSize) => {
   return normalizedFontSize;
 };
 
-const normalizeUnits = (dimensioningObject, defaultDimensionsProperty) => {
-  let normalizedUnitResult = {};
+const normalizeUnits = (dimensioningObject: any, defaultDimensionsProperty: any) => {
+  let normalizedUnitResult: any = {};
   if (typeof dimensioningObject === 'object' && dimensioningObject !== null) {
     Object.keys(dimensioningObject).forEach((key) => {
       if (pixelRegex.test(dimensioningObject[key])) {
@@ -61,7 +61,7 @@ const normalizeUnits = (dimensioningObject, defaultDimensionsProperty) => {
  * @returns {Object} - The merged and normalized document options.
  */
 
-const createDocumentOptionsAndMergeWithDefaults = (documentOptions) => {
+const createDocumentOptionsAndMergeWithDefaults = (documentOptions: any) => {
   // Start with a shallow copy of the user-provided options to avoid mutating the original object
   const normalizedDocumentOptions = { ...documentOptions };
 
@@ -71,13 +71,13 @@ const createDocumentOptionsAndMergeWithDefaults = (documentOptions) => {
       case 'pageSize':
       case 'margins':
         normalizedDocumentOptions[key] = normalizeUnits(
-          documentOptions[key],
-          defaultDocumentOptions[key]
+          (documentOptions as any)[key],
+          (defaultDocumentOptions as any)[key]
         );
         break;
       case 'fontSize':
       case 'complexScriptFontSize':
-        normalizedDocumentOptions[key] = fixupFontSize(documentOptions[key]);
+        normalizedDocumentOptions[key] = fixupFontSize((documentOptions as any)[key]);
         break;
       // If there are other keys that require normalization, handle them here
       default:

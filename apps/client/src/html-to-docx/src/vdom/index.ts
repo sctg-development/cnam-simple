@@ -11,34 +11,34 @@
 
 const version = '2';
 const noProperties = {};
-const noChildren = [];
+const noChildren: any[] = [];
 
 /**
  * Helper to check if something is a VNode (internal)
  */
 // eslint-disable-next-line no-underscore-dangle
-function _isVNode(x) {
+function _isVNode(x: any): boolean {
   return x && x.type === 'VirtualNode';
 }
 
 /**
  * Helper to check if something is a Widget
  */
-function isWidget(x) {
+function isWidget(x: any): boolean {
   return x && x.type === 'Widget';
 }
 
 /**
  * Helper to check if something is a Thunk
  */
-function isThunk(x) {
+function isThunk(x: any): boolean {
   return x && x.type === 'Thunk';
 }
 
 /**
  * Helper to check if something is a VHook
  */
-function isVHook(x) {
+function isVHook(x: any): boolean {
   return (
     x &&
     ((typeof x.hook === 'function' && !Object.prototype.hasOwnProperty.call(x, 'hook')) ||
@@ -51,12 +51,26 @@ function isVHook(x) {
  * EXACT copy of virtual-dom/vnode/vnode.js
  */
 export class VNode {
-  constructor(tagName, properties, children, key, namespace) {
+  tagName: any;
+  properties: any;
+  children: any;
+  key: any;
+  namespace: any;
+  count: number;
+  hasWidgets: boolean;
+  hasThunks: boolean;
+  hooks: any;
+  descendantHooks: boolean;
+  version: string;
+  type: string;
+  constructor(tagName: any, properties: any, children: any, key: any, namespace: any) {
     this.tagName = tagName;
     this.properties = properties || noProperties;
     this.children = children || noChildren;
     this.key = key != null ? String(key) : undefined;
     this.namespace = typeof namespace === 'string' ? namespace : null;
+    this.version = version;
+    this.type = 'VirtualNode';
 
     const count = (children && children.length) || 0;
     let descendants = 0;
@@ -74,7 +88,7 @@ export class VNode {
           if (!hooks) {
             hooks = {};
           }
-          hooks[propName] = property;
+          (hooks as any)[propName] = property;
         }
       }
     }
@@ -113,32 +127,31 @@ export class VNode {
   }
 }
 
-VNode.prototype.version = version;
-VNode.prototype.type = 'VirtualNode';
-
 /**
  * VText - Represents a text node in the virtual DOM tree
  * EXACT copy of virtual-dom/vnode/vtext.js
  */
 export class VText {
-  constructor(text) {
+  text: string;
+  version: string;
+  type: string;
+  constructor(text: any) {
     this.text = String(text);
+    this.version = version;
+    this.type = 'VirtualText';
   }
 }
-
-VText.prototype.version = version;
-VText.prototype.type = 'VirtualText';
 
 /**
  * Check if a value is a VNode (exported for compatibility)
  */
-export function isVNode(vnode) {
+export function isVNode(vnode: any): boolean {
   return vnode && vnode.type === 'VirtualNode';
 }
 
 /**
  * Check if a value is a VText (exported for compatibility)
  */
-export function isVText(vtext) {
+export function isVText(vtext: any): boolean {
   return vtext && vtext.type === 'VirtualText';
 }

@@ -6,7 +6,7 @@ export const hexRegex = /#([0-9A-F]{6})/i;
 export const hex3Regex = /#([0-9A-F])([0-9A-F])([0-9A-F])/i;
 
 // eslint-disable-next-line import/prefer-default-export
-export const rgbToHex = (red, green, blue) => {
+export const rgbToHex = (red: any, green: any, blue: any) => {
   const hexColorCode = [red, green, blue]
     .map((x) => {
       // eslint-disable-next-line radix, no-param-reassign
@@ -18,7 +18,7 @@ export const rgbToHex = (red, green, blue) => {
   return hexColorCode;
 };
 
-export const hslToHex = (hue, saturation, luminosity) => {
+export const hslToHex = (hue: any, saturation: any, luminosity: any) => {
   hue /= 360;
   saturation /= 100;
   luminosity /= 100;
@@ -28,7 +28,7 @@ export const hslToHex = (hue, saturation, luminosity) => {
     // eslint-disable-next-line no-multi-assign
     red = green = blue = luminosity; // achromatic
   } else {
-    const hue2rgb = (p, q, t) => {
+    const hue2rgb = (p: any, q: any, t: any) => {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
       if (t < 1 / 6) return p + (q - p) * 6 * t;
@@ -53,7 +53,7 @@ export const hslToHex = (hue, saturation, luminosity) => {
     .join('');
 };
 
-export const hex3ToHex = (red, green, blue) => {
+export const hex3ToHex = (red: any, green: any, blue: any) => {
   const hexColorCode = [red, green, blue].map((x) => `${x}${x}`).join('');
 
   return hexColorCode;
