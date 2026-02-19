@@ -22,7 +22,7 @@ const portraitMargins = {
   footer: 720,
   gutter: 0,
 };
-const defaultFont = 'Times New Roman';
+const defaultFont = 'Arial';
 const defaultFontSize = 22;
 const defaultLang = 'en-US';
 const defaultDirection = 'ltr';
