@@ -86,7 +86,7 @@ export const Navbar = () => {
                   "data-[active=true]:text-primary data-[active=true]:font-medium",
                 )}
                 color="foreground"
-                href={useHref(item.href)}
+                href={useHref(item.href.charAt(0) === "/" ? item.href.substring(1) : item.href)}
               >
                 {item.label}
               </Link>
