@@ -30,7 +30,7 @@ import {
 import { link as linkStyles } from "@heroui/theme";
 import { clsx } from "@heroui/shared-utils";
 import { Trans, useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useHref, useNavigate } from "react-router-dom";
 
 import { LinkUniversal } from "./link-universal";
 import { I18nIcon, LanguageSwitch } from "./language-switch";
@@ -71,7 +71,7 @@ export const Navbar = () => {
           <Link
             className="flex justify-start items-center gap-1"
             color="foreground"
-            href="/"
+            href={useHref("/")}
           >
             <Logo />
             <p className="font-bold text-inherit">SCTG</p>
@@ -86,7 +86,7 @@ export const Navbar = () => {
                   "data-[active=true]:text-primary data-[active=true]:font-medium",
                 )}
                 color="foreground"
-                href={item.href}
+                href={useHref(item.href)}
               >
                 {item.label}
               </Link>
@@ -154,7 +154,7 @@ export const Navbar = () => {
                       ? "danger"
                       : "foreground"
                 }
-                href="#"
+                href={useHref(item.href)}
                 size="lg"
               >
                 {item.label}

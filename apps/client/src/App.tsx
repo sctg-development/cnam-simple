@@ -16,6 +16,7 @@ import DocsPage from "@/pages/docs";
 import PricingPage from "@/pages/pricing";
 import MarkdownUtil from "@/pages/markdown-util";
 import AboutPage from "@/pages/about";
+import { siteConfig } from "@/config/site";
 
 declare module "@react-types/shared" {
   interface RouterConfig {
@@ -41,7 +42,7 @@ export function App() {
               path={`/markdown-util`}
             />
             <Route key="about" element={<AboutPage />} path={`/about`} />
-            <Route key="404" element={<PageNotFound />} path="*" />
+            <Route key="404" element={<PageNotFound githubUrl={siteConfig().links.github}/>} path="*" />
           </Routes>
         </CookieConsentProvider>
       </HeroUIProvider>
