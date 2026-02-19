@@ -100,12 +100,12 @@ jobs:
         run: |
           source .env
           ./build-reproductible-dev.sh
-      
-      - name: Publish to Cloudflare Pages
-        uses: sctg-development/pages-action-without-url@main
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
         with:
-            apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-            accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-            projectName: cnam-simple
-            directory: apps/client/dist
-            gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy apps/client/dist --project-name=cnam-simple
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      
