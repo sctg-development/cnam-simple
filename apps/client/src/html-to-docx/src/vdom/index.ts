@@ -1,4 +1,3 @@
-/* eslint-disable max-classes-per-file */
 /**
  * Virtual DOM classes - EXACT implementation matching virtual-dom@2.x
  *
@@ -9,30 +8,30 @@
  * Based on: https://github.com/Matt-Esch/virtual-dom
  */
 
-const version = '2';
+const version = "2";
 const noProperties = {};
 const noChildren: any[] = [];
 
 /**
  * Helper to check if something is a VNode (internal)
  */
-// eslint-disable-next-line no-underscore-dangle
+
 function _isVNode(x: any): boolean {
-  return x && x.type === 'VirtualNode';
+  return x && x.type === "VirtualNode";
 }
 
 /**
  * Helper to check if something is a Widget
  */
 function isWidget(x: any): boolean {
-  return x && x.type === 'Widget';
+  return x && x.type === "Widget";
 }
 
 /**
  * Helper to check if something is a Thunk
  */
 function isThunk(x: any): boolean {
-  return x && x.type === 'Thunk';
+  return x && x.type === "Thunk";
 }
 
 /**
@@ -41,8 +40,10 @@ function isThunk(x: any): boolean {
 function isVHook(x: any): boolean {
   return (
     x &&
-    ((typeof x.hook === 'function' && !Object.prototype.hasOwnProperty.call(x, 'hook')) ||
-      (typeof x.unhook === 'function' && !Object.prototype.hasOwnProperty.call(x, 'unhook')))
+    ((typeof x.hook === "function" &&
+      !Object.prototype.hasOwnProperty.call(x, "hook")) ||
+      (typeof x.unhook === "function" &&
+        !Object.prototype.hasOwnProperty.call(x, "unhook")))
   );
 }
 
@@ -63,14 +64,20 @@ export class VNode {
   descendantHooks: boolean;
   version: string;
   type: string;
-  constructor(tagName: any, properties: any, children: any, key: any, namespace: any) {
+  constructor(
+    tagName: any,
+    properties: any,
+    children: any,
+    key: any,
+    namespace: any,
+  ) {
     this.tagName = tagName;
     this.properties = properties || noProperties;
     this.children = children || noChildren;
     this.key = key != null ? String(key) : undefined;
-    this.namespace = typeof namespace === 'string' ? namespace : null;
+    this.namespace = typeof namespace === "string" ? namespace : null;
     this.version = version;
-    this.type = 'VirtualNode';
+    this.type = "VirtualNode";
 
     const count = (children && children.length) || 0;
     let descendants = 0;
@@ -80,10 +87,11 @@ export class VNode {
     let hooks;
 
     // Check properties for hooks
-    // eslint-disable-next-line no-restricted-syntax
+
     for (const propName in properties) {
       if (Object.prototype.hasOwnProperty.call(properties, propName)) {
         const property = properties[propName];
+
         if (isVHook(property) && property.unhook) {
           if (!hooks) {
             hooks = {};
@@ -96,6 +104,7 @@ export class VNode {
     // Calculate descendants and check for widgets/thunks
     for (let i = 0; i < count; i += 1) {
       const child = children[i];
+
       if (_isVNode(child)) {
         descendants += child.count || 0;
 
@@ -111,7 +120,7 @@ export class VNode {
           descendantHooks = true;
         }
       } else if (!hasWidgets && isWidget(child)) {
-        if (typeof child.destroy === 'function') {
+        if (typeof child.destroy === "function") {
           hasWidgets = true;
         }
       } else if (!hasThunks && isThunk(child)) {
@@ -138,7 +147,7 @@ export class VText {
   constructor(text: any) {
     this.text = String(text);
     this.version = version;
-    this.type = 'VirtualText';
+    this.type = "VirtualText";
   }
 }
 
@@ -146,12 +155,12 @@ export class VText {
  * Check if a value is a VNode (exported for compatibility)
  */
 export function isVNode(vnode: any): boolean {
-  return vnode && vnode.type === 'VirtualNode';
+  return vnode && vnode.type === "VirtualNode";
 }
 
 /**
  * Check if a value is a VText (exported for compatibility)
  */
 export function isVText(vtext: any): boolean {
-  return vtext && vtext.type === 'VirtualText';
+  return vtext && vtext.type === "VirtualText";
 }

@@ -1,45 +1,59 @@
-import { defaultFont, defaultFontSize, defaultLang, defaultHeadingOptions } from '../constants';
-import namespaces from '../namespaces';
-import { escapeXml } from '../utils/xml-escape';
+import {
+  defaultFont,
+  defaultFontSize,
+  defaultLang,
+  defaultHeadingOptions,
+} from "../constants";
+import namespaces from "../namespaces";
+import { escapeXml } from "../utils/xml-escape";
 
 const generateHeadingStyleXML = (headingId: any, heading: any) => {
-  const headingNumber = parseInt(headingId.replace('Heading', ''), 10);
+  const headingNumber = parseInt(headingId.replace("Heading", ""), 10);
 
   const fontXml =
     heading.font && heading.font !== defaultFont
       ? `<w:rFonts w:ascii="${escapeXml(
-          heading.font
+          heading.font,
         )}" w:eastAsiaTheme="minorHAnsi" w:hAnsiTheme="minorHAnsi" w:cstheme="minorBidi" />`
-      : '';
+      : "";
 
   const fontSizeXml =
-    heading.fontSize !== undefined && heading.fontSize !== defaultFontSize && heading.fontSize > 0
+    heading.fontSize !== undefined &&
+    heading.fontSize !== defaultFontSize &&
+    heading.fontSize > 0
       ? `<w:sz w:val="${heading.fontSize}" /><w:szCs w:val="${heading.fontSize}" />`
-      : '';
+      : "";
 
-  const boldXml = heading.bold ? '<w:b />' : '';
+  const boldXml = heading.bold ? "<w:b />" : "";
 
-  const keepLinesXml = heading.keepLines ? '<w:keepLines />' : '';
-  const keepNextXml = heading.keepNext ? '<w:keepNext />' : '';
+  const keepLinesXml = heading.keepLines ? "<w:keepLines />" : "";
+  const keepNextXml = heading.keepNext ? "<w:keepNext />" : "";
 
-  let spacingAfterXml = '';
-  let spacingXml = '';
+  let spacingAfterXml = "";
+  let spacingXml = "";
+
   if (heading.spacing) {
     const spacingBeforeXml =
-      heading.spacing.before !== undefined ? `w:before="${heading.spacing.before}"` : '';
+      heading.spacing.before !== undefined
+        ? `w:before="${heading.spacing.before}"`
+        : "";
+
     spacingAfterXml =
-      heading.spacing.after !== undefined ? `w:after="${heading.spacing.after}"` : '';
+      heading.spacing.after !== undefined
+        ? `w:after="${heading.spacing.after}"`
+        : "";
     spacingXml =
       spacingBeforeXml || spacingAfterXml
         ? `<w:spacing ${spacingBeforeXml} ${spacingAfterXml} />`
-        : '';
+        : "";
   }
 
   const validOutlineLevel = Math.max(0, Math.min(5, heading.outlineLevel || 0));
   const outlineXml = `<w:outlineLvl w:val="${validOutlineLevel}" />`;
 
-  const additionalPropsXml = headingNumber >= 3 ? '<w:semiHidden /><w:unhideWhenUsed />' : '';
-  const unhideWhenUsedXml = headingNumber === 2 ? '<w:unhideWhenUsed />' : '';
+  const additionalPropsXml =
+    headingNumber >= 3 ? "<w:semiHidden /><w:unhideWhenUsed />" : "";
+  const unhideWhenUsedXml = headingNumber === 2 ? "<w:unhideWhenUsed />" : "";
 
   return `
 	<w:style w:type="paragraph" w:styleId="${headingId}">
@@ -69,10 +83,17 @@ const generateStylesXML = (
   fontSize = defaultFontSize,
   complexScriptFontSize = defaultFontSize,
   lang = defaultLang,
-  headingConfig = defaultHeadingOptions
+  headingConfig = defaultHeadingOptions,
 ) => {
   const config = Object.fromEntries(
-    Object.entries(defaultHeadingOptions).map(([key, defaultValue]: [string, any]) => [key, (headingConfig as any)?.[key] ? { ...defaultValue, ...(headingConfig as any)[key] } : defaultValue,])
+    Object.entries(defaultHeadingOptions).map(
+      ([key, defaultValue]: [string, any]) => [
+        key,
+        (headingConfig as any)?.[key]
+          ? { ...defaultValue, ...(headingConfig as any)[key] }
+          : defaultValue,
+      ],
+    ),
   );
 
   return `
@@ -105,12 +126,15 @@ const generateStylesXML = (
 	  </w:rPr>
 	</w:style>
 	${Object.entries(config)
-    .filter(([key]) => key.startsWith('heading'))
+    .filter(([key]) => key.startsWith("heading"))
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([key, value]) =>
-      generateHeadingStyleXML(key.charAt(0).toUpperCase() + key.slice(1), value)
+      generateHeadingStyleXML(
+        key.charAt(0).toUpperCase() + key.slice(1),
+        value,
+      ),
     )
-    .join('')}
+    .join("")}
   </w:styles>
   `;
 };

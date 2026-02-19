@@ -22,21 +22,13 @@ import { BrowserRouter } from "react-router-dom";
 
 import { App } from "./App.tsx";
 import "./i18n";
-// Application Bootstrap: Root provider setup for dependency injection
-import { Provider } from "./provider.tsx";
+
 import "@/styles/globals.css";
-import { CookieConsentProvider } from "./contexts/cookie-consent-context.tsx";
-import { CookieConsent } from "./components/cookie-consent.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter basename={import.meta.env.BASE_URL}>
-      <Provider>
-        <CookieConsentProvider>
-          <CookieConsent />
-          <App />
-        </CookieConsentProvider>
-      </Provider>
+      <App />
     </BrowserRouter>
   </React.StrictMode>,
 );

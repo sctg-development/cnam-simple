@@ -1,3 +1,5 @@
-// eslint-disable-next-line import/prefer-default-export
 export const vNodeHasChildren = (vNode: any) =>
-  vNode && vNode.children && Array.isArray(vNode.children) && vNode.children.length;
+  vNode &&
+  vNode.children &&
+  Array.isArray(vNode.children) &&
+  vNode.children.length;

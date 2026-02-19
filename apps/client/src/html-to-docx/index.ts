@@ -1,8 +1,7 @@
-/* eslint-disable no-useless-escape */
-import JSZip from 'jszip';
+import JSZip from "jszip";
 
-import createDocumentOptionsAndMergeWithDefaults from './src/utils/options-utils';
-import addFilesToContainer from './src/html-to-docx';
+import createDocumentOptionsAndMergeWithDefaults from "./src/utils/options-utils";
+import addFilesToContainer from "./src/html-to-docx";
 
 /// <reference types="node" />
 
@@ -41,7 +40,7 @@ export interface Table {
 export interface LineNumberOptions {
   start: number;
   countBy: number;
-  restart: 'continuous' | 'newPage' | 'newSection';
+  restart: "continuous" | "newPage" | "newSection";
 }
 
 export interface HeadingSpacing {
@@ -69,7 +68,7 @@ export interface HeadingConfig {
 }
 
 export interface DocumentOptions {
-  orientation?: 'portrait' | 'landscape';
+  orientation?: "portrait" | "landscape";
   pageSize?: PageSize;
   margins?: Margins;
   title?: string;
@@ -81,9 +80,9 @@ export interface DocumentOptions {
   revision?: number;
   createdAt?: Date;
   modifiedAt?: Date;
-  headerType?: 'default' | 'first' | 'even';
+  headerType?: "default" | "first" | "even";
   header?: boolean;
-  footerType?: 'default' | 'first' | 'even';
+  footerType?: "default" | "first" | "even";
   footer?: boolean;
   font?: string;
   fontSize?: number;
@@ -99,7 +98,7 @@ export interface DocumentOptions {
   heading?: HeadingConfig;
   decodeUnicode?: boolean;
   lang?: string;
-  direction?: 'ltr' | 'rtl';
+  direction?: "ltr" | "rtl";
   preprocessing?: {
     skipHTMLMinify?: boolean;
   };
@@ -114,7 +113,7 @@ export interface DocumentOptions {
     minImageSize?: number;
     maxCacheSize?: number;
     maxCacheEntries?: number;
-    svgHandling?: 'convert' | 'native' | 'auto';
+    svgHandling?: "convert" | "native" | "auto";
     suppressSharpWarning?: boolean;
     svgSanitization?: boolean;
   };
@@ -135,35 +134,52 @@ async function generateContainer(
 ): Promise<ArrayBuffer | Blob | Buffer> {
   const zip = new JSZip();
 
-  const normalizedDocumentOptions = createDocumentOptionsAndMergeWithDefaults(documentOptions);
+  const normalizedDocumentOptions =
+    createDocumentOptionsAndMergeWithDefaults(documentOptions);
 
   let contentHTML = htmlString;
   let headerHTML = headerHTMLString;
   let footerHTML = footerHTMLString;
-  if (htmlString && !normalizedDocumentOptions['preprocessing']['skipHTMLMinify']) {
+
+  if (
+    htmlString &&
+    !normalizedDocumentOptions["preprocessing"]["skipHTMLMinify"]
+  ) {
     contentHTML = await minifyHTMLString(contentHTML);
   }
-  if (headerHTMLString && !normalizedDocumentOptions['preprocessing']['skipHTMLMinify']) {
+  if (
+    headerHTMLString &&
+    !normalizedDocumentOptions["preprocessing"]["skipHTMLMinify"]
+  ) {
     headerHTML = await minifyHTMLString(headerHTMLString);
   }
-  if (footerHTMLString && !normalizedDocumentOptions['preprocessing']['skipHTMLMinify']) {
+  if (
+    footerHTMLString &&
+    !normalizedDocumentOptions["preprocessing"]["skipHTMLMinify"]
+  ) {
     footerHTML = await minifyHTMLString(footerHTMLString);
   }
 
-  await addFilesToContainer(zip, contentHTML, normalizedDocumentOptions, headerHTML, footerHTML);
+  await addFilesToContainer(
+    zip,
+    contentHTML,
+    normalizedDocumentOptions,
+    headerHTML,
+    footerHTML,
+  );
 
-  const buffer = await zip.generateAsync({ type: 'arraybuffer' });
-  if (Object.prototype.hasOwnProperty.call(global, 'Buffer')) {
+  const buffer = await zip.generateAsync({ type: "arraybuffer" });
+
+  if (Object.prototype.hasOwnProperty.call(global, "Buffer")) {
     return Buffer.from(new Uint8Array(buffer));
   }
-  if (Object.prototype.hasOwnProperty.call(global, 'Blob')) {
-    // eslint-disable-next-line no-undef
+  if (Object.prototype.hasOwnProperty.call(global, "Blob")) {
     return new Blob([buffer], {
-      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     });
   }
   throw new Error(
-    'Add blob support using a polyfill eg https://github.com/bjornstar/blob-polyfill'
+    "Add blob support using a polyfill eg https://github.com/bjornstar/blob-polyfill",
   );
 }
 

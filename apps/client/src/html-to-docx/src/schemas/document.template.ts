@@ -1,6 +1,11 @@
-import namespaces from '../namespaces';
+import namespaces from "../namespaces";
 
-const generateDocumentTemplate = (width: any, height: any, orientation: any, margins: any) => `
+const generateDocumentTemplate = (
+  width: any,
+  height: any,
+  orientation: any,
+  margins: any,
+) => `
   <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 
     <w:document

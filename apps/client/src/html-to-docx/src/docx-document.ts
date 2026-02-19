@@ -1,7 +1,20 @@
-import { create, fragment } from 'xmlbuilder2';
-import { nanoid } from 'nanoid';
-import { parseDataUrl, isSVG, convertSVGtoPNG, parseSVGDimensions } from './utils/image';
-import type { Margins, PageSize, Table, LineNumberOptions, HeadingConfig } from '../index';
+import type {
+  Margins,
+  PageSize,
+  Table,
+  LineNumberOptions,
+  HeadingConfig,
+} from "../index";
+
+import { create, fragment } from "xmlbuilder2";
+import { nanoid } from "nanoid";
+
+import {
+  parseDataUrl,
+  isSVG,
+  convertSVGtoPNG,
+  parseSVGDimensions,
+} from "./utils/image";
 
 // Track if we've already warned about missing sharp (show once per process)
 let sharpMissingWarningShown = false;
@@ -54,9 +67,9 @@ import {
   fontTableXML as fontTableXMLString,
   genericRelsXML as genericRelsXMLString,
   generateDocumentTemplate,
-} from './schemas';
-import { convertVTreeToXML } from './helpers';
-import namespaces from './namespaces';
+} from "./schemas";
+import { convertVTreeToXML } from "./helpers";
+import namespaces from "./namespaces";
 import {
   footerType as footerFileType,
   headerType as headerFileType,
@@ -74,19 +87,25 @@ import {
   documentFileName,
   imageType,
   defaultDocumentOptions,
-} from './constants';
-import ListStyleBuilder from './utils/list';
-import { fontFamilyToTableObject } from './utils/font-family-conversion';
+} from "./constants";
+import ListStyleBuilder from "./utils/list";
+import { fontFamilyToTableObject } from "./utils/font-family-conversion";
 
-function generateContentTypesFragments(contentTypesXML: any, type: string, objects: any[]): void {
+function generateContentTypesFragments(
+  contentTypesXML: any,
+  type: string,
+  objects: any[],
+): void {
   if (objects && Array.isArray(objects)) {
     objects.forEach((object) => {
-      const contentTypesFragment = fragment({ defaultNamespace: { ele: namespaces.contentTypes } })
-        .ele('Override')
-        .att('PartName', `/word/${type}${object[`${type}Id`]}.xml`)
+      const contentTypesFragment = fragment({
+        defaultNamespace: { ele: namespaces.contentTypes },
+      })
+        .ele("Override")
+        .att("PartName", `/word/${type}${object[`${type}Id`]}.xml`)
         .att(
-          'ContentType',
-          `application/vnd.openxmlformats-officedocument.wordprocessingml.${type}+xml`
+          "ContentType",
+          `application/vnd.openxmlformats-officedocument.wordprocessingml.${type}+xml`,
         )
         .up();
 
@@ -95,15 +114,24 @@ function generateContentTypesFragments(contentTypesXML: any, type: string, objec
   }
 }
 
-function generateSectionReferenceXML(documentXML: any, documentSectionType: string, objects: any[], isEnabled: boolean): void {
+function generateSectionReferenceXML(
+  documentXML: any,
+  documentSectionType: string,
+  objects: any[],
+  isEnabled: boolean,
+): void {
   if (isEnabled && objects && Array.isArray(objects) && objects.length) {
     const xmlFragment = fragment();
+
     objects.forEach(({ relationshipId, type }) => {
-      const objectFragment = fragment({ namespaceAlias: { w: namespaces.w, r: namespaces.r } })
-        .ele('@w', `${documentSectionType}Reference`)
-        .att('@r', 'id', `rId${relationshipId}`)
-        .att('@w', 'type', type)
+      const objectFragment = fragment({
+        namespaceAlias: { w: namespaces.w, r: namespaces.r },
+      })
+        .ele("@w", `${documentSectionType}Reference`)
+        .att("@r", "id", `rId${relationshipId}`)
+        .att("@w", "type", type)
         .up();
+
       xmlFragment.import(objectFragment);
     });
 
@@ -112,22 +140,25 @@ function generateSectionReferenceXML(documentXML: any, documentSectionType: stri
 }
 
 function generateXMLString(xmlString: any, direction?: string): string {
-  const xmlDocumentString = create({ encoding: 'UTF-8', standalone: true }, xmlString);
+  const xmlDocumentString = create(
+    { encoding: "UTF-8", standalone: true },
+    xmlString,
+  );
 
   // RTL condition xml styles addition
-  if (direction === 'rtl') {
+  if (direction === "rtl") {
     const rtlStyle = fragment({ namespaceAlias: { w: namespaces.w } })
-      .ele('@w', 'style')
-      .att('@w', 'type', 'paragraph')
-      .att('@w', 'styleId', 'RTLDefault')
-      .ele('@w', 'name')
-      .att('@w', 'val', 'RTL Default')
+      .ele("@w", "style")
+      .att("@w", "type", "paragraph")
+      .att("@w", "styleId", "RTLDefault")
+      .ele("@w", "name")
+      .att("@w", "val", "RTL Default")
       .up()
-      .ele('@w', 'pPr')
-      .ele('@w', 'jc')
-      .att('@w', 'val', 'right')
+      .ele("@w", "pPr")
+      .ele("@w", "jc")
+      .att("@w", "val", "right")
       .up()
-      .ele('@w', 'bidi')
+      .ele("@w", "bidi")
       .up()
       .up()
       .up();
@@ -138,9 +169,13 @@ function generateXMLString(xmlString: any, direction?: string): string {
   return xmlDocumentString.toString({ prettyPrint: true });
 }
 
-async function generateSectionXML(this: DocxDocument, vTree: any, type: string = 'header'): Promise<any> {
+async function generateSectionXML(
+  this: DocxDocument,
+  vTree: any,
+  type: string = "header",
+): Promise<any> {
   const sectionXML = create({
-    encoding: 'UTF-8',
+    encoding: "UTF-8",
     standalone: true,
     namespaceAlias: {
       w: namespaces.w,
@@ -151,26 +186,36 @@ async function generateSectionXML(this: DocxDocument, vTree: any, type: string =
       wp: namespaces.wp,
       w10: namespaces.w10,
     },
-  }).ele('@w', type === 'header' ? 'hdr' : 'ftr');
+  }).ele("@w", type === "header" ? "hdr" : "ftr");
 
   const XMLFragment = fragment();
+
   await convertVTreeToXML(this, vTree, XMLFragment);
-  if (type === 'footer' && XMLFragment.first() && (XMLFragment.first().node as any).tagName === 'p' && this.pageNumber) {
+  if (
+    type === "footer" &&
+    XMLFragment.first() &&
+    (XMLFragment.first().node as any).tagName === "p" &&
+    this.pageNumber
+  ) {
     XMLFragment.first().import(
       fragment({ namespaceAlias: { w: namespaces.w } })
-        .ele('@w', 'fldSimple')
-        .att('@w', 'instr', 'PAGE')
-        .ele('@w', 'r')
+        .ele("@w", "fldSimple")
+        .att("@w", "instr", "PAGE")
+        .ele("@w", "r")
         .up()
-        .up()
+        .up(),
     );
   }
   sectionXML.root().import(XMLFragment);
 
-  const referenceName = type === 'header' ? 'Header' : 'Footer';
+  const referenceName = type === "header" ? "Header" : "Footer";
+
   this[`last${referenceName}Id`] += 1;
 
-  return { [`${type}Id`]: this[`last${referenceName}Id`], [`${type}XML`]: sectionXML };
+  return {
+    [`${type}Id`]: this[`last${referenceName}Id`],
+    [`${type}XML`]: sectionXML,
+  };
 }
 
 class DocxDocument {
@@ -233,58 +278,92 @@ class DocxDocument {
     this.deterministicIds = properties.deterministicIds || false;
 
     const isPortraitOrientation = this.orientation === defaultOrientation;
-    const height = this.pageSize.height ? this.pageSize.height : landscapeHeight;
+    const height = this.pageSize.height
+      ? this.pageSize.height
+      : landscapeHeight;
     const width = this.pageSize.width ? this.pageSize.width : landscapeWidth;
 
     this.width = isPortraitOrientation ? width : height;
     this.height = isPortraitOrientation ? height : width;
 
-    const defaultMargins = isPortraitOrientation ? portraitMargins : landscapeMargins;
+    const defaultMargins = isPortraitOrientation
+      ? portraitMargins
+      : landscapeMargins;
     const marginsObject = properties.margins || {};
 
     this.margins = {
-      top: marginsObject.top !== undefined ? marginsObject.top : defaultMargins.top,
-      right: marginsObject.right !== undefined ? marginsObject.right : defaultMargins.right,
-      bottom: marginsObject.bottom !== undefined ? marginsObject.bottom : defaultMargins.bottom,
-      left: marginsObject.left !== undefined ? marginsObject.left : defaultMargins.left,
-      header: marginsObject.header !== undefined ? marginsObject.header : defaultMargins.header,
-      footer: marginsObject.footer !== undefined ? marginsObject.footer : defaultMargins.footer,
-      gutter: marginsObject.gutter !== undefined ? marginsObject.gutter : defaultMargins.gutter,
+      top:
+        marginsObject.top !== undefined
+          ? marginsObject.top
+          : defaultMargins.top,
+      right:
+        marginsObject.right !== undefined
+          ? marginsObject.right
+          : defaultMargins.right,
+      bottom:
+        marginsObject.bottom !== undefined
+          ? marginsObject.bottom
+          : defaultMargins.bottom,
+      left:
+        marginsObject.left !== undefined
+          ? marginsObject.left
+          : defaultMargins.left,
+      header:
+        marginsObject.header !== undefined
+          ? marginsObject.header
+          : defaultMargins.header,
+      footer:
+        marginsObject.footer !== undefined
+          ? marginsObject.footer
+          : defaultMargins.footer,
+      gutter:
+        marginsObject.gutter !== undefined
+          ? marginsObject.gutter
+          : defaultMargins.gutter,
     };
 
-    this.availableDocumentSpace = this.width - (this.margins.left ?? 0) - (this.margins.right ?? 0);
-    this.title = properties.title || '';
-    this.subject = properties.subject || '';
+    this.availableDocumentSpace =
+      this.width - (this.margins.left ?? 0) - (this.margins.right ?? 0);
+    this.title = properties.title || "";
+    this.subject = properties.subject || "";
     this.creator = properties.creator || applicationName;
     this.keywords = properties.keywords || [applicationName];
-    this.description = properties.description || '';
+    this.description = properties.description || "";
     this.lastModifiedBy = properties.lastModifiedBy || applicationName;
     this.revision = properties.revision || 1;
     this.createdAt = properties.createdAt || new Date();
     this.modifiedAt = properties.modifiedAt || new Date();
-    this.headerType = properties.headerType || 'default';
+    this.headerType = properties.headerType || "default";
     this.header = properties.header || false;
-    this.footerType = properties.footerType || 'default';
+    this.footerType = properties.footerType || "default";
     this.footer = properties.footer || false;
     this.font = properties.font || defaultFont;
     this.fontSize = properties.fontSize || defaultFontSize;
-    this.complexScriptFontSize = properties.complexScriptFontSize || defaultFontSize;
+    this.complexScriptFontSize =
+      properties.complexScriptFontSize || defaultFontSize;
     this.lang = properties.lang || defaultLang;
-    this.direction = properties.direction || 'ltr';
+    this.direction = properties.direction || "ltr";
     this.tableRowCantSplit =
-      (properties.table && properties.table.row && properties.table.row.cantSplit) || false;
+      (properties.table &&
+        properties.table.row &&
+        properties.table.row.cantSplit) ||
+      false;
     this.tableBorders =
       (properties.table && properties.table.borderOptions) ||
       defaultDocumentOptions.table.borderOptions;
     this.pageNumber = properties.pageNumber || false;
     this.skipFirstHeaderFooter = properties.skipFirstHeaderFooter || false;
-    this.lineNumber = properties.lineNumber && properties.lineNumberOptions ? properties.lineNumberOptions : null;
+    this.lineNumber =
+      properties.lineNumber && properties.lineNumberOptions
+        ? properties.lineNumberOptions
+        : null;
     this.addSpacingAfterTable =
       properties.table && properties.table.addSpacingAfter !== undefined
         ? properties.table.addSpacingAfter
         : defaultDocumentOptions.table.addSpacingAfter;
     this.heading = properties.heading || defaultDocumentOptions.heading;
-    this.imageProcessing = properties.imageProcessing || defaultDocumentOptions.imageProcessing;
+    this.imageProcessing =
+      properties.imageProcessing || defaultDocumentOptions.imageProcessing;
     this.lastNumberingId = 0;
     this.lastMediaId = 0;
     this.lastHeaderId = 0;
@@ -293,7 +372,9 @@ class DocxDocument {
     this.numberingObjects = [];
     this.fontTableObjects = [];
     this.relationshipFilename = documentFileName;
-    this.relationships = [{ fileName: documentFileName, lastRelsId: 5, rels: [] }];
+    this.relationships = [
+      { fileName: documentFileName, lastRelsId: 5, rels: [] },
+    ];
     this.mediaFiles = [];
     this.headerObjects = [];
     this.footerObjects = [];
@@ -310,7 +391,8 @@ class DocxDocument {
     this.generateNumberingXML = this.generateNumberingXML.bind(this);
     this.generateRelsXML = this.generateRelsXML.bind(this);
     this.createMediaFile = this.createMediaFile.bind(this);
-    this.createDocumentRelationships = this.createDocumentRelationships.bind(this);
+    this.createDocumentRelationships =
+      this.createDocumentRelationships.bind(this);
     this.generateHeaderXML = this.generateHeaderXML.bind(this);
     this.generateFooterXML = this.generateFooterXML.bind(this);
     this.generateSectionXML = generateSectionXML.bind(this);
@@ -319,43 +401,76 @@ class DocxDocument {
   }
 
   generateContentTypesXML(): string {
-    const contentTypesXML = create({ encoding: 'UTF-8', standalone: true }, contentTypesXMLString);
+    const contentTypesXML = create(
+      { encoding: "UTF-8", standalone: true },
+      contentTypesXMLString,
+    );
 
-    generateContentTypesFragments(contentTypesXML, 'header', this.headerObjects);
-    generateContentTypesFragments(contentTypesXML, 'footer', this.footerObjects);
+    generateContentTypesFragments(
+      contentTypesXML,
+      "header",
+      this.headerObjects,
+    );
+    generateContentTypesFragments(
+      contentTypesXML,
+      "footer",
+      this.footerObjects,
+    );
 
     return contentTypesXML.toString({ prettyPrint: true });
   }
 
   generateDocumentXML(): string {
     const documentXML = create(
-      { encoding: 'UTF-8', standalone: true },
-      generateDocumentTemplate(this.width, this.height, this.orientation, this.margins)
+      { encoding: "UTF-8", standalone: true },
+      generateDocumentTemplate(
+        this.width,
+        this.height,
+        this.orientation,
+        this.margins,
+      ),
     );
+
     documentXML.root().first().import(this.documentXML);
 
-    generateSectionReferenceXML(documentXML, 'header', this.headerObjects, this.header);
-    generateSectionReferenceXML(documentXML, 'footer', this.footerObjects, this.footer);
+    generateSectionReferenceXML(
+      documentXML,
+      "header",
+      this.headerObjects,
+      this.header,
+    );
+    generateSectionReferenceXML(
+      documentXML,
+      "footer",
+      this.footerObjects,
+      this.footer,
+    );
 
     if ((this.header || this.footer) && this.skipFirstHeaderFooter) {
       documentXML
         .root()
         .first()
         .first()
-        .import(fragment({ namespaceAlias: { w: namespaces.w } }).ele('@w', 'titlePg'));
+        .import(
+          fragment({ namespaceAlias: { w: namespaces.w } }).ele(
+            "@w",
+            "titlePg",
+          ),
+        );
     }
     if (this.lineNumber) {
       const { countBy, start, restart } = this.lineNumber;
+
       documentXML
         .root()
         .first()
         .first()
         .import(
           fragment({ namespaceAlias: { w: namespaces.w } })
-            .ele('@w', 'lnNumType')
-            .att('@w', 'countBy', String(countBy))
-            .att('@w', 'start', String(start))
-            .att('@w', 'restart', restart)
+            .ele("@w", "lnNumType")
+            .att("@w", "countBy", String(countBy))
+            .att("@w", "start", String(start))
+            .att("@w", "restart", restart),
         );
     }
 
@@ -373,17 +488,15 @@ class DocxDocument {
         this.lastModifiedBy,
         this.revision,
         this.createdAt,
-        this.modifiedAt
-      )
+        this.modifiedAt,
+      ),
     );
   }
 
-  // eslint-disable-next-line class-methods-use-this
   generateSettingsXML(): string {
     return generateXMLString(settingsXMLString);
   }
 
-  // eslint-disable-next-line class-methods-use-this
   generateWebSettingsXML(): string {
     return generateXMLString(webSettingsXMLString);
   }
@@ -395,46 +508,52 @@ class DocxDocument {
         this.fontSize,
         this.complexScriptFontSize,
         this.lang,
-        this.heading as any
+        this.heading as any,
       ),
-      this.direction
+      this.direction,
     );
   }
 
   generateFontTableXML(): string {
-    const fontTableXML = create({ encoding: 'UTF-8', standalone: true }, fontTableXMLString);
+    const fontTableXML = create(
+      { encoding: "UTF-8", standalone: true },
+      fontTableXMLString,
+    );
     const fontNames = [
-      'Arial',
-      'Calibri',
-      'Calibri Light',
-      'Courier New',
-      'Symbol',
-      'Times New Roman',
+      "Arial",
+      "Calibri",
+      "Calibri Light",
+      "Courier New",
+      "Symbol",
+      "Times New Roman",
     ];
+
     this.fontTableObjects.forEach(({ fontName, genericFontName }) => {
       if (!fontNames.includes(fontName)) {
         fontNames.push(fontName);
         const fontFragment = fragment({
           namespaceAlias: { w: namespaces.w },
         })
-          .ele('@w', 'font')
-          .att('@w', 'name', fontName);
+          .ele("@w", "font")
+          .att("@w", "name", fontName);
 
         switch (genericFontName) {
-          case 'serif':
-            fontFragment.ele('@w', 'altName').att('@w', 'val', 'Times New Roman');
-            fontFragment.ele('@w', 'family').att('@w', 'val', 'roman');
-            fontFragment.ele('@w', 'pitch').att('@w', 'val', 'variable');
+          case "serif":
+            fontFragment
+              .ele("@w", "altName")
+              .att("@w", "val", "Times New Roman");
+            fontFragment.ele("@w", "family").att("@w", "val", "roman");
+            fontFragment.ele("@w", "pitch").att("@w", "val", "variable");
             break;
-          case 'sans-serif':
-            fontFragment.ele('@w', 'altName').att('@w', 'val', 'Arial');
-            fontFragment.ele('@w', 'family').att('@w', 'val', 'swiss');
-            fontFragment.ele('@w', 'pitch').att('@w', 'val', 'variable');
+          case "sans-serif":
+            fontFragment.ele("@w", "altName").att("@w", "val", "Arial");
+            fontFragment.ele("@w", "family").att("@w", "val", "swiss");
+            fontFragment.ele("@w", "pitch").att("@w", "val", "variable");
             break;
-          case 'monospace':
-            fontFragment.ele('@w', 'altName').att('@w', 'val', 'Courier New');
-            fontFragment.ele('@w', 'family').att('@w', 'val', 'modern');
-            fontFragment.ele('@w', 'pitch').att('@w', 'val', 'fixed');
+          case "monospace":
+            fontFragment.ele("@w", "altName").att("@w", "val", "Courier New");
+            fontFragment.ele("@w", "family").att("@w", "val", "modern");
+            fontFragment.ele("@w", "pitch").att("@w", "val", "fixed");
             break;
           default:
             break;
@@ -453,8 +572,8 @@ class DocxDocument {
 
   generateNumberingXML(): string {
     const numberingXML = create(
-      { encoding: 'UTF-8', standalone: true },
-      generateNumberingXMLTemplate()
+      { encoding: "UTF-8", standalone: true },
+      generateNumberingXMLTemplate(),
     );
 
     const abstractNumberingFragments = fragment();
@@ -468,70 +587,78 @@ class DocxDocument {
     // For every ul or ol encountered, all levels have the same startValue
     // This helps in handling the indentation for that particular level in the transformation
     this.numberingObjects.forEach(({ numberingId, type, properties }) => {
-      const abstractNumberingFragment = fragment({ namespaceAlias: { w: namespaces.w } })
-        .ele('@w', 'abstractNum')
-        .att('@w', 'abstractNumId', String(numberingId));
+      const abstractNumberingFragment = fragment({
+        namespaceAlias: { w: namespaces.w },
+      })
+        .ele("@w", "abstractNum")
+        .att("@w", "abstractNumId", String(numberingId));
 
       let startValue = 1;
-      if (properties.attributes && properties.attributes['data-start']) {
-        startValue = properties.attributes['data-start'];
+
+      if (properties.attributes && properties.attributes["data-start"]) {
+        startValue = properties.attributes["data-start"];
       } else if (properties.start) {
         startValue = properties.start;
       }
       [...Array(9).keys()].forEach((level) => {
         const levelFragment = fragment({ namespaceAlias: { w: namespaces.w } })
-          .ele('@w', 'lvl')
-          .att('@w', 'ilvl', String(level))
-          .ele('@w', 'start')
-          .att('@w', 'val', type === 'ol' ? String(startValue) : '1')
+          .ele("@w", "lvl")
+          .att("@w", "ilvl", String(level))
+          .ele("@w", "start")
+          .att("@w", "val", type === "ol" ? String(startValue) : "1")
           .up()
-          .ele('@w', 'numFmt')
+          .ele("@w", "numFmt")
           .att(
-            '@w',
-            'val',
-            type === 'ol'
+            "@w",
+            "val",
+            type === "ol"
               ? this.ListStyleBuilder.getListStyleType(
-                  properties.style && properties.style['list-style-type']
+                  properties.style && properties.style["list-style-type"],
                 )
-              : 'bullet'
+              : "bullet",
           )
           .up()
-          .ele('@w', 'lvlText')
+          .ele("@w", "lvlText")
           .att(
-            '@w',
-            'val',
-            type === 'ol'
-              ? this.ListStyleBuilder.getListPrefixSuffix(properties.style, level)
-              : this.ListStyleBuilder.getUnorderedListPrefixSuffix(properties.style)
+            "@w",
+            "val",
+            type === "ol"
+              ? this.ListStyleBuilder.getListPrefixSuffix(
+                  properties.style,
+                  level,
+                )
+              : this.ListStyleBuilder.getUnorderedListPrefixSuffix(
+                  properties.style,
+                ),
           )
           .up()
-          .ele('@w', 'lvlJc')
-          .att('@w', 'val', 'left')
+          .ele("@w", "lvlJc")
+          .att("@w", "val", "left")
           .up()
-          .ele('@w', 'pPr')
-          .ele('@w', 'tabs')
-          .ele('@w', 'tab')
-          .att('@w', 'val', 'num')
-          .att('@w', 'pos', String((level + 1) * 720))
+          .ele("@w", "pPr")
+          .ele("@w", "tabs")
+          .ele("@w", "tab")
+          .att("@w", "val", "num")
+          .att("@w", "pos", String((level + 1) * 720))
           .up()
           .up()
-          .ele('@w', 'ind')
-          .att('@w', 'left', String((level + 1) * 720))
-          .att('@w', 'hanging', '360')
+          .ele("@w", "ind")
+          .att("@w", "left", String((level + 1) * 720))
+          .att("@w", "hanging", "360")
           .up()
           .up()
           .up();
 
-        if (type === 'ul') {
+        if (type === "ul") {
           levelFragment.last().import(
             fragment({ namespaceAlias: { w: namespaces.w } })
-              .ele('@w', 'rPr')
-              .ele('@w', 'rFonts')
-              .att('@w', 'ascii', 'Symbol')
-              .att('@w', 'hAnsi', 'Symbol')
-              .att('@w', 'hint', 'default')
+              .ele("@w", "rPr")
+              .ele("@w", "rFonts")
+              .att("@w", "ascii", "Symbol")
+              .att("@w", "hAnsi", "Symbol")
+              .att("@w", "hint", "default")
               .up()
-              .up()
+              .up(),
           );
         }
         abstractNumberingFragment.import(levelFragment);
@@ -541,12 +668,12 @@ class DocxDocument {
 
       numberingFragments.import(
         fragment({ namespaceAlias: { w: namespaces.w } })
-          .ele('@w', 'num')
-          .att('@w', 'numId', String(numberingId))
-          .ele('@w', 'abstractNumId')
-          .att('@w', 'val', String(numberingId))
+          .ele("@w", "num")
+          .att("@w", "numId", String(numberingId))
+          .ele("@w", "abstractNumId")
+          .att("@w", "val", String(numberingId))
           .up()
-          .up()
+          .up(),
       );
     });
 
@@ -556,52 +683,71 @@ class DocxDocument {
     return numberingXML.toString({ prettyPrint: true });
   }
 
-  // eslint-disable-next-line class-methods-use-this
   appendRelationships(xmlFragment: any, relationships: any[]): void {
     relationships.forEach(({ relationshipId, type, target, targetMode }) => {
       xmlFragment.import(
         fragment({ defaultNamespace: { ele: namespaces.relationship } })
-          .ele('Relationship')
-          .att('Id', `rId${relationshipId}`)
-          .att('Type', type)
-          .att('Target', target)
-          .att('TargetMode', targetMode)
-          .up()
+          .ele("Relationship")
+          .att("Id", `rId${relationshipId}`)
+          .att("Type", type)
+          .att("Target", target)
+          .att("TargetMode", targetMode)
+          .up(),
       );
     });
   }
 
   generateRelsXML(): Array<{ fileName: string; xmlString: string }> {
-    const relationshipXMLStrings = this.relationships.map(({ fileName, rels }) => {
-      const xmlFragment = create(
-        { encoding: 'UTF-8', standalone: true },
-        fileName === documentFileName ? documentRelsXMLString : genericRelsXMLString
-      );
-      this.appendRelationships(xmlFragment.root(), rels);
+    const relationshipXMLStrings = this.relationships.map(
+      ({ fileName, rels }) => {
+        const xmlFragment = create(
+          { encoding: "UTF-8", standalone: true },
+          fileName === documentFileName
+            ? documentRelsXMLString
+            : genericRelsXMLString,
+        );
 
-      return { fileName, xmlString: xmlFragment.toString({ prettyPrint: true }) };
-    });
+        this.appendRelationships(xmlFragment.root(), rels);
+
+        return {
+          fileName,
+          xmlString: xmlFragment.toString({ prettyPrint: true }),
+        };
+      },
+    );
 
     return relationshipXMLStrings;
   }
 
   createNumbering(type: string, properties: any): number {
     this.lastNumberingId += 1;
-    this.numberingObjects.push({ numberingId: this.lastNumberingId, type, properties });
+    this.numberingObjects.push({
+      numberingId: this.lastNumberingId,
+      type,
+      properties,
+    });
 
     return this.lastNumberingId;
   }
 
   createFont(fontFamily: string): string {
     const fontTableObject = fontFamilyToTableObject(fontFamily, this.font);
+
     this.fontTableObjects.push(fontTableObject);
+
     return fontTableObject.fontName;
   }
 
-  async createMediaFile(base64String: string): Promise<{ id: number; fileContent: string; fileNameWithExtension: string; isSVG: boolean }> {
+  async createMediaFile(base64String: string): Promise<{
+    id: number;
+    fileContent: string;
+    fileNameWithExtension: string;
+    isSVG: boolean;
+  }> {
     const parsed = parseDataUrl(base64String);
+
     if (!parsed) {
-      throw new Error('Invalid base64 string');
+      throw new Error("Invalid base64 string");
     }
 
     let base64FileContent = parsed.base64;
@@ -610,18 +756,22 @@ class DocxDocument {
     // Extract file extension from MIME type (e.g., image/jpeg -> jpeg)
     const mimeTypePart = mimeType.match(/\/(.*?)$/);
     let fileExtension =
-      !mimeTypePart || mimeTypePart[1] === 'octet-stream' ? 'png' : mimeTypePart[1];
+      !mimeTypePart || mimeTypePart[1] === "octet-stream"
+        ? "png"
+        : mimeTypePart[1];
 
     // Handle SVG images based on svgHandling option
     const svgHandling =
       this.imageProcessing?.svgHandling ||
       defaultDocumentOptions.imageProcessing.svgHandling;
 
-    if (isSVG(mimeType) && svgHandling === 'convert') {
+    if (isSVG(mimeType) && svgHandling === "convert") {
       try {
         // Convert SVG to PNG for backward compatibility with older Word versions
         // Decode base64 to get SVG string for dimension extraction
-        const svgString = Buffer.from(base64FileContent, 'base64').toString('utf-8');
+        const svgString = Buffer.from(base64FileContent, "base64").toString(
+          "utf-8",
+        );
 
         // Extract dimensions from SVG using improved parser that handles:
         // - Decimal values (100.5)
@@ -629,14 +779,19 @@ class DocxDocument {
         // - ViewBox as fallback
         const { width, height } = parseSVGDimensions(svgString);
 
-        const pngBuffer = await convertSVGtoPNG(base64FileContent, { width, height });
-        base64FileContent = pngBuffer.toString('base64');
-        fileExtension = 'png';
-        mimeType = 'image/png';
+        const pngBuffer = await convertSVGtoPNG(base64FileContent, {
+          width,
+          height,
+        });
+
+        base64FileContent = pngBuffer.toString("base64");
+        fileExtension = "png";
+        mimeType = "image/png";
       } catch (error) {
         // Sharp not available - fall back to native SVG mode
         const err = error instanceof Error ? error : new Error(String(error));
-        if (err.message.includes('Sharp is not installed')) {
+
+        if (err.message.includes("Sharp is not installed")) {
           // Only show the warning once per process to avoid spam (unless suppressed)
           const suppressWarning =
             this.imageProcessing?.suppressSharpWarning ||
@@ -645,9 +800,9 @@ class DocxDocument {
           if (!sharpMissingWarningShown && !suppressWarning) {
             // eslint-disable-next-line no-console
             console.warn(
-              '\n[INFO] Sharp not installed - SVG images will be embedded natively (requires Office 2019+ or Microsoft 365).\n' +
-                'For maximum compatibility with all Word versions, install sharp: npm install sharp\n' +
-                'Learn more: https://github.com/TurboDocx/html-to-docx#svg-image-support\n'
+              "\n[INFO] Sharp not installed - SVG images will be embedded natively (requires Office 2019+ or Microsoft 365).\n" +
+                "For maximum compatibility with all Word versions, install sharp: npm install sharp\n" +
+                "Learn more: https://github.com/TurboDocx/html-to-docx#svg-image-support\n",
             );
             sharpMissingWarningShown = true;
           }
@@ -656,15 +811,17 @@ class DocxDocument {
           console.error(`[ERROR] Failed to convert SVG to PNG: ${err.message}`);
         }
         // Fall back to using SVG directly if conversion fails
-        fileExtension = 'svg';
+        fileExtension = "svg";
       }
     } else if (isSVG(mimeType)) {
       // Use SVG natively (Office 2019+ support)
-      fileExtension = 'svg';
+      fileExtension = "svg";
     }
 
     // Use deterministic IDs when deterministicIds option is enabled (for CI diff testing)
-    const imageId = this.deterministicIds ? this.lastMediaId.toString() : nanoid();
+    const imageId = this.deterministicIds
+      ? this.lastMediaId.toString()
+      : nanoid();
     const fileNameWithExtension = `image-${imageId}.${fileExtension}`;
 
     this.lastMediaId += 1;
@@ -673,15 +830,21 @@ class DocxDocument {
       id: this.lastMediaId,
       fileContent: base64FileContent,
       fileNameWithExtension,
-      isSVG: fileExtension === 'svg',
+      isSVG: fileExtension === "svg",
     };
   }
 
-  createDocumentRelationships(fileName: string = 'document', type: string, target: string, targetMode: string = 'External'): number {
+  createDocumentRelationships(
+    fileName: string = "document",
+    type: string,
+    target: string,
+    targetMode: string = "External",
+  ): number {
     let relationshipObject = this.relationships.find(
-      (relationship) => relationship.fileName === fileName
+      (relationship) => relationship.fileName === fileName,
     );
     let lastRelsId = 1;
+
     if (relationshipObject) {
       lastRelsId = relationshipObject.lastRelsId + 1;
       relationshipObject.lastRelsId = lastRelsId;
@@ -690,6 +853,7 @@ class DocxDocument {
       this.relationships.push(relationshipObject);
     }
     let relationshipType;
+
     switch (type) {
       case hyperlinkType:
         relationshipType = namespaces.hyperlinks;
@@ -719,11 +883,11 @@ class DocxDocument {
   }
 
   generateHeaderXML(vTree: any): Promise<any> {
-    return this.generateSectionXML(vTree, 'header');
+    return this.generateSectionXML(vTree, "header");
   }
 
   generateFooterXML(vTree: any): Promise<any> {
-    return this.generateSectionXML(vTree, 'footer');
+    return this.generateSectionXML(vTree, "footer");
   }
 }
 

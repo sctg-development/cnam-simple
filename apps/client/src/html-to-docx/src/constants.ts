@@ -1,7 +1,7 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from "lodash";
 
-const applicationName = 'html-to-docx';
-const defaultOrientation = 'portrait';
+const applicationName = "html-to-docx";
+const defaultOrientation = "portrait";
 const landscapeWidth = 15840;
 const landscapeHeight = 12240;
 const landscapeMargins = {
@@ -22,18 +22,18 @@ const portraitMargins = {
   footer: 720,
   gutter: 0,
 };
-const defaultFont = 'Arial';
+const defaultFont = "Arial";
 const defaultFontSize = 22;
-const defaultLang = 'en-US';
-const defaultDirection = 'ltr';
+const defaultLang = "en-US";
+const defaultDirection = "ltr";
 const defaultTableBorderOptions = {
   size: 0,
-  stroke: 'nil',
-  color: '000000',
+  stroke: "nil",
+  color: "000000",
 };
 const defaultTableBorderAttributeOptions = {
   size: 1,
-  stroke: 'single',
+  stroke: "single",
 };
 
 // SVG unit conversion factors to pixels (at 96 DPI standard)
@@ -47,7 +47,7 @@ const SVG_UNIT_TO_PIXEL_CONVERSIONS = {
   pc: 16, // 1 pica = 12 points
   em: 16, // Assume 16px default
   rem: 16, // Assume 16px default
-  '%': 1, // Cannot convert without parent context, treat as pixels
+  "%": 1, // Cannot convert without parent context, treat as pixels
 };
 const defaultHeadingOptions = {
   heading1: {
@@ -109,18 +109,18 @@ const defaultHeadingOptions = {
 const defaultDocumentOptions = {
   orientation: defaultOrientation,
   margins: cloneDeep(portraitMargins),
-  title: '',
-  subject: '',
+  title: "",
+  subject: "",
   creator: applicationName,
   keywords: [applicationName],
-  description: '',
+  description: "",
   lastModifiedBy: applicationName,
   revision: 1,
   createdAt: new Date(),
   modifiedAt: new Date(),
-  headerType: 'default',
+  headerType: "default",
   header: false,
-  footerType: 'default',
+  footerType: "default",
   footer: false,
   font: defaultFont,
   fontSize: defaultFontSize,
@@ -142,10 +142,10 @@ const defaultDocumentOptions = {
   lineNumberOptions: {
     countBy: 1,
     start: 0,
-    restart: 'continuous',
+    restart: "continuous",
   },
   numbering: {
-    defaultOrderedListStyleType: 'decimal',
+    defaultOrderedListStyleType: "decimal",
   },
   heading: defaultHeadingOptions,
   decodeUnicode: false,
@@ -165,49 +165,49 @@ const defaultDocumentOptions = {
     minImageSize: 1024, // Minimum image size in bytes (1KB)
     maxCacheSize: 20 * 1024 * 1024, // 20MB max total cache size (prevents OOM)
     maxCacheEntries: 100, // Max 100 unique images in cache (LRU eviction)
-    svgHandling: 'convert', // 'convert' (to PNG for compatibility), 'native' (Office 2019+ SVG support), or 'auto' (convert if sharp available, otherwise native)
+    svgHandling: "convert", // 'convert' (to PNG for compatibility), 'native' (Office 2019+ SVG support), or 'auto' (convert if sharp available, otherwise native)
     svgSanitization: true, // Sanitize SVG content to prevent XSS/XXE attacks (recommended for untrusted content)
     suppressSharpWarning: false, // Set to true to suppress the warning when sharp is not installed
   },
 };
-const defaultHTMLString = '<p></p>';
-const relsFolderName = '_rels';
-const headerFileName = 'header1';
-const footerFileName = 'footer1';
-const themeFileName = 'theme1';
-const documentFileName = 'document';
-const headerType = 'header';
-const footerType = 'footer';
-const themeType = 'theme';
-const hyperlinkType = 'hyperlink';
-const imageType = 'image';
-const internalRelationship = 'Internal';
-const wordFolder = 'word';
-const themeFolder = 'theme';
+const defaultHTMLString = "<p></p>";
+const relsFolderName = "_rels";
+const headerFileName = "header1";
+const footerFileName = "footer1";
+const themeFileName = "theme1";
+const documentFileName = "document";
+const headerType = "header";
+const footerType = "footer";
+const themeType = "theme";
+const hyperlinkType = "hyperlink";
+const imageType = "image";
+const internalRelationship = "Internal";
+const wordFolder = "word";
+const themeFolder = "theme";
 const paragraphBordersObject = {
   top: {
     size: 0,
     spacing: 3,
-    color: 'FFFFFF',
+    color: "FFFFFF",
   },
   left: {
     size: 0,
     spacing: 3,
-    color: 'FFFFFF',
+    color: "FFFFFF",
   },
   bottom: {
     size: 0,
     spacing: 3,
-    color: 'FFFFFF',
+    color: "FFFFFF",
   },
   right: {
     size: 0,
     spacing: 3,
-    color: 'FFFFFF',
+    color: "FFFFFF",
   },
 };
-const colorlessColors = ['transparent', 'auto'];
-const verticalAlignValues = ['top', 'middle', 'bottom'];
+const colorlessColors = ["transparent", "auto"];
+const verticalAlignValues = ["top", "middle", "bottom"];
 const defaultPercentageMarginValue = 0;
 
 export {

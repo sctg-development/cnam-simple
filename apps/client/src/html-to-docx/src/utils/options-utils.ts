@@ -1,4 +1,5 @@
-import { defaultDocumentOptions } from '../constants';
+import { defaultDocumentOptions } from "../constants";
+
 import {
   pixelRegex,
   pixelToTWIP,
@@ -8,10 +9,11 @@ import {
   inchToTWIP,
   pointRegex,
   pointToHIP,
-} from './unit-conversion';
+} from "./unit-conversion";
 
 const fixupFontSize = (fontSize: any) => {
   let normalizedFontSize;
+
   if (pointRegex.test(fontSize)) {
     const matchedParts = fontSize.match(pointRegex);
 
@@ -26,18 +28,25 @@ const fixupFontSize = (fontSize: any) => {
   return normalizedFontSize;
 };
 
-const normalizeUnits = (dimensioningObject: any, defaultDimensionsProperty: any) => {
+const normalizeUnits = (
+  dimensioningObject: any,
+  defaultDimensionsProperty: any,
+) => {
   let normalizedUnitResult: any = {};
-  if (typeof dimensioningObject === 'object' && dimensioningObject !== null) {
+
+  if (typeof dimensioningObject === "object" && dimensioningObject !== null) {
     Object.keys(dimensioningObject).forEach((key) => {
       if (pixelRegex.test(dimensioningObject[key])) {
         const matchedParts = dimensioningObject[key].match(pixelRegex);
+
         normalizedUnitResult[key] = pixelToTWIP(matchedParts[1]);
       } else if (cmRegex.test(dimensioningObject[key])) {
         const matchedParts = dimensioningObject[key].match(cmRegex);
+
         normalizedUnitResult[key] = cmToTWIP(matchedParts[1]);
       } else if (inchRegex.test(dimensioningObject[key])) {
         const matchedParts = dimensioningObject[key].match(inchRegex);
+
         normalizedUnitResult[key] = inchToTWIP(matchedParts[1]);
       } else if (dimensioningObject[key]) {
         normalizedUnitResult[key] = dimensioningObject[key];
@@ -47,7 +56,6 @@ const normalizeUnits = (dimensioningObject: any, defaultDimensionsProperty: any)
       }
     });
   } else {
-    // eslint-disable-next-line no-param-reassign
     normalizedUnitResult = null;
   }
 
@@ -68,16 +76,18 @@ const createDocumentOptionsAndMergeWithDefaults = (documentOptions: any) => {
   // Iterate over each key in the user-provided options
   Object.keys(documentOptions).forEach((key) => {
     switch (key) {
-      case 'pageSize':
-      case 'margins':
+      case "pageSize":
+      case "margins":
         normalizedDocumentOptions[key] = normalizeUnits(
           (documentOptions as any)[key],
-          (defaultDocumentOptions as any)[key]
+          (defaultDocumentOptions as any)[key],
         );
         break;
-      case 'fontSize':
-      case 'complexScriptFontSize':
-        normalizedDocumentOptions[key] = fixupFontSize((documentOptions as any)[key]);
+      case "fontSize":
+      case "complexScriptFontSize":
+        normalizedDocumentOptions[key] = fixupFontSize(
+          (documentOptions as any)[key],
+        );
         break;
       // If there are other keys that require normalization, handle them here
       default:

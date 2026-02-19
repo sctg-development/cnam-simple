@@ -16,70 +16,70 @@
  */
 const ALLOWED_ELEMENTS = new Set([
   // Container elements
-  'svg',
-  'g',
-  'defs',
-  'symbol',
-  'marker',
-  'clipPath',
-  'mask',
-  'pattern',
+  "svg",
+  "g",
+  "defs",
+  "symbol",
+  "marker",
+  "clipPath",
+  "mask",
+  "pattern",
 
   // Shape elements
-  'circle',
-  'ellipse',
-  'line',
-  'path',
-  'polygon',
-  'polyline',
-  'rect',
+  "circle",
+  "ellipse",
+  "line",
+  "path",
+  "polygon",
+  "polyline",
+  "rect",
 
   // Text elements
-  'text',
-  'tspan',
-  'textPath',
+  "text",
+  "tspan",
+  "textPath",
 
   // Gradient elements
-  'linearGradient',
-  'radialGradient',
-  'stop',
+  "linearGradient",
+  "radialGradient",
+  "stop",
 
   // Filter elements
-  'filter',
-  'feBlend',
-  'feColorMatrix',
-  'feComponentTransfer',
-  'feComposite',
-  'feConvolveMatrix',
-  'feDiffuseLighting',
-  'feDisplacementMap',
-  'feDistantLight',
-  'feDropShadow',
-  'feFlood',
-  'feFuncA',
-  'feFuncB',
-  'feFuncG',
-  'feFuncR',
-  'feGaussianBlur',
-  'feImage',
-  'feMerge',
-  'feMergeNode',
-  'feMorphology',
-  'feOffset',
-  'fePointLight',
-  'feSpecularLighting',
-  'feSpotLight',
-  'feTile',
-  'feTurbulence',
+  "filter",
+  "feBlend",
+  "feColorMatrix",
+  "feComponentTransfer",
+  "feComposite",
+  "feConvolveMatrix",
+  "feDiffuseLighting",
+  "feDisplacementMap",
+  "feDistantLight",
+  "feDropShadow",
+  "feFlood",
+  "feFuncA",
+  "feFuncB",
+  "feFuncG",
+  "feFuncR",
+  "feGaussianBlur",
+  "feImage",
+  "feMerge",
+  "feMergeNode",
+  "feMorphology",
+  "feOffset",
+  "fePointLight",
+  "feSpecularLighting",
+  "feSpotLight",
+  "feTile",
+  "feTurbulence",
 
   // Other elements
-  'image',
-  'use',
-  'title',
-  'desc',
-  'metadata',
-  'switch',
-  'a',
+  "image",
+  "use",
+  "title",
+  "desc",
+  "metadata",
+  "switch",
+  "a",
 ]);
 
 /**
@@ -88,178 +88,178 @@ const ALLOWED_ELEMENTS = new Set([
  */
 const ALLOWED_ATTRIBUTES = new Set([
   // Core attributes
-  'xmlns',
-  'xmlns:xlink',
-  'id',
-  'class',
-  'style',
-  'tabindex',
+  "xmlns",
+  "xmlns:xlink",
+  "id",
+  "class",
+  "style",
+  "tabindex",
 
   // Dimension and position attributes
-  'width',
-  'height',
-  'x',
-  'y',
-  'x1',
-  'y1',
-  'x2',
-  'y2',
-  'cx',
-  'cy',
-  'r',
-  'rx',
-  'ry',
-  'dx',
-  'dy',
+  "width",
+  "height",
+  "x",
+  "y",
+  "x1",
+  "y1",
+  "x2",
+  "y2",
+  "cx",
+  "cy",
+  "r",
+  "rx",
+  "ry",
+  "dx",
+  "dy",
 
   // ViewBox and aspect ratio
-  'viewBox',
-  'preserveAspectRatio',
+  "viewBox",
+  "preserveAspectRatio",
 
   // Path and shape attributes
-  'd',
-  'points',
-  'pathLength',
+  "d",
+  "points",
+  "pathLength",
 
   // Transform
-  'transform',
+  "transform",
 
   // Presentation attributes - Fill
-  'fill',
-  'fill-opacity',
-  'fill-rule',
+  "fill",
+  "fill-opacity",
+  "fill-rule",
 
   // Presentation attributes - Stroke
-  'stroke',
-  'stroke-width',
-  'stroke-opacity',
-  'stroke-linecap',
-  'stroke-linejoin',
-  'stroke-miterlimit',
-  'stroke-dasharray',
-  'stroke-dashoffset',
+  "stroke",
+  "stroke-width",
+  "stroke-opacity",
+  "stroke-linecap",
+  "stroke-linejoin",
+  "stroke-miterlimit",
+  "stroke-dasharray",
+  "stroke-dashoffset",
 
   // Presentation attributes - Other
-  'opacity',
-  'visibility',
-  'display',
-  'overflow',
-  'clip-path',
-  'clip-rule',
-  'mask',
-  'filter',
+  "opacity",
+  "visibility",
+  "display",
+  "overflow",
+  "clip-path",
+  "clip-rule",
+  "mask",
+  "filter",
 
   // Text attributes
-  'font-family',
-  'font-size',
-  'font-weight',
-  'font-style',
-  'font-variant',
-  'font-stretch',
-  'text-anchor',
-  'text-decoration',
-  'text-rendering',
-  'letter-spacing',
-  'word-spacing',
-  'writing-mode',
-  'direction',
-  'dominant-baseline',
-  'alignment-baseline',
-  'baseline-shift',
+  "font-family",
+  "font-size",
+  "font-weight",
+  "font-style",
+  "font-variant",
+  "font-stretch",
+  "text-anchor",
+  "text-decoration",
+  "text-rendering",
+  "letter-spacing",
+  "word-spacing",
+  "writing-mode",
+  "direction",
+  "dominant-baseline",
+  "alignment-baseline",
+  "baseline-shift",
 
   // Gradient attributes
-  'gradientUnits',
-  'gradientTransform',
-  'spreadMethod',
-  'offset',
-  'stop-color',
-  'stop-opacity',
+  "gradientUnits",
+  "gradientTransform",
+  "spreadMethod",
+  "offset",
+  "stop-color",
+  "stop-opacity",
 
   // Filter attributes
-  'in',
-  'in2',
-  'result',
-  'type',
-  'values',
-  'mode',
-  'stdDeviation',
-  'edgeMode',
-  'kernelMatrix',
-  'divisor',
-  'bias',
-  'targetX',
-  'targetY',
-  'surfaceScale',
-  'specularConstant',
-  'specularExponent',
-  'diffuseConstant',
-  'scale',
-  'xChannelSelector',
-  'yChannelSelector',
-  'k1',
-  'k2',
-  'k3',
-  'k4',
-  'operator',
-  'radius',
-  'baseFrequency',
-  'numOctaves',
-  'seed',
-  'stitchTiles',
-  'order',
-  'kernelUnitLength',
-  'pointsAtX',
-  'pointsAtY',
-  'pointsAtZ',
-  'limitingConeAngle',
-  'z',
-  'azimuth',
-  'elevation',
+  "in",
+  "in2",
+  "result",
+  "type",
+  "values",
+  "mode",
+  "stdDeviation",
+  "edgeMode",
+  "kernelMatrix",
+  "divisor",
+  "bias",
+  "targetX",
+  "targetY",
+  "surfaceScale",
+  "specularConstant",
+  "specularExponent",
+  "diffuseConstant",
+  "scale",
+  "xChannelSelector",
+  "yChannelSelector",
+  "k1",
+  "k2",
+  "k3",
+  "k4",
+  "operator",
+  "radius",
+  "baseFrequency",
+  "numOctaves",
+  "seed",
+  "stitchTiles",
+  "order",
+  "kernelUnitLength",
+  "pointsAtX",
+  "pointsAtY",
+  "pointsAtZ",
+  "limitingConeAngle",
+  "z",
+  "azimuth",
+  "elevation",
 
   // Link attributes (href will be sanitized separately)
-  'href',
-  'xlink:href',
-  'target',
+  "href",
+  "xlink:href",
+  "target",
 
   // Use element
-  'xlink:href',
+  "xlink:href",
 
   // Image element
-  'preserveAspectRatio',
+  "preserveAspectRatio",
 
   // Marker attributes
-  'markerWidth',
-  'markerHeight',
-  'refX',
-  'refY',
-  'orient',
-  'markerUnits',
+  "markerWidth",
+  "markerHeight",
+  "refX",
+  "refY",
+  "orient",
+  "markerUnits",
 
   // Pattern attributes
-  'patternUnits',
-  'patternContentUnits',
-  'patternTransform',
+  "patternUnits",
+  "patternContentUnits",
+  "patternTransform",
 
   // ClipPath attributes
-  'clipPathUnits',
+  "clipPathUnits",
 
   // Mask attributes
-  'maskUnits',
-  'maskContentUnits',
+  "maskUnits",
+  "maskContentUnits",
 ]);
 
 /**
  * Elements that are explicitly disallowed for security reasons
  */
 const DISALLOWED_ELEMENTS = new Set([
-  'script',
-  'foreignObject',
-  'iframe',
-  'embed',
-  'object',
-  'applet',
-  'frame',
-  'frameset',
+  "script",
+  "foreignObject",
+  "iframe",
+  "embed",
+  "object",
+  "applet",
+  "frame",
+  "frameset",
 ]);
 
 /**
@@ -278,7 +278,7 @@ const DANGEROUS_PROTOCOLS = /^\s*(javascript|data|vbscript|file|about):/i;
  * @returns {boolean} True if dangerous, false if safe
  */
 const hasDangerousProtocol = (value: any) => {
-  if (!value || typeof value !== 'string') {
+  if (!value || typeof value !== "string") {
     return false;
   }
 
@@ -286,9 +286,9 @@ const hasDangerousProtocol = (value: any) => {
 
   // Allow http, https, and fragment identifiers (#id)
   if (
-    trimmedValue.startsWith('#') ||
-    trimmedValue.startsWith('http://') ||
-    trimmedValue.startsWith('https://')
+    trimmedValue.startsWith("#") ||
+    trimmedValue.startsWith("http://") ||
+    trimmedValue.startsWith("https://")
   ) {
     return false;
   }
@@ -327,8 +327,11 @@ export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
   if (DISALLOWED_ELEMENTS.has(lowerTagName)) {
     if (verboseLogging) {
       // eslint-disable-next-line no-console
-      console.warn(`[SVG SANITIZER] Blocked dangerous element: <${vNode.tagName}>`);
+      console.warn(
+        `[SVG SANITIZER] Blocked dangerous element: <${vNode.tagName}>`,
+      );
     }
+
     return null;
   }
 
@@ -336,8 +339,11 @@ export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
   if (!ALLOWED_ELEMENTS.has(tagName) && !ALLOWED_ELEMENTS.has(lowerTagName)) {
     if (verboseLogging) {
       // eslint-disable-next-line no-console
-      console.warn(`[SVG SANITIZER] Removed non-whitelisted element: <${vNode.tagName}>`);
+      console.warn(
+        `[SVG SANITIZER] Removed non-whitelisted element: <${vNode.tagName}>`,
+      );
     }
+
     return null;
   }
 
@@ -357,33 +363,44 @@ export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
       if (DANGEROUS_ATTRIBUTES.test(lowerKey)) {
         if (verboseLogging) {
           // eslint-disable-next-line no-console
-          console.warn(`[SVG SANITIZER] Removed event handler: ${key}="${value}"`);
+          console.warn(
+            `[SVG SANITIZER] Removed event handler: ${key}="${value}"`,
+          );
         }
         removedCount += 1;
+
         return;
       }
 
       // Block dangerous protocols in href/xlink:href
-      if ((lowerKey === 'href' || lowerKey === 'xlink:href') && hasDangerousProtocol(value)) {
+      if (
+        (lowerKey === "href" || lowerKey === "xlink:href") &&
+        hasDangerousProtocol(value)
+      ) {
         if (verboseLogging) {
           // eslint-disable-next-line no-console
-          console.warn(`[SVG SANITIZER] Blocked dangerous protocol in ${key}: ${value}`);
+          console.warn(
+            `[SVG SANITIZER] Blocked dangerous protocol in ${key}: ${value}`,
+          );
         }
         removedCount += 1;
+
         return;
       }
 
       // Allow whitelisted attributes and data-* attributes (safe for data storage)
       if (
         ALLOWED_ATTRIBUTES.has(lowerKey) ||
-        lowerKey.startsWith('data-') ||
-        lowerKey.startsWith('aria-')
+        lowerKey.startsWith("data-") ||
+        lowerKey.startsWith("aria-")
       ) {
         sanitizedAttributes[key] = value;
       } else {
         if (verboseLogging) {
           // eslint-disable-next-line no-console
-          console.warn(`[SVG SANITIZER] Removed non-whitelisted attribute: ${key}="${value}"`);
+          console.warn(
+            `[SVG SANITIZER] Removed non-whitelisted attribute: ${key}="${value}"`,
+          );
         }
         removedCount += 1;
       }
@@ -396,7 +413,9 @@ export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
 
     if (removedCount > 0 && verboseLogging) {
       // eslint-disable-next-line no-console
-      console.log(`[SVG SANITIZER] Removed ${removedCount} unsafe attribute(s) from <${tagName}>`);
+      console.log(
+        `[SVG SANITIZER] Removed ${removedCount} unsafe attribute(s) from <${tagName}>`,
+      );
     }
   }
 
@@ -405,9 +424,10 @@ export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
     const sanitizedChildren = vNode.children
       .map((child: any) => {
         // Text nodes are safe - they get escaped during XML serialization
-        if (typeof child === 'string' || child.text) {
+        if (typeof child === "string" || child.text) {
           return child;
         }
+
         // Recursively sanitize VNode children
         return sanitizeSVGVNode(child, options);
       })
@@ -417,8 +437,11 @@ export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
 
     if (sanitizedChildren.length < vNode.children.length && verboseLogging) {
       const removed = vNode.children.length - sanitizedChildren.length;
+
       // eslint-disable-next-line no-console
-      console.log(`[SVG SANITIZER] Removed ${removed} child element(s) from <${tagName}>`);
+      console.log(
+        `[SVG SANITIZER] Removed ${removed} child element(s) from <${tagName}>`,
+      );
     }
   }
 
@@ -435,33 +458,33 @@ export const sanitizeSVGVNode = (vNode: any, options: any = {}) => {
 export const validateSVGString = (svgString: any) => {
   const warnings = [];
 
-  if (!svgString || typeof svgString !== 'string') {
-    return { valid: false, warnings: ['Invalid or empty SVG string'] };
+  if (!svgString || typeof svgString !== "string") {
+    return { valid: false, warnings: ["Invalid or empty SVG string"] };
   }
 
   // Check for script tags
   if (/<script[\s>]/i.test(svgString)) {
-    warnings.push('Contains <script> tag');
+    warnings.push("Contains <script> tag");
   }
 
   // Check for event handlers
   if (/\son[a-z]+\s*=/i.test(svgString)) {
-    warnings.push('Contains event handler attributes (onclick, onload, etc.)');
+    warnings.push("Contains event handler attributes (onclick, onload, etc.)");
   }
 
   // Check for javascript: protocol
   if (/javascript:/i.test(svgString)) {
-    warnings.push('Contains javascript: protocol');
+    warnings.push("Contains javascript: protocol");
   }
 
   // Check for foreignObject
   if (/<foreignObject[\s>]/i.test(svgString)) {
-    warnings.push('Contains <foreignObject> element');
+    warnings.push("Contains <foreignObject> element");
   }
 
   // Check for data: protocol (potentially dangerous in some contexts)
   if (/data:text\/html/i.test(svgString)) {
-    warnings.push('Contains data:text/html URI (potential XSS vector)');
+    warnings.push("Contains data:text/html URI (potential XSS vector)");
   }
 
   return {
