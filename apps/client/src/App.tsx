@@ -13,6 +13,7 @@ import AboutPage from "@/pages/about";
 
 // Declarative Routing: Route-based component composition
 export function App() {
+  console.log(`React router base path: ${import.meta.env.BASE_URL}`);
   return (
     <CookieConsentProvider>
       <CookieConsent />
