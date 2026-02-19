@@ -1,0 +1,114 @@
+# Copyright (c) 2024-2026 Ronan LE MEILLAT
+# License: AGPL-3.0-or-later
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+name: Deploy client on cloudflare pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - apps/client/**
+      - yarn.lock
+      - .github/workflows/deploy-pages.yaml
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  packages: write
+  attestations: write
+
+jobs:
+  create-env:
+    uses: ./.github/workflows/create-env-artifact.yaml
+    secrets: inherit
+  build-printpdf:
+    uses: ./.github/workflows/build-printpdf.yaml
+    secrets: inherit
+
+  build:
+    needs: [create-env,build-printpdf]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Cache Yarn dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            .yarn/cache
+            .yarn/unplugged
+            .yarn/build-state.yml
+            .yarn/install-state.gz
+            node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-yarn-
+
+      - name: Cache Turborepo
+        uses: actions/cache@v5
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+
+      - name: Install dependencies
+        run: |
+          corepack enable
+          yarn install --immutable
+
+      - name: Download shared .env artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: shared-env
+          path: .
+
+      # .env.enc was encrypted with openssl enc -aes-256-cbc -salt -in .env -out .env.enc -iter 10000  -pass pass:"${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
+      # Decrypt it using the same key and parameters
+      - name: Decrypt .env file
+        run: |
+          openssl enc -aes-256-cbc -d -salt -in .env.enc -out .env -iter 10000 -pass pass:"${{ secrets.ARTIFACT_ENCRYPTION_KEY }}"
+          rm .env.enc
+          # validate .env content by simply checking the presence of DOMAIN_NAME=${{ secrets.DOMAIN_NAME }} with or without quotes, to avoid issues with decryption producing an invalid .env file
+          if ! grep -q "DOMAIN_NAME=${{ secrets.DOMAIN_NAME }}" .env && ! grep -q "DOMAIN_NAME=\"${{ secrets.DOMAIN_NAME }}\"" .env; then
+            echo "Decrypted .env file does not contain expected DOMAIN_NAME value"
+            exit 1
+          fi
+
+      - name: Workaround bug for heroui and mono repo
+        run: |
+          source .env
+          ./build-reproductible-dev.sh
+      
+      - name: Publish to Cloudflare Pages
+        uses: sctg-development/pages-action-without-url@main
+        with:
+            apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+            accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            projectName: cnam-simple
+            directory: apps/client/dist
+            gitHubToken: ${{ secrets.GITHUB_TOKEN }}
