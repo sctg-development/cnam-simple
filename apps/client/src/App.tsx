@@ -18,12 +18,12 @@ export function App() {
     <CookieConsentProvider>
       <CookieConsent />
       <Routes>
-        <Route element={<IndexPage />} path={`/`} />
-        <Route element={<DocsPage />} path={`/docs`} />
-        <Route element={<PricingPage />} path={`/pricing`} />
-        <Route element={<MarkdownUtil />} path={`/markdown-util`} />
-        <Route element={<AboutPage />} path={`/about`} />
-        <Route element={<PageNotFound />} path="*" />
+        <Route key="index" element={<IndexPage />} path={`/`} />
+        <Route key="docs" element={<DocsPage />} path={`/docs`} />
+        <Route key="pricing" element={<PricingPage />} path={`/pricing`} />
+        <Route key="markdown-util" element={<MarkdownUtil />} path={`/markdown-util`} />
+        <Route key="about" element={<AboutPage />} path={`/about`} />
+        <Route key="404" element={<PageNotFound />} path="*" />
       </Routes>
     </CookieConsentProvider>
   );
