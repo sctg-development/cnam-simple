@@ -87,7 +87,7 @@ jobs:
           ls -la libs
           ls -la libs/printpdf
           cd libs/printpdf
-          wasm-pack build --target web --no-pack --dev --no-default-features --features "html,js-sys,gif,jpeg,png,pnm,tiff,bmp,webp"
+          wasm-pack build --target web --no-pack --release --no-default-features --features "html,js-sys,gif,jpeg,png,pnm,tiff,bmp,webp"
       - name: Inject default fonts into script.js
         shell: bash
         run: |
