@@ -89,5 +89,8 @@
   "markdown.include_png_tooltip": "המר SVG מוצגים ל‑PNG ברזולוציית 2× (base64) לפני ההורדה — עשוי להגדיל את גודל הקובץ",
   "markdown.png_conversion_in_progress": "ממירים SVG ל‑PNG...",
   "markdown.png_conversion_error_cors": "לא ניתן להמיר חלק מהתמונות בגלל CORS.",
-  "simple": "פָּשׁוּט"
+  "simple": "פָּשׁוּט",
+  "download_images_zip": "הורדת תמונות (ZIP)",
+  "markdown.images_zip_error_cors": "לא ניתן היה לכלול חלק מהתמונות עקב CORS או שגיאות רשת.",
+  "markdown.no_images_found": "לא נמצאו תמונות ב-HTML המעובד."
 }

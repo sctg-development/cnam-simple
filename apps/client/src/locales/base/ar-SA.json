@@ -89,5 +89,8 @@
   "markdown.png_conversion_error_cors": "بعض الصور لم نتمكن من تحويلها بسبب قيود CORS.",
   "markdown.docx_conversion_in_progress": "جارٍ إنشاء ملف Word (.docx)...",
   "markdown.docx_error": "خطأ أثناء إنشاء DOCX",
-  "simple": "بسيط"
+  "simple": "بسيط",
+  "download_images_zip": "تنزيل الصور (ZIP)",
+  "markdown.images_zip_error_cors": "تعذر تضمين بعض الصور بسبب CORS أو أخطاء في الشبكة.",
+  "markdown.no_images_found": "لم يتم العثور على صور في ملف HTML المعروض."
 }

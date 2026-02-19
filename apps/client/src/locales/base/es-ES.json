@@ -89,5 +89,8 @@
   "markdown.png_conversion_error_cors": "Algunas imágenes no se pudieron convertir debido a CORS.",
   "markdown.docx_conversion_in_progress": "Generando DOCX...",
   "markdown.docx_error": "Error al generar DOCX",
-  "simple": "Simple"
+  "simple": "Simple",
+  "download_images_zip": "Descargar imágenes (ZIP)",
+  "markdown.images_zip_error_cors": "Algunas imágenes no se pudieron incluir debido a CORS o errores de red.",
+  "markdown.no_images_found": "No se encontraron imágenes en el HTML renderizado."
 }

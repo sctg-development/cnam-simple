@@ -69,6 +69,7 @@
   "download_pdf": "Técharger PDF",
   "download_html": "Télécharger HTML",
   "download_docx": "Télécharger DOCX",
+  "download_images_zip": "Télécharger les images (ZIP)",
   "cursus.code": "Code",
   "cursus.audience": "Public",
   "cursus.objectives": "Objectifs",
@@ -87,5 +88,7 @@
   "markdown.include_png_tooltip": "Convertir les SVG du rendu en images PNG en résolution 2× (base64) avant le téléchargement — peut augmenter la taille du fichier",
   "markdown.png_conversion_in_progress": "Conversion des SVG en PNG...",
   "markdown.png_conversion_error_cors": "Certaines images n'ont pas pu être converties (CORS).",
+  "markdown.no_images_found": "Aucune image trouvée dans le HTML généré.",
+  "markdown.images_zip_error_cors": "Certaines images n'ont pas pu être incluses (CORS ou erreur réseau).",
   "simple": "Simple"
 }

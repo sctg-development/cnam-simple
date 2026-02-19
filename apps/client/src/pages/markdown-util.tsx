@@ -33,6 +33,7 @@ import markedMermaid from "@maddyguthridge/marked-mermaid";
 import { Button } from "@heroui/button";
 // Inline highlight.js CSS for HTML export (Vite raw import)
 import hljsGithubCss from "highlight.js/styles/github.css?raw";
+import JSZip from "jszip";
 
 import HtmlToDocx from "../html-to-docx/";
 
@@ -50,6 +51,7 @@ export default function DocsPage() {
 
   const [loading, setLoading] = useState(false);
   const [docxLoading, setDocxLoading] = useState(false);
+  const [zipLoading, setZipLoading] = useState(false);
 
   // Markdown content comes from drag & drop or file input
   const [markdown, setMarkdown] = useState<string>("");
@@ -799,6 +801,173 @@ ${bodyHtml}
     }
   }
 
+  // Download images (SVG or PNG depending on `includePng`) as a ZIP archive
+  async function handleDownloadImagesZip() {
+    if (!renderedHtml) return;
+    setZipLoading(true);
+    let wrapper: HTMLElement | null = null;
+
+    try {
+      const container = document.getElementById("markdown-content");
+
+      if (!container) throw new Error("Markdown content not found");
+
+      const clone = container.cloneNode(true) as HTMLElement;
+      const containerRect = container.getBoundingClientRect
+        ? container.getBoundingClientRect()
+        : { width: 800 };
+
+      // prepare clone (this will convert SVG -> PNG in the clone when includePng === true)
+      wrapper = await prepareCloneWithMermaidRendering(
+        clone,
+        includePng,
+        containerRect,
+      );
+
+      const zip = new JSZip();
+      let added = 0;
+      let failures = 0;
+
+      const makeSafeName = (base: string, idx: number, ext: string) =>
+        `${base}-${String(idx).padStart(3, "0")}.${ext}`;
+
+      const getExtFromMime = (mime: string | null) => {
+        if (!mime) return "bin";
+        if (mime.includes("svg")) return "svg";
+        if (mime.includes("png")) return "png";
+        if (mime.includes("jpeg") || mime.includes("jpg")) return "jpg";
+        if (mime.includes("gif")) return "gif";
+        return mime.split("/")[1] || "bin";
+      };
+
+      const dataUrlToArrayBuffer = (dataUrl: string) => {
+        const comma = dataUrl.indexOf(",");
+        const meta = dataUrl.substring(5, comma);
+        const data = dataUrl.substring(comma + 1);
+
+        if (meta.includes("base64")) {
+          const binary = atob(data);
+          const len = binary.length;
+          const u8 = new Uint8Array(len);
+
+          for (let i = 0; i < len; i++) u8[i] = binary.charCodeAt(i);
+
+          return u8.buffer;
+        }
+
+        // not base64 (e.g. data:image/svg+xml;charset=utf-8,<svg...>)
+        const text = decodeURIComponent(data);
+        return new TextEncoder().encode(text).buffer;
+      };
+
+      // 1) If includePng is false — collect inline <svg> elements as .svg files
+      if (!includePng) {
+        const svgs = Array.from(clone.querySelectorAll("svg")) as SVGElement[];
+
+        for (let i = 0; i < svgs.length; i++) {
+          try {
+            let serialized = new XMLSerializer().serializeToString(svgs[i]);
+
+            // ensure xmlns is present
+            if (!/^<svg[^>]*xmlns=/i.test(serialized)) {
+              serialized = serialized.replace(
+                /^<svg/i,
+                '<svg xmlns="http://www.w3.org/2000/svg"',
+              );
+            }
+
+            const name = makeSafeName("image", added + 1, "svg");
+
+            zip.file(name, serialized);
+            added++;
+          } catch (err) {
+            // keep going on per-image error
+            // eslint-disable-next-line no-console
+            console.warn("Failed to serialize SVG for ZIP", err);
+            failures++;
+          }
+        }
+      }
+
+      // 2) Collect <img> elements (these include PNG replacements when includePng === true)
+      const imgs = Array.from(clone.querySelectorAll("img")) as HTMLImageElement[];
+
+      for (let i = 0; i < imgs.length; i++) {
+        const img = imgs[i];
+        const src = img.getAttribute("src") || img.src || "";
+
+        if (!src) continue;
+
+        try {
+          if (src.startsWith("data:")) {
+            // data URL — may be base64 or URI-encoded
+            const comma = src.indexOf(",");
+            const meta = src.substring(5, comma);
+            const mime = meta.split(";")[0] || "application/octet-stream";
+            const ext = getExtFromMime(mime);
+            const arrayBuffer = dataUrlToArrayBuffer(src);
+
+            zip.file(makeSafeName("image", added + 1, ext), arrayBuffer);
+            added++;
+            continue;
+          }
+
+          // blob: or external/relative URL — try to fetch
+          const fetchUrl = src.startsWith("blob:") ? src : new URL(src, document.baseURI).href;
+          const resp = await fetch(fetchUrl, { mode: "cors" });
+
+          if (!resp.ok) throw new Error(`fetch ${resp.status}`);
+
+          const contentType = resp.headers.get("content-type") || "";
+          const ext = getExtFromMime(contentType) || (fetchUrl.split(".").pop() || "bin");
+          const ab = await resp.arrayBuffer();
+
+          zip.file(makeSafeName("image", added + 1, ext), ab);
+          added++;
+        } catch (err) {
+          // fetch failed (likely CORS) — record and continue
+          // eslint-disable-next-line no-console
+          console.warn("Failed to fetch image for ZIP", { src, err });
+          failures++;
+        }
+      }
+
+      if (added === 0) {
+        alert(t("markdown.no_images_found"));
+        return;
+      }
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = `${fileName ? fileName.replace(/\.md$/i, "") : "cnam-markdown"}-images.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+
+      if (failures > 0) {
+        alert(`${t("markdown.images_zip_error_cors")} (${failures})`);
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error(err);
+      alert(String(err));
+    } finally {
+      try {
+        if (wrapper) wrapper.remove();
+      } catch (e) {
+        /* ignore */
+      }
+
+      setZipLoading(false);
+      setConverting(false);
+      setConversionProgress(null);
+    }
+  }
+
   // Convert markdown -> HTML (hoisted function so it can be used earlier)
   function getHtmlFromMarkdown(markdown: string) {
     const marked = new Marked();
@@ -927,6 +1096,16 @@ ${bodyHtml}
                 onPress={handleDownloadDocx}
               >
                 {docxLoading ? t("download_docx") + "..." : t("download_docx")}
+              </Button>
+
+              <Button
+                aria-disabled={zipLoading || loading || converting || !renderedHtml}
+                className="btn btn-primary"
+                disabled={zipLoading || loading || converting || !renderedHtml}
+                variant="bordered"
+                onPress={handleDownloadImagesZip}
+              >
+                {zipLoading ? t("download_images_zip") + "..." : t("download_images_zip")}
               </Button>
 
               <Button

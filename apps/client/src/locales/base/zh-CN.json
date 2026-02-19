@@ -85,5 +85,12 @@
   "markdown.docx_error": "生成 DOCX 时出错",
   "markdown.clear": "清除",
   "markdown.pasted_name": "已粘贴内容",
-  "simple": "简单的"
+  "simple": "简单的",
+  "download_images_zip": "下载图片 (ZIP)",
+  "markdown.images_zip_error_cors": "由于 CORS 或网络错误，某些图像无法包含在内。",
+  "markdown.include_png": "包含 PNG 图像 (base64)",
+  "markdown.include_png_tooltip": "下载前将渲染的 SVG 转换为 2× PNG (base64) — 可能会增加文件大小",
+  "markdown.no_images_found": "在渲染的 HTML 中找不到图像。",
+  "markdown.png_conversion_error_cors": "由于 CORS，某些图像无法转换。",
+  "markdown.png_conversion_in_progress": "将 SVG 转换为 PNG..."
 }

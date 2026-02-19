@@ -70,6 +70,7 @@
   "download_pdf": "Download PDF",
   "download_html": "Download HTML",
   "download_docx": "Download DOCX",
+  "download_images_zip": "Download images (ZIP)",
   "cursus.code": "Code",
   "cursus.audience": "Audience",
   "cursus.objectives": "Objectives",
@@ -87,6 +88,8 @@
   "markdown.include_png_tooltip": "Convert rendered SVGs to 2× PNG (base64) before download — may increase file size",
   "markdown.png_conversion_in_progress": "Converting SVGs to PNG...",
   "markdown.png_conversion_error_cors": "Some images could not be converted due to CORS.",
+  "markdown.no_images_found": "No images found in the rendered HTML.",
+  "markdown.images_zip_error_cors": "Some images could not be included due to CORS or network errors.",
   "beautiful": "beautiful",
   "markdown.docx_error": "Error while generating DOCX"
 }
