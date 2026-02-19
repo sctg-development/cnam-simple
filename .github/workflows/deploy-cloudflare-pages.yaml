@@ -23,7 +23,7 @@ on:
     paths:
       - apps/client/**
       - yarn.lock
-      - .github/workflows/deploy-pages.yaml
+      - .github/workflows/deploy-cloudflare-pages.yaml
 
   workflow_dispatch:
 
