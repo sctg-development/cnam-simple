@@ -38,9 +38,12 @@ jobs:
   create-env:
     uses: ./.github/workflows/create-env-artifact.yaml
     secrets: inherit
+  build-printpdf:
+    uses: ./.github/workflows/build-printpdf.yaml
+    secrets: inherit
 
   build:
-    needs: [create-env,]
+    needs: [create-env, build-printpdf]
     runs-on: ubuntu-latest
 
     steps:
@@ -96,6 +99,16 @@ jobs:
             exit 1
           fi
 
+      - name: Retrieve printpdf build artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: printpdf-wasm
+
+      - name: Copy printpdf build output
+        run: |
+          cd apps/client
+          yarn copy:printpdf
+          
       - name: Workaround bug for heroui and mono repo
         run: |
           source .env
