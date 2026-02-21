@@ -88,6 +88,35 @@ jobs:
           ls -la libs/printpdf
           cd libs/printpdf
           wasm-pack build --target web --no-pack --release --no-default-features --features "html,js-sys,gif,jpeg,png,pnm,tiff,bmp,webp"
+
+      - name: wasm-split
+        shell: bash
+        continue-on-error: true
+        run: |
+          cd libs/printpdf
+          cargo add wasm-splitter \
+            --git https://github.com/DioxusLabs/dioxus.git \
+            --rename wasm_split \
+            --target 'cfg(all(target_arch="wasm32",target_os="unknown"))'
+
+          # the macro has the same name, no rename needed
+          cargo add wasm-split-macro \
+              --git https://github.com/DioxusLabs/dioxus.git \
+              --target 'cfg(all(target_arch="wasm32",target_os="unknown"))'
+
+          # the CLI is optional; again rename if you prefer a different local name
+          cargo add wasm-splitter \
+              --git https://github.com/DioxusLabs/dioxus.git \
+              --rename wasm-splitter \
+              --target 'cfg(all(target_arch="wasm32",target_os="unknown"))' \
+              --optional
+          export RUSTFLAGS="-C link-arg=--emit-relocs -C debuginfo=2 -C"
+          mkdir -p wasm
+          mkdir -p splitted
+          cargo build --target wasm32-unknown-unknown --features "html,js-sys,gif,jpeg,png,pnm,tiff,bmp,webp"
+          wasm-bindgen --target web --out-dir wasm target/wasm32-unknown-unknown/debug/printpdf.wasm
+          wasm-split-cli split target/wasm32-unknown-unknown/debug/printpdf.wasm wasm/printpdf_bg.wasm split
+
       - name: Inject default fonts into script.js
         shell: bash
         run: |
