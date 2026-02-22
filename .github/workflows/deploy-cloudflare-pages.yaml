@@ -103,6 +103,7 @@ jobs:
         uses: actions/download-artifact@v5
         with:
           name: printpdf-wasm
+          path: libs/printpdf/pkg
 
       - name: Copy printpdf build output
         run: |
