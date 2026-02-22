@@ -11,7 +11,6 @@ import {
   Pdf_HtmlToDocument,
   Pdf_BytesToDocument,
 } from "@/printpdf/printpdf.js";
-import { getFonts } from "@/printpdf/fonts";
 
 type Props = {
   data: Cursus | null;
@@ -69,6 +68,8 @@ export default function PdfTransformer({ data, fileName }: Props) {
     if (!data) return;
     setError(null);
     setLoading(true);
+    // lazily load the font definitions in their own chunk
+    const { getFonts } = await import("@/printpdf/fonts");
     const fonts = getFonts(); // Load default fonts (returns an object with font names as keys and base64 strings as values)
 
     try {

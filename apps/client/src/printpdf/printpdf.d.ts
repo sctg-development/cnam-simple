@@ -86,10 +86,9 @@ export interface InitOutput {
     readonly Pdf_PageToSvgSync: (a: number, b: number) => [number, number];
     readonly Pdf_ResourcesForPage: (a: number, b: number) => any;
     readonly Pdf_ResourcesForPageSync: (a: number, b: number) => [number, number];
-    readonly wasm_bindgen__closure__destroy__h4c26ae7f03025301: (a: number, b: number) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h3f578972cab80878: (a: number, b: number, c: any, d: any) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h2e8dd1a1a505f443: (a: number, b: number, c: any) => void;
-    readonly wasm_bindgen__convert__closures_____invoke__h56b8ab701c766f1e: (a: number, b: number) => number;
+    readonly wasm_bindgen__closure__destroy__h5eff59757512815b: (a: number, b: number) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h0f6501f88b219e2a: (a: number, b: number, c: any, d: any) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h86981c9f4215b9b0: (a: number, b: number, c: any) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
     readonly __wbindgen_exn_store: (a: number) => void;
