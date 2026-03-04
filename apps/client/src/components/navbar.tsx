@@ -68,28 +68,28 @@ export const Navbar = () => {
     <HeroUINavbar maxWidth="xl" position="sticky">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand className="gap-3 max-w-fit">
-          <Link
+          <LinkUniversal
             className="flex justify-start items-center gap-1"
             color="foreground"
-            href={useHref("/")}
+            href={"/"}
           >
             <Logo />
             <p className="font-bold text-inherit">SCTG</p>
-          </Link>
+          </LinkUniversal>
         </NavbarBrand>
         <div className="hidden lg:flex gap-4 justify-start ml-2">
           {siteConfig().navItems.map((item) => (
             <NavbarItem key={item.href}>
-              <Link
+              <LinkUniversal 
                 className={clsx(
                   linkStyles({ color: "foreground" }),
                   "data-[active=true]:text-primary data-[active=true]:font-medium",
                 )}
                 color="foreground"
-                href={useHref(item.href)}
+                href={item.href}
               >
                 {item.label}
-              </Link>
+              </LinkUniversal>
             </NavbarItem>
           ))}
         </div>
@@ -130,9 +130,9 @@ export const Navbar = () => {
       </NavbarContent>
 
       <NavbarContent className="sm:hidden basis-1 pl-4" justify="end">
-        <Link isExternal href={siteConfig().links.github}>
+        <LinkUniversal isExternal href={siteConfig().links.github}>
           <GithubIcon className="text-default-500" />
-        </Link>
+        </LinkUniversal>
         <ThemeSwitch />
         <LanguageSwitch
           availableLanguages={availableLanguages}
@@ -146,7 +146,7 @@ export const Navbar = () => {
         <div className="mx-4 mt-2 flex flex-col gap-2">
           {siteConfig().navMenuItems.map((item, index) => (
             <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
+              <LinkUniversal
                 color={
                   index === 2
                     ? "primary"
@@ -154,11 +154,11 @@ export const Navbar = () => {
                       ? "danger"
                       : "foreground"
                 }
-                href={useHref(item.href)}
+                href={item.href}
                 size="lg"
               >
                 {item.label}
-              </Link>
+              </LinkUniversal>
             </NavbarMenuItem>
           ))}
         </div>
