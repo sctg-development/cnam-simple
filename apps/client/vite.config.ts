@@ -140,17 +140,15 @@ export default defineConfig({
           if (id.includes('node_modules')) {
             const deps = Object.entries({
               axios: extractPerVendorDependencies(packageJson, "axios"),
-              heroui: extractPerVendorDependencies(packageJson, ["@heroui", "tailwindcss", "tailwind-variants"]),
               markedMermaid: extractPerVendorDependencies(packageJson, "@maddyguthridge"),
               marked: extractPerVendorDependencies(packageJson, ["marked", "highlight.js"]),
               html: extractPerVendorDependencies(packageJson, ["html", "dompurify"]),
-              react: extractPerVendorDependencies(packageJson, ["react", "@react-aria", "react-dom", "react-router-dom", "react-i18next", "i18next"]),
-              framerMotion: extractPerVendorDependencies(packageJson, "framer-motion"),
+              react: extractPerVendorDependencies(packageJson, ["react", "@react-aria", "react-dom", "react-router-dom", "react-i18next", "i18next", "framer-motion", "tailwindcss", "tailwind-variants", "@heroui"]),
             });
 
             for (const [name, list] of deps) {
               if (list.some(dep => id.includes(`/node_modules/${dep}/`))) {
-                return name;
+                return name; 
               }
             }
           }
