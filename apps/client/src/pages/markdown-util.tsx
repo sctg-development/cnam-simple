@@ -1016,8 +1016,8 @@ ${bodyHtml}
           <h1 className={title()}>
             <Trans t={t}>markdown-util</Trans>
           </h1>
-          <div className="mt-4 flex items-start gap-4 w-xl md:w-3xl lg:w-7xl">
-            <div className="w-xl md:w-3xl lg:w-7xl text-left">
+          <div className="mt-4 flex flex-col items-start gap-4 w-full lg:min-w-3xl max-w-lg">
+            <div className="w-full text-left">
               <div
                 aria-label={t("markdown.drop_or_click")}
                 className={`mb-4 rounded border-2 border-dashed p-6 cursor-pointer ${isDragging ? "border-primary bg-slate-50" : "border-gray-200"}`}
@@ -1054,7 +1054,7 @@ ${bodyHtml}
               />
             </div>
 
-            <div className="shrink-0 flex flex-col gap-2 md:flex-row md:items-center md:gap-3">
+            <div className="mt-4 w-full shrink-0 flex flex-col gap-2 md:mt-0 md:flex-row md:items-center md:gap-3">
               <label
                 className="inline-flex items-center gap-2 text-sm"
                 title={t("markdown.include_png_tooltip")}
