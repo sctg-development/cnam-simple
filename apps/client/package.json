@@ -11,7 +11,7 @@
         "copy:printpdf": "bash -lc 'mkdir -p src/printpdf && cp -v ../../libs/printpdf/pkg/printpdf.js ../../libs/printpdf/pkg/printpdf_bg.wasm ../../libs/printpdf/pkg/printpdf.d.ts ../../libs/printpdf/pkg/printpdf_bg.wasm.d.ts src/printpdf/ || true'",
         "lint": "eslint ./src/**/**/*.{ts,tsx} --fix",
         "type-check": "tsc --noEmit",
-        "preview:env": "bash ./scripts/preview-ensure.sh",
+        "preview:env": "bash -c 'set -a && source ../../.env && set +a && vite preview \"$@\"' --",
         "clean": "rm -rf dist .turbo node_modules/.vite node_modules/.cache"
     },
     "dependencies": {
